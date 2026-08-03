@@ -1,0 +1,93 @@
+# Phase 9 — API & Dashboard
+
+## Objectif
+
+Étendre l'API FastAPI avec des endpoints pour tous les modules métier : SMC, signaux, stratégies, risque, exécution et backtesting.
+
+---
+
+## Architecture
+
+```
+src/arty_trading/api/
+├── main.py              # Application FastAPI + endpoints existants
+└── routes/              # Routers Phase 9
+    ├── __init__.py      # Exports publics
+    ├── smc.py           # Router SMC
+    ├── signals.py       # Router Signaux & Stratégies
+    ├── risk.py          # Router Risque
+    ├── execution.py     # Router Exécution
+    └── backtesting.py   # Router Backtesting
+```
+
+---
+
+## Endpoints ajoutés
+
+### SMC (`/smc`)
+
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| GET | `/smc/concepts` | Liste les détecteurs SMC disponibles |
+| GET | `/smc/enabled` | Retourne les détecteurs activés |
+| GET | `/smc/detect/{symbol}` | Détecte les concepts SMC sur les bougies |
+| POST | `/smc/enable/{concept}` | Active un détecteur |
+| POST | `/smc/disable/{concept}` | Désactive un détecteur |
+| POST | `/smc/enable-all` | Active tous les détecteurs |
+| POST | `/smc/disable-all` | Désactive tous les détecteurs |
+
+### Signaux (`/signals`)
+
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| GET | `/signals/strategies` | Liste toutes les stratégies |
+| GET | `/signals/strategies/enabled` | Retourne les stratégies activées |
+| POST | `/signals/strategies/{name}/enable` | Active une stratégie |
+| POST | `/signals/strategies/{name}/disable` | Désactive une stratégie |
+| POST | `/signals/strategies/enable-all` | Active toutes les stratégies |
+| POST | `/signals/strategies/disable-all` | Désactive toutes les stratégies |
+| GET | `/signals/generate/{symbol}` | Génère le meilleur signal |
+| GET | `/signals/generate-all/{symbol}` | Génère tous les signaux |
+
+### Risque (`/risk`)
+
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| GET | `/risk/report` | Rapport de risque complet |
+| GET | `/risk/status` | Statut du risque (positions, drawdown) |
+| POST | `/risk/validate` | Valide un signal selon les règles de risque |
+
+### Exécution (`/execution`)
+
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| GET | `/execution/positions` | Positions ouvertes |
+| GET | `/execution/history` | Historique des trades |
+| POST | `/execution/open` | Ouvre un trade |
+| POST | `/execution/close/{ticket}` | Ferme un trade |
+| POST | `/execution/modify/{ticket}` | Modifie SL/TP d'un trade |
+
+### Backtesting (`/backtesting`)
+
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| GET | `/backtesting/info` | Informations sur le moteur |
+| POST | `/backtesting/run` | Lance un backtest |
+
+---
+
+## Tests
+
+21 tests couvrent les nouvelles routes (`tests/test_api_routes.py`) :
+
+- **TestSMCRoutes** (6 tests) : concepts, enable/disable, enable-all/disable-all
+- **TestSignalsRoutes** (6 tests) : stratégies, enable/disable, enable-all/disable-all
+- **TestRiskRoutes** (3 tests) : rapport, statut, validation de signal
+- **TestExecutionRoutes** (5 tests) : positions, historique, ouverture, fermeture, modification
+- **TestBacktestingRoutes** (1 test) : info backtesting
+
+---
+
+## Statut
+
+✅ **Terminé** — 21 tests passent (231 tests au total).

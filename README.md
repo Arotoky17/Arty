@@ -332,9 +332,9 @@ Le projet doit être conçu pour évoluer vers une plateforme de trading profess
 | 6 | Gestion du risque | ✅ Terminé |
 | 7 | Exécution des ordres | ✅ Terminé |
 | 8 | Backtesting | ✅ Terminé |
-| 9 | API & Dashboard | ⏳ À venir |
-| 10 | IA Assistant | ⏳ À venir |
-| 11 | Notifications | ⏳ À venir |
+| 9 | API & Dashboard | ✅ Terminé |
+| 10 | IA Assistant | ✅ Terminé |
+| 11 | Notifications | ✅ Terminé |
 
 ---
 

@@ -5,18 +5,34 @@ Endpoints de santé, configuration, MT5 et données de marché.
 
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import AsyncGenerator
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
 from arty_trading import __version__
+from arty_trading.api.routes import (
+    ai_router,
+    backtesting_router,
+    execution_router,
+    notifications_router,
+    risk_router,
+    signals_router,
+    smc_router,
+)
+from arty_trading.application import TradingEngine
 from arty_trading.config import get_settings
-from arty_trading.core.enums import LogCategory, TimeFrame
+from arty_trading.core.enums import LogCategory, TimeFrame, TradingMode
 from arty_trading.infrastructure.mt5 import MT5Connector, MT5MarketDataProvider
-from arty_trading.logging import setup_logging, get_logger
+from arty_trading.infrastructure.notifications import NotificationManager
+from arty_trading.logging import get_logger, setup_logging
+from arty_trading.modules.ai import AIAssistant
+from arty_trading.modules.execution import OrderExecutor
+from arty_trading.modules.risk import RiskManager
+from arty_trading.modules.signals import SignalGenerator
+from arty_trading.modules.smc import SMCDetector
 
 
 @asynccontextmanager
@@ -53,7 +69,37 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     except Exception as exc:
         logger.warning("Échec connexion MT5 au démarrage: %s", exc)
 
+    # Initialisation du moteur de trading (orchestration live)
+    trading_engine = TradingEngine(
+        settings=settings,
+        market_data=market_data,
+        smc_detector=app.state.smc_detector,
+        signal_generator=app.state.signal_generator,
+        risk_manager=app.state.risk_manager,
+        executor=app.state.executor,
+        mt5_connector=mt5_connector,
+    )
+    app.state.trading_engine = trading_engine
+
+    # Démarrer le moteur seulement si le mode de trading est actif (démo/live)
+    if settings.trading_mode in (TradingMode.DEMO, TradingMode.REAL):
+        app.state.engine_task = trading_engine.start()
+        logger.info(
+            "TradingEngine lancé en tâche de fond | mode=%s",
+            settings.trading_mode.value,
+        )
+    else:
+        logger.info("Trading désactivé - TradingEngine non démarré")
+
     yield
+
+    # Arrêt du moteur de trading
+    engine = getattr(app.state, "trading_engine", None)
+    if engine is not None and engine.is_running:
+        try:
+            await engine.stop()
+        except Exception as exc:
+            logger.warning("Erreur arrêt TradingEngine: %s", exc)
 
     # Déconnexion MT5 propre à l'arrêt
     try:
@@ -81,6 +127,14 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # Initialisation des modules metier (Phase 9)
+    app.state.smc_detector = SMCDetector()
+    app.state.signal_generator = SignalGenerator()
+    app.state.risk_manager = RiskManager(settings=settings.risk)
+    app.state.executor = OrderExecutor()
+    app.state.ai_assistant = AIAssistant.from_settings(settings.ai)
+    app.state.notification_manager = NotificationManager.from_settings(settings.notifications)
 
     @app.get("/health", tags=["Système"])
     async def health_check() -> dict:
@@ -112,6 +166,12 @@ def create_app() -> FastAPI:
             "max_open_positions": settings.risk.max_open_positions,
             "one_trade_per_symbol": settings.risk.one_trade_per_symbol,
         }
+
+    @app.get("/engine/status", tags=["Engine"])
+    async def engine_status() -> dict:
+        """Retourne le statut du moteur de trading (running, symboles, derniers signaux)."""
+        engine: TradingEngine = app.state.trading_engine
+        return engine.get_status()
 
     @app.get("/mt5/status", tags=["MT5"])
     async def mt5_status() -> dict:
@@ -264,6 +324,18 @@ def create_app() -> FastAPI:
             logger = get_logger(LogCategory.MARKET_DATA)
             logger.error("Erreur WebSocket ticks | %s | %s", symbol, exc)
             await websocket.close(code=1011, reason=str(exc))
+
+    # =====================================================================
+    # Routes API - Phase 9
+    # =====================================================================
+
+    app.include_router(smc_router)
+    app.include_router(signals_router)
+    app.include_router(risk_router)
+    app.include_router(execution_router)
+    app.include_router(backtesting_router)
+    app.include_router(ai_router)
+    app.include_router(notifications_router)
 
     return app
 

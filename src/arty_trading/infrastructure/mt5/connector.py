@@ -366,12 +366,12 @@ class MT5Connector(IMT5Connector):
             "build": terminal.build,
             "connected": terminal.connected,
             "trade_allowed": terminal.trade_allowed,
-            "community_account": terminal.community_account,
-            "community_connection": terminal.community_connection,
-            "started": terminal.started,
-            "dlls_allowed": terminal.dlls_allowed,
-            "trade_expert": terminal.trade_expert,
-            "code": terminal.code,
+            "community_account": getattr(terminal, "community_account", False),
+            "community_connection": getattr(terminal, "community_connection", False),
+            "started": getattr(terminal, "started", False),
+            "dlls_allowed": getattr(terminal, "dlls_allowed", False),
+            "trade_expert": getattr(terminal, "trade_expert", False),
+            "code": getattr(terminal, "code", 0),
         }
 
     def _parse_account_info(self, account: Any) -> TradingAccount:

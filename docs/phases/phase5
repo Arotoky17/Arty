@@ -1,0 +1,110 @@
+# Phase 5 – Stratégies & Signaux
+
+## Objectif
+
+Mettre en place un moteur de stratégies multiples et un générateur de signaux qui fusionne les données SMC avec les règles de chaque stratégie pour produire des signaux d'achat/vente avec score de confiance.
+
+## Modules livrés
+
+### 1. Classe de base (`modules/strategies/base.py`)
+
+**`BaseStrategy`** implémente `IStrategy` :
+- Gestion de l'activation (enabled/disabled)
+- `risk_reward_min` et `confidence_min` configurables
+- Helpers : `_filter_smc()`, `_has_concept()`, `_count_confluences()`
+- `_calculate_confidence()` — score basé sur le nombre de confluences
+- `_build_signal()` — construction d'un objet `Signal` complet
+- `_calculate_sl_tp()` — calcul automatique du Stop Loss et Take Profit
+
+### 2. Stratégies (6)
+
+| Stratégie | Fichier | Confluences requises | SL/TP (pips) |
+|-----------|---------|----------------------|--------------|
+| SMC Trend Following | `strategies.py` | BOS + FVG + OB + OTE + Sweep | 20/40 |
+| Breakout | `strategies.py` | BOS + FVG + Volume élevé | 15/30 |
+| Momentum | `strategies.py` | FVG + 3 bougies consécutives | 12/24 |
+| Reversal | `strategies.py` | CHoCH + Liquidity Sweep + MSS | 25/50 |
+| Scalping | `strategies.py` | FVG + Spread serré (≤5) | 8/8 |
+| Swing Trading | `strategies.py` | BOS + OTE + OB + Zone P/D | 30/90 |
+
+Chaque stratégie :
+- Implémente `IStrategy` (port de domaine)
+- Est indépendante et activable/désactivable
+- Analyse les bougies + données SMC
+- Retourne un `Signal` ou `None`
+- Calcule un score de confiance (0-1) basé sur les confluences
+
+### 3. Générateur de signaux (`modules/signals/generator.py`)
+
+**`SignalGenerator`** :
+- Orchestre les 6 stratégies
+- `enable_strategy()` / `disable_strategy()` — activation individuelle
+- `enable_all()` / `disable_all()` — activation globale
+- `generate()` — retourne le meilleur signal (confiance la plus élevée)
+- `generate_all()` — retourne tous les signaux valides triés par confiance
+- Filtre par `min_confidence` configurable
+
+### 4. Structure du Signal
+
+Chaque signal contient :
+- `symbol` — Symbole tradé
+- `signal_type` — BUY, SELL, HOLD, CLOSE
+- `direction` — BUY, SELL, NEUTRAL
+- `entry_price` — Prix d'entrée
+- `stop_loss` — Niveau de Stop Loss
+- `take_profit` — Niveau de Take Profit
+- `confidence` — Score de confiance (0-1)
+- `strategy_name` — Nom de la stratégie
+- `timeframe` — Timeframe analysé
+- `justification` — Justification textuelle
+- `smc_concepts` — Liste des concepts SMC détectés
+- `risk_reward_ratio` — Ratio R/R calculé automatiquement
+
+## Architecture
+
+```
+IStrategy (core/interfaces.py)  ← Port
+    ↓
+BaseStrategy (modules/strategies/base.py)
+    ↓
+6 stratégies concrètes :
+    ├── SMCTrendStrategy     → BOS + FVG + OB
+    ├── BreakoutStrategy    → BOS + FVG + Volume
+    ├── MomentumStrategy    → FVG + 3 bougies
+    ├── ReversalStrategy     → CHoCH + Sweep
+    ├── ScalpingStrategy    → FVG + Spread
+    └── SwingStrategy       → BOS + OTE + OB
+    ↓
+SignalGenerator (modules/signals/generator.py)
+    ↓
+Signal (core/entities.py)
+```
+
+## Tests — 30 tests (tous ✅)
+
+| Catégorie | Tests |
+|-----------|-------|
+| SMC Trend Strategy | 6 |
+| Breakout Strategy | 3 |
+| Momentum Strategy | 3 |
+| Reversal Strategy | 4 |
+| Scalping Strategy | 3 |
+| Swing Strategy | 3 |
+| SignalGenerator | 8 |
+
+## État global du projet
+
+| Phase | Tests |
+|-------|-------|
+| 1-3 (Fondations, MT5, Marché) | 72 |
+| 4 (SMC) | 33 |
+| 5 (Stratégies & Signaux) | 30 |
+| **Total** | **135** |
+
+## Prochaine phase
+
+**Phase 6 – Gestion du risque** :
+- Validation des signaux (risque par trade, drawdown max, etc.)
+- Calcul automatique de la taille de position
+- Vérification du nombre max de positions
+- Un seul trade par symbole (paramétrable)

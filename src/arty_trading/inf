@@ -1,0 +1,362 @@
+"""
+Connecteur MetaTrader 5 - Implémentation de IMT5Connector.
+
+Fournit :
+- Connexion robuste avec reconnexion automatique (tenacity)
+- Vérification du compte et du terminal
+- Gestion complète des erreurs
+- Garde-fou sécurité : mode REAL désactivé sans autorisation explicite
+- Fonctionnement dégradé si MT5 n'est pas installé (mock mode)
+"""
+
+from __future__ import annotations
+
+import asyncio
+from datetime import datetime
+from decimal import Decimal
+from typing import Any
+
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
+
+from arty_trading.config.settings import MT5Settings, Settings, get_settings
+from arty_trading.core.entities import TradingAccount
+from arty_trading.core.enums import LogCategory, TradingMode
+from arty_trading.core.interfaces import IMT5Connector
+from arty_trading.logging import get_logger, log_error
+
+logger = get_logger(LogCategory.MT5)
+
+# Import conditionnel de MetaTrader5
+# Permet au module de fonctionner même si MT5 n'est pas installé
+try:
+    import MetaTrader5 as mt5  # type: ignore[import-untyped]
+    MT5_AVAILABLE = True
+except ImportError:
+    mt5 = None  # type: ignore[assignment]
+    MT5_AVAILABLE = False
+
+
+class MT5ConnectionError(Exception):
+    """Erreur de connexion MetaTrader 5."""
+
+
+class MT5TerminalError(Exception):
+    """Erreur liée au terminal MT5 (non démarré, non installé)."""
+
+
+class MT5AccountError(Exception):
+    """Erreur liée au compte MT5 (identifiants invalides, compte non trouvé)."""
+
+
+class MT5Connector(IMT5Connector):
+    """
+    Connecteur MetaTrader 5 implémentant IMT5Connector.
+
+    Caractéristiques :
+    - Connexion robuste avec retry automatique (tenacity)
+    - Reconnexion automatique en cas de perte de connexion
+    - Vérification du statut du terminal et du compte
+    - Mode démo/real avec garde-fou de sécurité
+    - Fonctionnement dégradé (mock) si MT5 n'est pas disponible
+    """
+
+    def __init__(
+        self,
+        settings: Settings | None = None,
+        mt5_settings: MT5Settings | None = None,
+    ) -> None:
+        """
+        Initialise le connecteur MT5.
+
+        Args:
+            settings: Settings globales (utilise get_settings() si None)
+            mt5_settings: Settings MT5 spécifiques (utilise settings.mt5 si None)
+        """
+        self._settings = settings or get_settings()
+        self._mt5_settings = mt5_settings or self._settings.mt5
+        self._connected = False
+        self._account: TradingAccount | None = None
+        self._last_connection_attempt: datetime | None = None
+        self._connection_lock = asyncio.Lock()
+
+        # Vérification de disponibilité de MT5
+        if not MT5_AVAILABLE:
+            logger.warning(
+                "MetaTrader5 non disponible - mode dégradé (mock). "
+                "Installez MetaTrader 5 et le package MetaTrader5 pour activer la connexion."
+            )
+
+    @property
+    def is_mt5_available(self) -> bool:
+        """Indique si le package MetaTrader5 est installé."""
+        return MT5_AVAILABLE
+
+    async def connect(self) -> bool:
+        """
+        Établit la connexion MT5 avec retry automatique.
+
+        Returns:
+            True si la connexion est établie, False sinon
+        """
+        if not MT5_AVAILABLE:
+            logger.warning("Connexion MT5 impossible - package non disponible")
+            return False
+
+        async with self._connection_lock:
+            if self._connected:
+                logger.info("MT5 déjà connecté")
+                return True
+
+            self._last_connection_attempt = datetime.utcnow()
+
+            try:
+                success = await self._connect_with_retry()
+                if success:
+                    self._connected = True
+                    await self._verify_terminal()
+                    self._account = await self.get_account_info()
+                    logger.info(
+                        "Connexion MT5 établie | login=%s | server=%s | demo=%s",
+                        self._mt5_settings.login,
+                        self._mt5_settings.server,
+                        self._account.is_demo if self._account else "unknown",
+                    )
+                    return True
+                return False
+            except Exception as exc:
+                log_error("Échec de connexion MT5", exc)
+                self._connected = False
+                return False
+
+    @retry(
+        retry=retry_if_exception_type((MT5ConnectionError, MT5TerminalError)),
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        reraise=True,
+    )
+    async def _connect_with_retry(self) -> bool:
+        """Tente la connexion avec retry automatique via tenacity."""
+        return await asyncio.to_thread(self._connect_sync)
+
+    def _connect_sync(self) -> bool:
+        """Connexion synchrone à MT5 (exécutée dans un thread)."""
+        # Initialisation du terminal
+        if self._mt5_settings.path:
+            if not mt5.initialize(self._mt5_settings.path, timeout=self._mt5_settings.timeout):
+                raise MT5TerminalError(f"Échec initialisation MT5: {mt5.last_error()}")
+        else:
+            if not mt5.initialize(timeout=self._mt5_settings.timeout):
+                raise MT5TerminalError(f"Échec initialisation MT5: {mt5.last_error()}")
+
+        # Vérification du terminal
+        terminal_info = mt5.terminal_info()
+        if terminal_info is None:
+            raise MT5TerminalError("Impossible de récupérer les infos du terminal")
+
+        if not terminal_info.connected:
+            raise MT5ConnectionError("Terminal MT5 non connecté au serveur de trading")
+
+        # Connexion au compte si identifiants fournis
+        if self._mt5_settings.login and self._mt5_settings.login > 0:
+            authorized = mt5.login(
+                login=self._mt5_settings.login,
+                password=self._mt5_settings.password,
+                server=self._mt5_settings.server,
+                timeout=self._mt5_settings.timeout,
+            )
+            if not authorized:
+                raise MT5AccountError(
+                    f"Échec authentification MT5: login={self._mt5_settings.login}, "
+                    f"erreur={mt5.last_error()}"
+                )
+
+        return True
+
+    async def _verify_terminal(self) -> None:
+        """Vérifie le statut du terminal MT5."""
+        if not MT5_AVAILABLE:
+            return
+
+        terminal_info = await asyncio.to_thread(mt5.terminal_info)
+        if terminal_info is None:
+            raise MT5TerminalError("Impossible de récupérer les infos du terminal")
+
+        if not terminal_info.trade_allowed:
+            logger.warning(
+                "Trading non autorisé sur ce terminal - vérifiez les paramètres MT5"
+            )
+
+        logger.info(
+            "Terminal MT5 vérifié | build=%s | connected=%s | trade_allowed=%s",
+            terminal_info.build,
+            terminal_info.connected,
+            terminal_info.trade_allowed,
+        )
+
+    async def disconnect(self) -> None:
+        """Ferme la connexion MT5 proprement."""
+        if not MT5_AVAILABLE:
+            self._connected = False
+            return
+
+        async with self._connection_lock:
+            if self._connected:
+                await asyncio.to_thread(mt5.shutdown)
+                self._connected = False
+                self._account = None
+                logger.info("Connexion MT5 fermée")
+
+    async def is_connected(self) -> bool:
+        """
+        Vérifie l'état de la connexion MT5.
+
+        Returns:
+            True si connecté, False sinon
+        """
+        if not MT5_AVAILABLE or not self._connected:
+            return False
+
+        try:
+            terminal_info = await asyncio.to_thread(mt5.terminal_info)
+            if terminal_info is None or not terminal_info.connected:
+                logger.warning("Perte de connexion MT5 détectée")
+                self._connected = False
+                return False
+            return True
+        except Exception as exc:
+            log_error("Erreur lors de la vérification de connexion MT5", exc)
+            self._connected = False
+            return False
+
+    async def get_account_info(self) -> TradingAccount:
+        """
+        Récupère les informations du compte MT5.
+
+        Returns:
+            TradingAccount avec les infos du compte
+
+        Raises:
+            MT5ConnectionError: si non connecté
+        """
+        if not MT5_AVAILABLE:
+            return TradingAccount(
+                login=0,
+                server="mock",
+                mode=self._settings.trading_mode,
+                is_connected=False,
+            )
+
+        if not self._connected:
+            raise MT5ConnectionError("MT5 non connecté - appelez connect() d'abord")
+
+        account_info = await asyncio.to_thread(mt5.account_info)
+        if account_info is None:
+            raise MT5AccountError(
+                f"Impossible de récupérer les infos du compte: {mt5.last_error()}"
+            )
+
+        # MT5: trade_mode 0 = démo, 1 = réel, 2 = concours
+        is_demo_account = account_info.trade_mode == 0
+
+        # Garde-fou sécurité
+        trading_mode = self._settings.trading_mode
+        if not is_demo_account and not self._settings.is_live_trading_enabled:
+            logger.warning(
+                "Compte réel détecté mais trading réel non autorisé - "
+                "force le mode DEMO par sécurité"
+            )
+            trading_mode = TradingMode.DEMO
+
+        self._account = TradingAccount(
+            login=account_info.login,
+            server=account_info.server,
+            name=account_info.name,
+            currency=account_info.currency,
+            balance=Decimal(str(account_info.balance)),
+            equity=Decimal(str(account_info.equity)),
+            margin=Decimal(str(account_info.margin)),
+            free_margin=Decimal(str(account_info.margin_free)),
+            leverage=account_info.leverage,
+            mode=trading_mode,
+            is_connected=True,
+        )
+
+        return self._account
+
+    async def reconnect(self) -> bool:
+        """
+        Tente une reconnexion automatique.
+
+        Returns:
+            True si la reconnexion réussit, False sinon
+        """
+        logger.info("Tentative de reconnexion MT5...")
+
+        try:
+            await self.disconnect()
+        except Exception as exc:
+            log_error("Erreur lors de la fermeture avant reconnexion", exc)
+
+        return await self.connect()
+
+    async def get_terminal_info(self) -> dict[str, Any] | None:
+        """
+        Récupère les informations du terminal MT5.
+
+        Returns:
+            Dictionnaire avec les infos du terminal ou None
+        """
+        if not MT5_AVAILABLE or not self._connected:
+            return None
+
+        terminal_info = await asyncio.to_thread(mt5.terminal_info)
+        if terminal_info is None:
+            return None
+
+        return {
+            "build": terminal_info.build,
+            "connected": terminal_info.connected,
+            "trade_allowed": terminal_info.trade_allowed,
+            "community_account": terminal_info.community_account,
+            "community_connection": terminal_info.community_connection,
+            "started": terminal_info.started,
+            "dlls_allowed": terminal_info.dlls_allowed,
+            "trade_expert": terminal_info.trade_expert,
+            "code": terminal_info.code,
+        }
+
+    async def get_connection_status(self) -> dict[str, Any]:
+        """
+        Retourne le statut de connexion détaillé.
+
+        Returns:
+            Dictionnaire avec le statut de connexion
+        """
+        connected = await self.is_connected()
+        return {
+            "connected": connected,
+            "mt5_available": MT5_AVAILABLE,
+            "login": self._mt5_settings.login,
+            "server": self._mt5_settings.server,
+            "last_connection_attempt": self._last_connection_attempt.isoformat()
+            if self._last_connection_attempt
+            else None,
+            "trading_mode": self._settings.trading_mode.value,
+            "live_trading_enabled": self._settings.is_live_trading_enabled,
+            "account": {
+                "login": self._account.login,
+                "server": self._account.server,
+                "balance": str(self._account.balance),
+                "equity": str(self._account.equity),
+                "currency": self._account.currency,
+                "leverage": self._account.leverage,
+                "is_demo": self._account.is_demo,
+            }
+            if self._account
+            else None,
+        }

@@ -18,6 +18,7 @@ from arty_trading.modules.smc.fair_value_gap import FairValueGapDetector
 from arty_trading.modules.smc.liquidity import LiquidityDetector
 from arty_trading.modules.smc.order_blocks import OrderBlockDetector
 from arty_trading.modules.smc.premium_discount import PremiumDiscountDetector
+from arty_trading.modules.smc.sessions import SessionDetector
 from arty_trading.modules.smc.structure import StructureDetector
 
 logger = get_logger(LogCategory.SMC)
@@ -46,6 +47,7 @@ class SMCDetector(ISMCDetector):
             "order_blocks": OrderBlockDetector(),
             "liquidity": LiquidityDetector(),
             "premium_discount": PremiumDiscountDetector(),
+            "sessions": SessionDetector(),
         }
 
     @property

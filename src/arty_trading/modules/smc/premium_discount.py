@@ -1,13 +1,18 @@
 """
 Détecteur Premium/Discount et Optimal Trade Entry (OTE).
 
+Concepts ICT
+------------
 - **Premium / Discount** : division du range en zones
-  - Premium (upper half) : zone de vente
-  - Discount (lower half) : zone d'achat
+  - Premium (upper half) : zone de vente (sell zone)
+  - Discount (lower half) : zone d'achat (buy zone)
   - Equilibrium (50%) : fair value
 - **OTE (Optimal Trade Entry)** : zone de retracement Fibonacci
   - 0.62 - 0.79 retracement du range
   - Sweet spot à 0.705 (70.5%)
+
+Aucune fonction ici n'ouvre de trade. Le détecteur retourne uniquement des
+informations de marché.
 """
 
 from __future__ import annotations
@@ -90,14 +95,15 @@ class PremiumDiscountDetector(BaseDetector):
 
         range_size = latest_high.price - latest_low.price
         equilibrium = latest_low.price + (range_size / 2)
+        ref_index = max(latest_high.index, latest_low.index)
 
-        # Premium (upper half) et Discount (lower half)
+        # Premium/Discount combiné (rétro-compatibilité)
         detections.append(
             SMCDetection(
                 concept=SMCConcept.PREMIUM_DISCOUNT,
                 direction="neutral",
                 price=equilibrium,
-                index=max(latest_high.index, latest_low.index),
+                index=ref_index,
                 details={
                     "swing_high": float(latest_high.price),
                     "swing_low": float(latest_low.price),
@@ -109,6 +115,46 @@ class PremiumDiscountDetector(BaseDetector):
                     "discount_end": float(equilibrium),
                     "current_price": float(candles[-1].close),
                     "current_zone": "premium" if candles[-1].close > equilibrium else "discount",
+                },
+            )
+        )
+
+        # Détection PREMIUM (zone de vente, upper half)
+        detections.append(
+            SMCDetection(
+                concept=SMCConcept.PREMIUM,
+                direction="bearish",
+                price=equilibrium,
+                index=ref_index,
+                details={
+                    "zone_start": float(equilibrium),
+                    "zone_end": float(latest_high.price),
+                    "equilibrium": float(equilibrium),
+                    "swing_high": float(latest_high.price),
+                    "swing_low": float(latest_low.price),
+                    "range_size": float(range_size),
+                    "current_price": float(candles[-1].close),
+                    "in_premium": bool(candles[-1].close > equilibrium),
+                },
+            )
+        )
+
+        # Détection DISCOUNT (zone d'achat, lower half)
+        detections.append(
+            SMCDetection(
+                concept=SMCConcept.DISCOUNT,
+                direction="bullish",
+                price=equilibrium,
+                index=ref_index,
+                details={
+                    "zone_start": float(latest_low.price),
+                    "zone_end": float(equilibrium),
+                    "equilibrium": float(equilibrium),
+                    "swing_high": float(latest_high.price),
+                    "swing_low": float(latest_low.price),
+                    "range_size": float(range_size),
+                    "current_price": float(candles[-1].close),
+                    "in_discount": bool(candles[-1].close < equilibrium),
                 },
             )
         )

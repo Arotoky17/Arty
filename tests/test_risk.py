@@ -1,24 +1,40 @@
 """Tests du gestionnaire de risque."""
 
 from decimal import Decimal
+from unittest.mock import AsyncMock
 
 import pytest
 
+from arty_trading.config.settings import RiskSettings
 from arty_trading.core.entities import Signal, Trade, TradingAccount
 from arty_trading.core.enums import Direction, SignalType, TimeFrame, TradingMode
 from arty_trading.modules.risk import RiskManager
 
 
-class MockRiskSettings:
+class MockRiskSettings(RiskSettings):
     """Mock simple pour éviter les problèmes de validation Pydantic."""
 
     def __init__(self, **kwargs):
-        self.risk_per_trade = kwargs.get("risk_per_trade", 0.01)
-        self.max_daily_risk = kwargs.get("max_daily_risk", 0.03)
-        self.max_drawdown = kwargs.get("max_drawdown", 0.10)
-        self.max_open_positions = kwargs.get("max_open_positions", 3)
-        self.max_consecutive_losses = kwargs.get("max_consecutive_losses", 3)
-        self.one_trade_per_symbol = kwargs.get("one_trade_per_symbol", True)
+        defaults = {
+            "risk_per_trade": 0.01,
+            "max_daily_risk": 0.03,
+            "max_drawdown": 0.10,
+            "max_open_positions": 3,
+            "max_consecutive_losses": 3,
+            "one_trade_per_symbol": True,
+        }
+        defaults.update(kwargs)
+        # Les champs de RiskSettings utilisent des alias (ex: RISK_PER_TRADE),
+        # on passe donc les alias à super().__init__().
+        data = {
+            "RISK_PER_TRADE": defaults["risk_per_trade"],
+            "MAX_DAILY_RISK": defaults["max_daily_risk"],
+            "MAX_DRAWDOWN": defaults["max_drawdown"],
+            "MAX_OPEN_POSITIONS": defaults["max_open_positions"],
+            "MAX_CONSECUTIVE_LOSSES": defaults["max_consecutive_losses"],
+            "ONE_TRADE_PER_SYMBOL": defaults["one_trade_per_symbol"],
+        }
+        super().__init__(**data)
 
 
 def make_account(balance: float = 10000.0, equity: float = 10000.0) -> TradingAccount:
@@ -32,7 +48,7 @@ def make_account(balance: float = 10000.0, equity: float = 10000.0) -> TradingAc
         margin=Decimal("0"),
         free_margin=Decimal(str(equity)),
         leverage=100,
-        mode=TradingMode.DEMO,
+        mode=TradingMode.PAPER,
         is_connected=True,
     )
 
@@ -69,6 +85,30 @@ def make_trade(symbol: str = "EURUSD") -> Trade:
         take_profit=Decimal("1.0840"),
         volume=Decimal("0.10"),
     )
+
+
+def make_market_data(
+    tick_size: float = 0.00001,
+    tick_value: float = 1.0,
+    contract_size: float = 100000,
+    symbol: str = "EURUSD",
+) -> AsyncMock:
+    """Mock d'un provider de marché retournant des infos symbole réelles."""
+    md = AsyncMock()
+    md.get_symbol_info.return_value = {
+        "name": symbol,
+        "digits": 5,
+        "point": tick_size,
+        "volume_min": 0.01,
+        "volume_max": 100.0,
+        "volume_step": 0.01,
+        "trade_mode": 0,
+        "spread": 5,
+        "trade_tick_size": tick_size,
+        "trade_tick_value": tick_value,
+        "trade_contract_size": contract_size,
+    }
+    return md
 
 
 def make_risk_settings(
@@ -214,6 +254,49 @@ class TestCalculatePositionSize:
         account = make_account()
         volume = await rm.calculate_position_size(signal, account)
         assert volume == 0.01
+
+    @pytest.mark.asyncio
+    async def test_uses_real_tick_value(self):
+        """Utilise les vraies infos du symbole (tick size/value) du provider."""
+        md = make_market_data(tick_size=0.00001, tick_value=1.0)
+        rm = RiskManager(settings=make_risk_settings(risk_per_trade=0.01), market_data=md)
+        signal = make_signal(entry=1.0800, sl=1.0780)  # 0.002 / 1e-5 = 200 ticks
+        account = make_account(balance=10000)
+        volume = await rm.calculate_position_size(signal, account)
+        # risk = 100, perte/lot = 200 * 1.0 = 200 => volume = 100 / 200 = 0.5
+        assert volume == 0.5
+        md.get_symbol_info.assert_awaited_once_with("EURUSD")
+
+    @pytest.mark.asyncio
+    async def test_custom_tick_value_changes_volume(self):
+        """Un tick value différent modifie la taille calculée."""
+        # tick_value = 0.5 => perte/lot = 200 * 0.5 = 100 => volume = 100 / 100 = 1.0
+        md = make_market_data(tick_size=0.00001, tick_value=0.5)
+        rm = RiskManager(settings=make_risk_settings(risk_per_trade=0.01), market_data=md)
+        signal = make_signal(entry=1.0800, sl=1.0780)
+        account = make_account(balance=10000)
+        volume = await rm.calculate_position_size(signal, account)
+        assert volume == 1.0
+
+    @pytest.mark.asyncio
+    async def test_falls_back_when_no_market_data(self):
+        """Sans provider, on conserve le calcul heuristique par constantes."""
+        rm = RiskManager(settings=make_risk_settings(risk_per_trade=0.01))
+        signal = make_signal(entry=1.0800, sl=1.0780)  # 20 pips, pip value 10
+        account = make_account(balance=10000)
+        volume = await rm.calculate_position_size(signal, account)
+        assert volume == 0.5
+
+    @pytest.mark.asyncio
+    async def test_falls_back_when_market_data_errors(self):
+        """En cas d'erreur du provider, on retombe sur l'heuristique."""
+        md = AsyncMock()
+        md.get_symbol_info.side_effect = RuntimeError("MT5 down")
+        rm = RiskManager(settings=make_risk_settings(risk_per_trade=0.01), market_data=md)
+        signal = make_signal(entry=1.0800, sl=1.0780)
+        account = make_account(balance=10000)
+        volume = await rm.calculate_position_size(signal, account)
+        assert volume == 0.5
 
 
 class TestCanOpenTrade:

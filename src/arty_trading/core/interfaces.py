@@ -5,7 +5,7 @@ Définissent les abstractions que l'infrastructure doit implémenter.
 
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import AsyncIterator
+from typing import Any, AsyncIterator
 
 import pandas as pd
 
@@ -42,6 +42,10 @@ class IMarketDataProvider(ABC):
     @abstractmethod
     async def subscribe_ticks(self, symbol: str) -> AsyncIterator[dict]:
         """Souscrit au flux de ticks temps réel."""
+
+    @abstractmethod
+    async def get_symbol_info(self, symbol: str) -> dict[str, Any]:
+        """Retourne les infos d'un symbole (digits, point, tick size/value, volumes)."""
 
 
 class IMT5Connector(ABC):

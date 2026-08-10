@@ -94,17 +94,17 @@ def make_account() -> TradingAccount:
         margin=Decimal("0"),
         free_margin=Decimal("10000"),
         leverage=100,
-        mode=TradingMode.DEMO,
+        mode=TradingMode.PAPER,
         is_connected=True,
     )
 
 
-def make_settings() -> MagicMock:
+def make_settings(trading_mode: TradingMode = TradingMode.PAPER) -> MagicMock:
     """Crée un mock de Settings sans dépendre de pydantic-settings ni du .env."""
     settings = MagicMock()
     settings.symbols_list = ["EURUSD"]
     settings.default_timeframe = TimeFrame.H1
-    settings.trading_mode = TradingMode.DEMO
+    settings.trading_mode = trading_mode
     return settings
 
 
@@ -119,6 +119,7 @@ def build_engine(
     can_open_result: bool = True,
     signal_result: Signal | object = _NO_SIGNAL,
     candle_time: datetime | None = None,
+    trading_mode: TradingMode = TradingMode.PAPER,
 ) -> TradingEngine:
     """
     Construit un TradingEngine avec des mocks qui enregistrent l'ordre des
@@ -187,7 +188,7 @@ def build_engine(
     executor.open_order = mock_open_order
 
     return TradingEngine(
-        settings=make_settings(),
+        settings=make_settings(trading_mode),
         market_data=market_data,  # type: ignore[arg-type]
         smc_detector=smc_detector,  # type: ignore[arg-type]
         signal_generator=signal_generator,  # type: ignore[arg-type]
@@ -486,3 +487,435 @@ class TestEngineStartStop:
         assert task1 is task2
 
         await engine.stop()
+
+
+# =============================================================================
+# Tests : Synchroniseur de bougies (CandleSynchronizer)
+# =============================================================================
+
+
+class TestCandleSynchronizerIntegration:
+    """Vérifie l'intégration du CandleSynchronizer dans le TradingEngine."""
+
+    def test_synchronizer_property(self) -> None:
+        """Le moteur doit exposer le CandleSynchronizer via la propriété."""
+        engine = build_engine([])
+        assert engine.synchronizer is not None
+        assert engine.synchronizer.get_all_last_processed() == {}
+
+    @pytest.mark.asyncio
+    async def test_initialize_symbols_sets_synchronizer(self) -> None:
+        """_initialize_symbols doit enregistrer la bougie actuelle dans le synchroniseur."""
+        call_order: list[str] = []
+        fixed_time = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
+        engine = build_engine(call_order, candle_time=fixed_time)
+
+        await engine._initialize_symbols()
+
+        # Le synchroniseur doit avoir enregistré la bougie actuelle
+        last = engine.synchronizer.get_last_processed("EURUSD")
+        assert last == fixed_time
+
+    @pytest.mark.asyncio
+    async def test_initialize_blocks_analysis_on_same_candle(self) -> None:
+        """Après initialisation, analyze_symbol ne doit pas analyser la même bougie."""
+        call_order: list[str] = []
+        fixed_time = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
+        engine = build_engine(call_order, candle_time=fixed_time)
+
+        # Initialiser le synchroniseur
+        await engine._initialize_symbols()
+
+        # L'analyse ne doit pas déclencher le pipeline (bougie déjà traitée)
+        call_order.clear()
+        await engine.analyze_symbol("EURUSD")
+
+        # Seul get_latest_candles doit être appelé
+        assert call_order == ["get_latest_candles"]
+        assert "detect" not in call_order
+        assert "generate" not in call_order
+        assert "open_order" not in call_order
+
+    @pytest.mark.asyncio
+    async def test_initialize_allows_analysis_on_new_candle(self) -> None:
+        """Après initialisation, une nouvelle bougie doit déclencher l'analyse."""
+        call_order: list[str] = []
+        initial_time = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
+        new_time = datetime(2024, 1, 1, 13, 0, 0, tzinfo=UTC)
+        engine = build_engine(call_order, candle_time=initial_time)
+
+        # Initialiser avec la bougie actuelle
+        await engine._initialize_symbols()
+
+        # Changer le mock pour retourner une nouvelle bougie
+        async def mock_new_candle(*args: object, **kwargs: object) -> list[Candle]:
+            call_order.append("get_latest_candles")
+            return [make_candle(time=new_time)]
+
+        engine._market_data.get_latest_candles = mock_new_candle  # type: ignore[attr-defined]
+
+        # L'analyse doit déclencher le pipeline complet
+        call_order.clear()
+        await engine.analyze_symbol("EURUSD")
+
+        assert "detect" in call_order
+        assert "generate" in call_order
+        assert "open_order" in call_order
+
+    @pytest.mark.asyncio
+    async def test_initialize_with_no_candles(self) -> None:
+        """_initialize_symbols ne doit pas planter si aucune bougie n'est reçue."""
+        call_order: list[str] = []
+
+        async def mock_empty_candles(*args: object, **kwargs: object) -> list[Candle]:
+            call_order.append("get_latest_candles")
+            return []
+
+        engine = build_engine(call_order)
+        engine._market_data.get_latest_candles = mock_empty_candles  # type: ignore[attr-defined]
+
+        # Ne doit pas lever d'exception
+        await engine._initialize_symbols()
+
+        # Le synchroniseur ne doit pas avoir enregistré le symbole
+        assert engine.synchronizer.get_last_processed("EURUSD") is None
+
+
+# =============================================================================
+# Tests : Pipeline structuré (étapes séparées)
+# =============================================================================
+
+
+class TestPipelineSteps:
+    """Vérifie que le pipeline est bien structuré en étapes séparées."""
+
+    @pytest.mark.asyncio
+    async def test_download_data_returns_candles(self) -> None:
+        """_download_data doit retourner la liste des bougies."""
+        call_order: list[str] = []
+        engine = build_engine(call_order)
+
+        candles = await engine._download_data("EURUSD")
+
+        assert candles is not None
+        assert len(candles) == 1
+        assert "get_latest_candles" in call_order
+
+    @pytest.mark.asyncio
+    async def test_download_data_returns_none_on_error(self) -> None:
+        """_download_data doit retourner None si la récupération échoue."""
+        engine = build_engine([])
+
+        async def mock_error(*args: object, **kwargs: object) -> list[Candle]:
+            raise RuntimeError("MT5 error")
+
+        engine._market_data.get_latest_candles = mock_error  # type: ignore[attr-defined]
+
+        candles = await engine._download_data("EURUSD")
+        assert candles is None
+
+    @pytest.mark.asyncio
+    async def test_download_data_returns_none_on_empty(self) -> None:
+        """_download_data doit retourner None si aucune bougie n'est reçue."""
+        engine = build_engine([])
+
+        async def mock_empty(*args: object, **kwargs: object) -> list[Candle]:
+            return []
+
+        engine._market_data.get_latest_candles = mock_empty  # type: ignore[attr-defined]
+
+        candles = await engine._download_data("EURUSD")
+        assert candles is None
+
+    @pytest.mark.asyncio
+    async def test_analyze_smc_returns_data(self) -> None:
+        """_analyze_smc doit retourner les détections SMC."""
+        call_order: list[str] = []
+        engine = build_engine(call_order)
+        candles = [make_candle()]
+
+        smc_data = await engine._analyze_smc("EURUSD", candles)
+
+        assert smc_data is not None
+        assert len(smc_data) == 1
+        assert "detect" in call_order
+
+    @pytest.mark.asyncio
+    async def test_generate_signal_returns_signal(self) -> None:
+        """_generate_signal doit retourner le signal généré."""
+        call_order: list[str] = []
+        engine = build_engine(call_order)
+        candles = [make_candle()]
+        smc_data = [{"concept": "BOS"}]
+
+        signal = await engine._generate_signal("EURUSD", candles, smc_data)
+
+        assert signal is not None
+        assert signal.direction == Direction.BUY
+        assert "generate" in call_order
+
+    @pytest.mark.asyncio
+    async def test_calculate_risk_returns_volume(self) -> None:
+        """_calculate_risk doit retourner le volume calculé."""
+        call_order: list[str] = []
+        engine = build_engine(call_order)
+        signal = make_signal()
+
+        volume = await engine._calculate_risk("EURUSD", signal)
+
+        assert volume is not None
+        assert volume == 0.1
+        assert "get_account_info" in call_order
+        assert "can_open_trade" in call_order
+        assert "validate_signal" in call_order
+        assert "calculate_position_size" in call_order
+
+    @pytest.mark.asyncio
+    async def test_execute_trade_returns_trade(self) -> None:
+        """_execute_trade doit retourner le trade ouvert."""
+        call_order: list[str] = []
+        engine = build_engine(call_order)
+        signal = make_signal()
+
+        trade = await engine._execute_trade("EURUSD", signal, 0.1)
+
+        assert trade is not None
+        assert trade.symbol == "EURUSD"
+        assert "open_order" in call_order
+
+    @pytest.mark.asyncio
+    async def test_monitor_trade_registers_trade(self) -> None:
+        """_monitor_trade doit enregistrer le trade auprès du risk manager."""
+        engine = build_engine([])
+        trade = make_trade()
+
+        # Le risk_manager est un MagicMock, pas un RiskManager concret,
+        # donc register_trade ne sera pas appelé. Mais _monitor_trade
+        # ne doit pas lever d'exception.
+        await engine._monitor_trade("EURUSD", trade)
+
+
+# =============================================================================
+# Tests : Modes de trading (ANALYSIS, PAPER, LIVE)
+# =============================================================================
+
+
+class TestTradingModes:
+    """Vérifie le comportement des trois modes de trading."""
+
+    @pytest.mark.asyncio
+    async def test_analysis_mode_stops_after_signal(self) -> None:
+        """En mode ANALYSIS, le moteur s'arrête après la génération du signal."""
+        call_order: list[str] = []
+        engine = build_engine(call_order, trading_mode=TradingMode.ANALYSIS)
+
+        await engine.analyze_symbol("EURUSD")
+
+        # Le pipeline doit s'arrêter après generate
+        assert call_order == [
+            "get_latest_candles",
+            "detect",
+            "generate",
+        ]
+        # Aucun calcul de risque ni ordre
+        assert "get_account_info" not in call_order
+        assert "can_open_trade" not in call_order
+        assert "validate_signal" not in call_order
+        assert "calculate_position_size" not in call_order
+        assert "open_order" not in call_order
+
+    @pytest.mark.asyncio
+    async def test_paper_mode_full_pipeline(self) -> None:
+        """En mode PAPER, le pipeline complet doit s'exécuter."""
+        call_order: list[str] = []
+        engine = build_engine(call_order, trading_mode=TradingMode.PAPER)
+
+        await engine.analyze_symbol("EURUSD")
+
+        assert call_order == [
+            "get_latest_candles",
+            "detect",
+            "generate",
+            "get_account_info",
+            "can_open_trade",
+            "validate_signal",
+            "calculate_position_size",
+            "open_order",
+        ]
+
+    @pytest.mark.asyncio
+    async def test_live_mode_full_pipeline(self) -> None:
+        """En mode LIVE, le pipeline complet doit s'exécuter."""
+        call_order: list[str] = []
+        engine = build_engine(call_order, trading_mode=TradingMode.LIVE)
+
+        await engine.analyze_symbol("EURUSD")
+
+        assert call_order == [
+            "get_latest_candles",
+            "detect",
+            "generate",
+            "get_account_info",
+            "can_open_trade",
+            "validate_signal",
+            "calculate_position_size",
+            "open_order",
+        ]
+
+    @pytest.mark.asyncio
+    async def test_analysis_mode_no_open_order_on_no_signal(self) -> None:
+        """En mode ANALYSIS, aucun open_order même si aucun signal."""
+        call_order: list[str] = []
+        engine = build_engine(
+            call_order,
+            trading_mode=TradingMode.ANALYSIS,
+            signal_result=None,
+        )
+
+        await engine.analyze_symbol("EURUSD")
+
+        assert call_order == ["get_latest_candles", "detect", "generate"]
+        assert "open_order" not in call_order
+
+    @pytest.mark.asyncio
+    async def test_get_status_includes_trading_mode(self) -> None:
+        """Le statut doit inclure le mode de trading."""
+        engine = build_engine([], trading_mode=TradingMode.ANALYSIS)
+        status = engine.get_status()
+        assert status["trading_mode"] == "analysis"
+
+        engine = build_engine([], trading_mode=TradingMode.PAPER)
+        status = engine.get_status()
+        assert status["trading_mode"] == "paper"
+
+        engine = build_engine([], trading_mode=TradingMode.LIVE)
+        status = engine.get_status()
+        assert status["trading_mode"] == "live"
+
+    def test_trading_mode_property(self) -> None:
+        """La propriété trading_mode doit retourner le mode configuré."""
+        engine = build_engine([], trading_mode=TradingMode.ANALYSIS)
+        assert engine.trading_mode == TradingMode.ANALYSIS
+
+        engine = build_engine([], trading_mode=TradingMode.PAPER)
+        assert engine.trading_mode == TradingMode.PAPER
+
+        engine = build_engine([], trading_mode=TradingMode.LIVE)
+        assert engine.trading_mode == TradingMode.LIVE
+
+
+# =============================================================================
+# Tests : Statistiques (TradingStatistics)
+# =============================================================================
+
+
+class TestStatistics:
+    """Vérifie l'enregistrement des statistiques dans le moteur."""
+
+    @pytest.mark.asyncio
+    async def test_analysis_mode_records_analysis_and_signal(self) -> None:
+        """En mode ANALYSIS, les analyses et signaux doivent être enregistrés."""
+        engine = build_engine([], trading_mode=TradingMode.ANALYSIS)
+
+        await engine.analyze_symbol("EURUSD")
+
+        stats = engine.get_statistics()
+        assert stats["mode"] == "analysis"
+        assert stats["total_analyses"] == 1
+        assert stats["total_signals"] == 1
+        assert stats["total_trades"] == 0
+        assert stats["analyses_by_symbol"] == {"EURUSD": 1}
+
+    @pytest.mark.asyncio
+    async def test_paper_mode_records_trade(self) -> None:
+        """En mode PAPER, les trades doivent être enregistrés."""
+        engine = build_engine([], trading_mode=TradingMode.PAPER)
+
+        await engine.analyze_symbol("EURUSD")
+
+        stats = engine.get_statistics()
+        assert stats["mode"] == "paper"
+        assert stats["total_analyses"] == 1
+        assert stats["total_signals"] == 1
+        assert stats["total_trades"] == 1
+
+    @pytest.mark.asyncio
+    async def test_live_mode_records_trade(self) -> None:
+        """En mode LIVE, les trades doivent être enregistrés."""
+        engine = build_engine([], trading_mode=TradingMode.LIVE)
+
+        await engine.analyze_symbol("EURUSD")
+
+        stats = engine.get_statistics()
+        assert stats["mode"] == "live"
+        assert stats["total_analyses"] == 1
+        assert stats["total_signals"] == 1
+        assert stats["total_trades"] == 1
+
+    @pytest.mark.asyncio
+    async def test_no_signal_no_trade_recorded(self) -> None:
+        """Si aucun signal n'est généré, aucun trade ne doit être enregistré."""
+        engine = build_engine([], signal_result=None)
+
+        await engine.analyze_symbol("EURUSD")
+
+        stats = engine.get_statistics()
+        assert stats["total_analyses"] == 1
+        assert stats["total_signals"] == 0
+        assert stats["total_trades"] == 0
+
+    @pytest.mark.asyncio
+    async def test_statistics_in_status(self) -> None:
+        """Le statut doit inclure un résumé des statistiques."""
+        engine = build_engine([])
+
+        await engine.analyze_symbol("EURUSD")
+
+        status = engine.get_status()
+        assert "statistics" in status
+        assert status["statistics"]["total_analyses"] == 1
+        assert status["statistics"]["total_signals"] == 1
+        assert status["statistics"]["total_trades"] == 1
+
+    @pytest.mark.asyncio
+    async def test_multiple_analyses_accumulate(self) -> None:
+        """Les statistiques doivent s'accumuler sur plusieurs analyses."""
+        call_order: list[str] = []
+        first_time = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
+        second_time = datetime(2024, 1, 1, 13, 0, 0, tzinfo=UTC)
+
+        engine = build_engine(call_order, candle_time=first_time)
+
+        # Première analyse
+        await engine.analyze_symbol("EURUSD")
+
+        # Deuxième analyse avec une nouvelle bougie
+        async def mock_new_candle(*args: object, **kwargs: object) -> list[Candle]:
+            call_order.append("get_latest_candles")
+            return [make_candle(time=second_time)]
+
+        engine._market_data.get_latest_candles = mock_new_candle  # type: ignore[attr-defined]
+        call_order.clear()
+        await engine.analyze_symbol("EURUSD")
+
+        stats = engine.get_statistics()
+        assert stats["total_analyses"] == 2
+        assert stats["total_signals"] == 2
+        assert stats["total_trades"] == 2
+        assert stats["analyses_by_symbol"] == {"EURUSD": 2}
+
+    def test_get_statistics_summary(self) -> None:
+        """get_statistics_summary doit retourner un résumé sans les listes."""
+        engine = build_engine([])
+
+        summary = engine.get_statistics_summary()
+        assert "mode" in summary
+        assert "total_analyses" in summary
+        assert "signals" not in summary
+        assert "equity_curve" not in summary
+
+    def test_statistics_property(self) -> None:
+        """La propriété statistics doit retourner le tracker."""
+        engine = build_engine([])
+        assert engine.statistics is not None
+        assert engine.statistics.total_analyses == 0

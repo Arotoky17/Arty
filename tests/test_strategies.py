@@ -218,27 +218,71 @@ class TestSignalGenerator:
         assert len(gen.strategies) == 6
         assert "SMC Trend Following" in gen.strategies
 
+    def test_default_min_confidence_is_085(self):
+        gen = SignalGenerator()
+        assert gen.min_confidence == 0.85
+
+    def test_default_active_strategy_is_smc_trend(self):
+        gen = SignalGenerator()
+        assert gen.active_strategy == "SMC Trend Following"
+
+    def test_only_smc_trend_enabled_by_default(self):
+        """Pendant le développement, seule SMC Trend Following est activée."""
+        gen = SignalGenerator()
+        enabled = gen.get_enabled_strategies()
+        assert enabled == ["SMC Trend Following"]
+        # Les autres stratégies sont désactivées mais toujours présentes
+        assert not gen.strategies["Breakout"].enabled
+        assert not gen.strategies["Momentum"].enabled
+        assert not gen.strategies["Reversal"].enabled
+        assert not gen.strategies["Scalping"].enabled
+        assert not gen.strategies["Swing Trading"].enabled
+
+    def test_strategies_not_deleted(self):
+        """Les stratégies désactivées ne sont pas supprimées."""
+        gen = SignalGenerator()
+        assert "Breakout" in gen.strategies
+        assert "Momentum" in gen.strategies
+        assert "Reversal" in gen.strategies
+        assert "Scalping" in gen.strategies
+        assert "Swing Trading" in gen.strategies
+
     def test_enable_disable(self):
         gen = SignalGenerator()
-        gen.disable_strategy("Breakout")
-        assert not gen.strategies["Breakout"].enabled
-        gen.enable_strategy("Breakout")
-        assert gen.strategies["Breakout"].enabled
+        gen.disable_strategy("SMC Trend Following")
+        assert not gen.strategies["SMC Trend Following"].enabled
+        gen.enable_strategy("SMC Trend Following")
+        assert gen.strategies["SMC Trend Following"].enabled
 
     def test_enable_disable_all(self):
         gen = SignalGenerator()
         gen.disable_all()
         assert len(gen.get_enabled_strategies()) == 0
         gen.enable_all()
+        # enable_all active toutes les stratégies, mais le garde-fou
+        # sur active_strategy empêche les signaux non-SMC Trend
         assert len(gen.get_enabled_strategies()) == 6
+
+    def test_set_active_strategy(self):
+        gen = SignalGenerator()
+        gen.set_active_strategy("Breakout")
+        assert gen.active_strategy == "Breakout"
+        assert gen.get_enabled_strategies() == ["Breakout"]
+
+    def test_set_active_strategy_unknown_ignored(self):
+        gen = SignalGenerator()
+        gen.set_active_strategy("Unknown")
+        assert gen.active_strategy == "SMC Trend Following"
 
     @pytest.mark.asyncio
     async def test_generate_best(self):
+        """Le signal généré provient uniquement de SMC Trend Following."""
         gen = SignalGenerator(min_confidence=0.1)
         signal = await gen.generate(make_uptrend_candles(20), make_bullish_smc_data())
         assert signal is not None
         assert isinstance(signal, Signal)
         assert signal.confidence >= 0.1
+        assert signal.strategy_name == "SMC Trend Following"
 
     @pytest.mark.asyncio
     async def test_generate_none(self):
@@ -256,9 +300,85 @@ class TestSignalGenerator:
         assert isinstance(signals, list)
         for i in range(1, len(signals)):
             assert signals[i - 1].confidence >= signals[i].confidence
+        # Tous les signaux proviennent de SMC Trend Following
+        for s in signals:
+            assert s.strategy_name == "SMC Trend Following"
 
     @pytest.mark.asyncio
     async def test_generate_disabled_all(self):
         gen = SignalGenerator(min_confidence=0.1)
         gen.disable_all()
         assert await gen.generate(make_uptrend_candles(20), make_bullish_smc_data()) is None
+
+    @pytest.mark.asyncio
+    async def test_never_returns_signal_from_other_strategy(self):
+        """Le SignalGenerator ne doit jamais retourner un signal d'une autre stratégie,
+        même si cette stratégie est activée manuellement."""
+        gen = SignalGenerator(min_confidence=0.1)
+        # Activer manuellement Breakout (qui produirait un signal avec ces données)
+        gen.enable_strategy("Breakout")
+        assert gen.strategies["Breakout"].enabled
+        # Mais le garde-fou empêche ses signaux
+        signal = await gen.generate(make_uptrend_candles(20), make_bullish_smc_data())
+        if signal is not None:
+            assert signal.strategy_name == "SMC Trend Following"
+            assert signal.strategy_name != "Breakout"
+
+    @pytest.mark.asyncio
+    async def test_rejects_signal_below_min_confidence(self):
+        """Un signal dont la confiance est inférieure au seuil est rejeté (NO_SIGNAL)."""
+        # Données SMC avec seulement BOS + FVG (confiance = 3/7 ≈ 0.43)
+        smc_data = [
+            {"concept": "break_of_structure", "direction": "bullish", "price": 1.0820, "index": 5, "details": {}},
+            {"concept": "fair_value_gap", "direction": "bullish", "price": 1.0810, "index": 6, "details": {}},
+        ]
+        # Seuil à 0.5 : 0.43 < 0.5 → signal rejeté
+        gen = SignalGenerator(min_confidence=0.5)
+        signal = await gen.generate(make_uptrend_candles(20), smc_data)
+        assert signal is None
+
+    @pytest.mark.asyncio
+    async def test_accepts_signal_at_min_confidence(self):
+        """Un signal dont la confiance est >= au seuil est accepté."""
+        gen = SignalGenerator(min_confidence=0.1)
+        signal = await gen.generate(make_uptrend_candles(20), make_bullish_smc_data())
+        assert signal is not None
+        assert signal.confidence >= 0.1
+
+    @pytest.mark.asyncio
+    async def test_enable_all_does_not_bypass_guard(self):
+        """Activer toutes les stratégies ne contourne pas le garde-fou."""
+        gen = SignalGenerator(min_confidence=0.1)
+        gen.enable_all()
+        signal = await gen.generate(make_uptrend_candles(20), make_bullish_smc_data())
+        if signal is not None:
+            assert signal.strategy_name == "SMC Trend Following"
+
+    @pytest.mark.asyncio
+    async def test_generate_all_only_returns_active_strategy_signals(self):
+        """generate_all ne retourne que les signaux de la stratégie active."""
+        gen = SignalGenerator(min_confidence=0.1)
+        gen.enable_all()  # Active toutes les stratégies
+        signals = await gen.generate_all(make_uptrend_candles(20), make_bullish_smc_data())
+        for s in signals:
+            assert s.strategy_name == "SMC Trend Following"
+
+    @pytest.mark.asyncio
+    async def test_custom_active_strategy(self):
+        """On peut configurer une autre stratégie active."""
+        gen = SignalGenerator(min_confidence=0.1, active_strategy="Breakout")
+        assert gen.active_strategy == "Breakout"
+        assert gen.get_enabled_strategies() == ["Breakout"]
+        # Les données bullish déclenchent Breakout avec volume élevé
+        candles = make_uptrend_candles(20)
+        candles[-1] = make_candle(
+            len(candles) - 1,
+            float(candles[-1].open),
+            float(candles[-1].high),
+            float(candles[-1].low),
+            float(candles[-1].close),
+            volume=500,
+        )
+        signal = await gen.generate(candles, make_bullish_smc_data())
+        if signal is not None:
+            assert signal.strategy_name == "Breakout"

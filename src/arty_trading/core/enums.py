@@ -7,10 +7,27 @@ from enum import Enum, IntEnum
 
 
 class TradingMode(str, Enum):
-    """Mode de trading - REAL désactivé par défaut pour la sécurité."""
+    """
+    Mode de trading de la plateforme.
 
-    DEMO = "demo"
-    REAL = "real"
+    Trois modes sont disponibles :
+
+    - **ANALYSIS** : Aucune position, uniquement les analyses.
+      Le moteur exécute le pipeline jusqu'à la génération du signal
+      mais n'ouvre aucun trade.
+
+    - **PAPER** : Simulation complète, aucun ordre MT5.
+      Le moteur exécute le pipeline complet (risque, exécution, monitoring)
+      mais les ordres sont simulés (PaperOrderExecutor).
+
+    - **LIVE** : Trading réel.
+      Le moteur exécute le pipeline complet avec des ordres MT5 réels.
+      Nécessite ``ALLOW_LIVE_TRADING=true``.
+    """
+
+    ANALYSIS = "analysis"
+    PAPER = "paper"
+    LIVE = "live"
 
 
 class Direction(str, Enum):
@@ -84,21 +101,39 @@ class TradingSession(str, Enum):
 class SMCConcept(str, Enum):
     """Concepts Smart Money Concepts détectables."""
 
+    # Structure de marché
     BOS = "break_of_structure"
+    INTERNAL_BOS = "internal_bos"
+    EXTERNAL_BOS = "external_bos"
     CHOCH = "change_of_character"
     MSS = "market_structure_shift"
+
+    # Fair Value Gap
     FVG = "fair_value_gap"
     IFVG = "inverse_fvg"
+
+    # Order Blocks
     ORDER_BLOCK = "order_block"
     BREAKER_BLOCK = "breaker_block"
     MITIGATION_BLOCK = "mitigation_block"
+
+    # Liquidité
     LIQUIDITY_SWEEP = "liquidity_sweep"
     EQUAL_HIGH = "equal_high"
     EQUAL_LOW = "equal_low"
+
+    # Premium / Discount
+    PREMIUM = "premium"
+    DISCOUNT = "discount"
     PREMIUM_DISCOUNT = "premium_discount"
     OTE = "optimal_trade_entry"
-    POI = "point_of_interest"
+
+    # Sessions
+    SESSION = "session"
     KILL_ZONE = "kill_zone"
+
+    # Divers
+    POI = "point_of_interest"
 
 
 class StrategyType(str, Enum):

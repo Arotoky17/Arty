@@ -29,10 +29,13 @@ from arty_trading.infrastructure.mt5 import MT5Connector, MT5MarketDataProvider
 from arty_trading.infrastructure.notifications import NotificationManager
 from arty_trading.logging import get_logger, setup_logging
 from arty_trading.modules.ai import AIAssistant
-from arty_trading.modules.execution import OrderExecutor
+from arty_trading.modules.execution import OrderExecutor, PaperOrderExecutor
 from arty_trading.modules.risk import RiskManager
 from arty_trading.modules.signals import SignalGenerator
+from arty_trading.modules.decision import DecisionEngine
 from arty_trading.modules.smc import SMCDetector
+
+logger = get_logger(LogCategory.SYSTEM)
 
 
 @asynccontextmanager
@@ -44,7 +47,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         logs_dir=settings.logs_dir,
         app_env=settings.app_env,
     )
-    logger = get_logger(LogCategory.SYSTEM)
     logger.info(
         "Arty démarré | v%s | mode=%s",
         __version__,
@@ -58,6 +60,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Initialisation du provider de données de marché
     market_data = MT5MarketDataProvider()
     app.state.market_data = market_data
+
+    # Fournir les infos symbole (tick size/value) au gestionnaire de risque
+    risk_manager = getattr(app.state, "risk_manager", None)
+    if risk_manager is not None:
+        risk_manager.market_data = market_data
 
     # Tentative de connexion MT5 (non bloquante si MT5 non disponible)
     try:
@@ -81,15 +88,19 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     )
     app.state.trading_engine = trading_engine
 
-    # Démarrer le moteur seulement si le mode de trading est actif (démo/live)
-    if settings.trading_mode in (TradingMode.DEMO, TradingMode.REAL):
+    # Démarrer le moteur pour les modes PAPER et LIVE
+    # (ANALYSIS ne fait que générer des signaux sans ouvrir de positions)
+    if settings.trading_mode in (TradingMode.PAPER, TradingMode.LIVE):
         app.state.engine_task = trading_engine.start()
         logger.info(
             "TradingEngine lancé en tâche de fond | mode=%s",
             settings.trading_mode.value,
         )
     else:
-        logger.info("Trading désactivé - TradingEngine non démarré")
+        logger.info(
+            "TradingEngine non démarré | mode=%s (ANALYSIS)",
+            settings.trading_mode.value,
+        )
 
     yield
 
@@ -130,9 +141,19 @@ def create_app() -> FastAPI:
 
     # Initialisation des modules metier (Phase 9)
     app.state.smc_detector = SMCDetector()
-    app.state.signal_generator = SignalGenerator()
+    app.state.signal_generator = SignalGenerator(
+        min_confidence=settings.signals.min_confidence,
+        active_strategy=settings.signals.active_strategy,
+        decision_engine=DecisionEngine(settings.decision) if settings.decision.enabled else None,
+    )
     app.state.risk_manager = RiskManager(settings=settings.risk)
-    app.state.executor = OrderExecutor()
+    # Choisir l'exécuteur selon le mode de trading
+    if settings.is_paper_mode or settings.is_analysis_mode:
+        app.state.executor = PaperOrderExecutor()
+        logger.info("Exécuteur Paper sélectionné | mode=%s", settings.trading_mode.value)
+    else:
+        app.state.executor = OrderExecutor()
+        logger.info("Exécuteur MT5 sélectionné | mode=%s", settings.trading_mode.value)
     app.state.ai_assistant = AIAssistant.from_settings(settings.ai)
     app.state.notification_manager = NotificationManager.from_settings(settings.notifications)
 
@@ -172,6 +193,17 @@ def create_app() -> FastAPI:
         """Retourne le statut du moteur de trading (running, symboles, derniers signaux)."""
         engine: TradingEngine = app.state.trading_engine
         return engine.get_status()
+
+    @app.get("/engine/statistics", tags=["Engine"])
+    async def engine_statistics() -> dict:
+        """
+        Retourne les statistiques complètes du moteur de trading.
+
+        Inclut : nombre d'analyses, signaux, trades, win rate, profit factor,
+        expectancy, drawdown, Sharpe ratio, équity curve, etc.
+        """
+        engine: TradingEngine = app.state.trading_engine
+        return engine.get_statistics()
 
     @app.get("/mt5/status", tags=["MT5"])
     async def mt5_status() -> dict:

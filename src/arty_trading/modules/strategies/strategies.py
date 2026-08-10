@@ -34,8 +34,8 @@ class SMCTrendStrategy(BaseStrategy):
     def __init__(
         self,
         enabled: bool = True,
-        risk_reward_min: float = 2.0,
-        confidence_min: float = 0.6,
+        risk_reward_min: float = 1.5,
+        confidence_min: float = 0.3,
     ) -> None:
         super().__init__(enabled, risk_reward_min, confidence_min)
 
@@ -179,9 +179,9 @@ class BreakoutStrategy(BaseStrategy):
         bullish_fvg = self._filter_smc(smc_data, "fair_value_gap", "bullish")
 
         if bullish_bos and bullish_fvg:
-            # Vérifier le volume (dernière bougie > moyenne)
+            # Vérifier le volume (dernière bougie > moyenne) - seuil assoupli
             avg_volume = sum(c.volume for c in candles[-20:]) / min(20, len(candles))
-            if candles[-1].volume > avg_volume * 1.5:
+            if candles[-1].volume > avg_volume * 1.1:
                 confidence = self._calculate_confidence(5, 6)
                 sl, tp = self._calculate_sl_tp(current_price, Direction.BUY, 15, 30)
                 return self._build_signal(
@@ -202,7 +202,7 @@ class BreakoutStrategy(BaseStrategy):
 
         if bearish_bos and bearish_fvg:
             avg_volume = sum(c.volume for c in candles[-20:]) / min(20, len(candles))
-            if candles[-1].volume > avg_volume * 1.5:
+            if candles[-1].volume > avg_volume * 1.1:
                 confidence = self._calculate_confidence(5, 6)
                 sl, tp = self._calculate_sl_tp(current_price, Direction.SELL, 15, 30)
                 return self._build_signal(
@@ -412,9 +412,9 @@ class ScalpingStrategy(BaseStrategy):
         timeframe = candles[0].timeframe
         current_price = candles[-1].close
 
-        # FVG haussier + spread serré
+        # FVG haussier + spread acceptable (assoupli de 5 à 20)
         bullish_fvg = self._filter_smc(smc_data, "fair_value_gap", "bullish")
-        if bullish_fvg and candles[-1].spread <= 5:
+        if bullish_fvg and candles[-1].spread <= 20:
             confidence = self._calculate_confidence(3, 4)
             sl, tp = self._calculate_sl_tp(current_price, Direction.BUY, 8, 8)
             return self._build_signal(
@@ -431,7 +431,7 @@ class ScalpingStrategy(BaseStrategy):
             )
 
         bearish_fvg = self._filter_smc(smc_data, "fair_value_gap", "bearish")
-        if bearish_fvg and candles[-1].spread <= 5:
+        if bearish_fvg and candles[-1].spread <= 20:
             confidence = self._calculate_confidence(3, 4)
             sl, tp = self._calculate_sl_tp(current_price, Direction.SELL, 8, 8)
             return self._build_signal(

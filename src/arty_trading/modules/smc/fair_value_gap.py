@@ -27,13 +27,13 @@ class FairValueGapDetector(BaseDetector):
     def __init__(
         self,
         enabled: bool = True,
-        min_gap_pips: float = 1.0,
+        min_gap_pips: float = 0.1,
         pip_size: float = 0.0001,
     ) -> None:
         """
         Args:
             enabled: Activer/désactiver le détecteur
-            min_gap_pips: Taille minimale du gap en pips
+            min_gap_pips: Taille minimale du gap en pips (0.1 par défaut - très permissif)
             pip_size: Taille d'un pip (0.0001 pour EURUSD, 0.01 pour JPY)
         """
         super().__init__(enabled=enabled)

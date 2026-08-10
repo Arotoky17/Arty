@@ -21,7 +21,7 @@ async def test_health_check(app):
     assert data["status"] == "healthy"
     assert data["bot"] == "Arty"
     assert data["name"] == "Arty"
-    assert data["trading_mode"] == "demo"
+    assert data["trading_mode"] == "analysis"
     assert data["live_trading_enabled"] is False
 
 
@@ -33,7 +33,7 @@ async def test_get_symbols(app):
     assert response.status_code == 200
     data = response.json()
     assert "EURUSD" in data["symbols"]
-    assert data["timeframe"] == "H1"
+    assert data["timeframe"] == "M5"
 
 
 @pytest.mark.asyncio

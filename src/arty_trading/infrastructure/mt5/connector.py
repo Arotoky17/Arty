@@ -6,7 +6,7 @@ Fonctionnalités :
 - Reconnexion automatique
 - Vérification du compte et du terminal
 - Mode dégradé (mock) si MT5 non disponible
-- Sécurité : compte réel forcé en démo sans autorisation
+- Sécurité : compte LIVE forcé en PAPER sans autorisation
 """
 
 from __future__ import annotations
@@ -390,16 +390,16 @@ class MT5Connector(IMT5Connector):
         # trade_mode: 0 = démo, 1 = réel, 2 = concours
         is_real = account.trade_mode == 1
 
-        # Sécurité : forcer le mode démo si le trading réel n'est pas autorisé
+        # Sécurité : forcer le mode PAPER si le trading LIVE n'est pas autorisé
         if is_real and not self._settings.allow_live_trading:
-            mode = TradingMode.DEMO
+            mode = TradingMode.PAPER
             logger.warning(
-                "Compte réel détecté (login=%s) mais trading réel non autorisé "
-                "- forcé en mode DEMO",
+                "Compte réel détecté (login=%s) mais trading LIVE non autorisé "
+                "- forcé en mode PAPER",
                 account.login,
             )
         else:
-            mode = TradingMode.REAL if is_real else TradingMode.DEMO
+            mode = TradingMode.LIVE if is_real else TradingMode.PAPER
 
         return TradingAccount(
             login=account.login,

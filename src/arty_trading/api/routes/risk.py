@@ -93,7 +93,7 @@ async def validate_signal(req: ValidateSignalRequest, request: Request) -> dict:
         server="demo",
         balance=Decimal("10000"),
         equity=Decimal("10000"),
-        mode=TradingMode.DEMO,
+        mode=TradingMode.PAPER,
     )
 
     is_valid = await risk_manager.validate_signal(signal, account)

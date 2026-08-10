@@ -110,11 +110,17 @@ class TradingAccount(BaseModel):
     margin: Decimal = Decimal("0")
     free_margin: Decimal = Decimal("0")
     leverage: int = 100
-    mode: TradingMode = TradingMode.DEMO
+    mode: TradingMode = TradingMode.ANALYSIS
     is_connected: bool = False
 
     @computed_field  # type: ignore[prop-decorator]
     @property
     def is_demo(self) -> bool:
-        """Vérifie si le compte est en mode démo."""
-        return self.mode == TradingMode.DEMO
+        """Vérifie si le compte n'est pas en mode live (rétro-compatibilité)."""
+        return self.mode != TradingMode.LIVE
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def is_paper(self) -> bool:
+        """Vérifie si le compte est en mode paper (simulation)."""
+        return self.mode == TradingMode.PAPER

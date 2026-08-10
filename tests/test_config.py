@@ -5,40 +5,70 @@ from unittest.mock import patch
 
 import pytest
 
-from arty_trading.config.settings import RiskSettings, Settings, get_settings
+from arty_trading.config.settings import (
+    RiskSettings,
+    Settings,
+    SignalSettings,
+    get_settings,
+)
 from arty_trading.core.enums import TimeFrame, TradingMode
 
 
 class TestSettings:
+    def test_debug_release_value_is_safe(self, monkeypatch):
+        """Une variable DEBUG externe ne doit pas empêcher le démarrage."""
+        monkeypatch.setenv("DEBUG", "release")
+        assert Settings().debug is False
+
     """Tests de la configuration Pydantic."""
 
     def test_default_symbols(self):
         settings = Settings()
         assert settings.symbols_list == ["EURUSD", "GBPUSD", "USDJPY", "XAUUSD"]
 
-    def test_default_trading_mode_is_demo(self):
+    def test_default_trading_mode_is_analysis(self):
+        """Le mode par défaut doit être ANALYSIS (sécurité)."""
         settings = Settings()
-        assert settings.trading_mode == TradingMode.DEMO
+        assert settings.trading_mode == TradingMode.ANALYSIS
         assert not settings.is_live_trading_enabled
+        assert settings.is_analysis_mode
+        assert not settings.is_paper_mode
+        assert not settings.is_live_mode
 
-    def test_live_trading_blocked_without_permission(self):
-        with patch.dict(os.environ, {"TRADING_MODE": "real", "ALLOW_LIVE_TRADING": "false"}):
+    def test_paper_mode_from_env(self):
+        """Le mode PAPER doit être chargé depuis l'environnement."""
+        with patch.dict(os.environ, {"TRADING_MODE": "paper"}):
             get_settings.cache_clear()
             settings = Settings()
-            assert settings.trading_mode == TradingMode.DEMO
+            assert settings.trading_mode == TradingMode.PAPER
+            assert settings.is_paper_mode
+            assert not settings.is_analysis_mode
+            assert not settings.is_live_mode
+            get_settings.cache_clear()
+
+    def test_live_trading_blocked_without_permission(self):
+        """Le mode LIVE doit basculer en PAPER si ALLOW_LIVE_TRADING=false."""
+        with patch.dict(os.environ, {"TRADING_MODE": "live", "ALLOW_LIVE_TRADING": "false"}):
+            get_settings.cache_clear()
+            settings = Settings()
+            assert settings.trading_mode == TradingMode.PAPER
+            assert not settings.is_live_trading_enabled
             get_settings.cache_clear()
 
     def test_live_trading_allowed_when_explicit(self):
-        with patch.dict(os.environ, {"TRADING_MODE": "real", "ALLOW_LIVE_TRADING": "true"}):
+        """Le mode LIVE doit être activé si ALLOW_LIVE_TRADING=true."""
+        with patch.dict(os.environ, {"TRADING_MODE": "live", "ALLOW_LIVE_TRADING": "true"}):
             get_settings.cache_clear()
             settings = Settings()
-            assert settings.trading_mode == TradingMode.REAL
+            assert settings.trading_mode == TradingMode.LIVE
             assert settings.is_live_trading_enabled
+            assert settings.is_live_mode
             get_settings.cache_clear()
 
     def test_default_timeframe(self):
         settings = Settings()
-        assert settings.default_timeframe == TimeFrame.H1
+        # Le .env contient DEFAULT_TIMEFRAME=M5
+        assert settings.default_timeframe == TimeFrame.M5
 
     def test_risk_settings_defaults(self):
         settings = Settings()
@@ -63,3 +93,46 @@ class TestSettings:
         s2 = get_settings()
         assert s1 is s2
         get_settings.cache_clear()
+
+
+class TestSignalSettings:
+    """Tests de la configuration du générateur de signaux."""
+
+    def test_default_min_confidence(self):
+        settings = SignalSettings()
+        assert settings.min_confidence == 0.85
+
+    def test_default_active_strategy(self):
+        settings = SignalSettings()
+        assert settings.active_strategy == "SMC Trend Following"
+
+    def test_settings_includes_signal_config(self):
+        settings = Settings()
+        assert settings.signals.min_confidence == 0.85
+        assert settings.signals.active_strategy == "SMC Trend Following"
+
+    def test_min_confidence_from_env(self):
+        with patch.dict(os.environ, {"SIGNAL_MIN_CONFIDENCE": "0.9"}):
+            settings = SignalSettings()
+            assert settings.min_confidence == 0.9
+
+    def test_active_strategy_from_env(self):
+        with patch.dict(os.environ, {"SIGNAL_ACTIVE_STRATEGY": "Breakout"}):
+            settings = SignalSettings()
+            assert settings.active_strategy == "Breakout"
+
+    def test_min_confidence_validation_rejects_zero(self):
+        with pytest.raises(ValueError):
+            SignalSettings(SIGNAL_MIN_CONFIDENCE=0)
+
+    def test_min_confidence_validation_rejects_negative(self):
+        with pytest.raises(ValueError):
+            SignalSettings(SIGNAL_MIN_CONFIDENCE=-0.1)
+
+    def test_min_confidence_validation_rejects_above_one(self):
+        with pytest.raises(ValueError):
+            SignalSettings(SIGNAL_MIN_CONFIDENCE=1.5)
+
+    def test_min_confidence_accepts_one(self):
+        settings = SignalSettings(SIGNAL_MIN_CONFIDENCE=1.0)
+        assert settings.min_confidence == 1.0

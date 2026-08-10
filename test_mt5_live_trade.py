@@ -66,7 +66,7 @@ async def main():
     print(f"   Equity   : {account.equity} USD")
     print(f"   Mode     : {account.mode.value.upper()}")
 
-    if account.mode.value != "demo":
+    if not account.is_demo:
         print("\n⚠️  ATTENTION : Ce n'est pas un compte démo !")
         print("   Le script s'arrête pour sécurité.")
         await connector.disconnect()

@@ -281,8 +281,7 @@ class TestMT5Connector:
                 connector = MT5Connector(settings=mock_settings)
                 await connector.connect()
                 account = await connector.get_account_info()
-
-                assert account.mode == TradingMode.DEMO
+                assert account.mode == TradingMode.PAPER
                 assert account.is_demo is True
 
     @pytest.mark.asyncio

@@ -3,7 +3,7 @@ Exécuteur d'ordres — implémente IOrderExecutor.
 
 Gère l'ouverture, fermeture et modification d'ordres via MT5.
 Inclut le trailing stop et le break-even automatique.
-Le mode Réel est désactivé par défaut pour la sécurité.
+Le mode LIVE est désactivé par défaut pour la sécurité.
 """
 
 from __future__ import annotations
@@ -82,9 +82,9 @@ class OrderExecutor(IOrderExecutor):
         Returns:
             Trade: Le trade créé avec son ticket MT5
         """
-        # Vérification du mode réel
-        if self._settings.trading_mode == TradingMode.REAL and not self.is_live_trading_enabled:
-            logger.warning("Trading réel bloqué - passage en mode mock")
+        # Vérification du mode live
+        if self._settings.trading_mode == TradingMode.LIVE and not self.is_live_trading_enabled:
+            logger.warning("Trading LIVE bloqué - passage en mode mock")
             self._mock_mode = True
 
         if self._mock_mode or not MT5_AVAILABLE:
@@ -129,6 +129,19 @@ class OrderExecutor(IOrderExecutor):
             return self._mock_modify_order(trade, stop_loss, take_profit)
 
         return await self._mt5_modify_order(trade, stop_loss, take_profit)
+
+    async def close_partial_order(self, trade: Trade, fraction: float) -> Trade | None:
+        """Clôture une fraction d'une position MT5 et conserve le reliquat ouvert."""
+        if not 0 < fraction < 1:
+            raise ValueError("La fraction de clôture doit être entre 0 et 1")
+        closed_volume = trade.volume * Decimal(str(fraction))
+        if closed_volume <= 0 or closed_volume >= trade.volume:
+            return await self.close_order(trade)
+        partial = trade.model_copy(update={"volume": closed_volume})
+        closed = await self.close_order(partial)
+        trade.volume -= closed_volume
+        logger.info("TP partiel | ticket=%s | volume=%s", trade.ticket, closed_volume)
+        return closed
 
     # =========================================================================
     # Trailing Stop & Break-Even

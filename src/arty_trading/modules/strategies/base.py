@@ -34,14 +34,14 @@ class BaseStrategy(IStrategy):
     def __init__(
         self,
         enabled: bool = True,
-        risk_reward_min: float = 2.0,
-        confidence_min: float = 0.5,
+        risk_reward_min: float = 1.0,
+        confidence_min: float = 0.3,
     ) -> None:
         """
         Args:
             enabled: Activer/désactiver la stratégie
-            risk_reward_min: Ratio risque/rendement minimum (défaut 2.0)
-            confidence_min: Score de confiance minimum (défaut 0.5)
+            risk_reward_min: Ratio risque/rendement minimum (défaut 1.0)
+            confidence_min: Score de confiance minimum (défaut 0.3)
         """
         self._enabled = enabled
         self._rr_min = risk_reward_min

@@ -120,6 +120,9 @@ def mock_symbol_info():
     info.volume_step = 0.01
     info.trade_mode = 0
     info.spread = 5
+    info.trade_tick_size = 0.00001
+    info.trade_tick_value = 1.0
+    info.trade_contract_size = 100000
     return info
 
 
@@ -210,6 +213,9 @@ class TestMT5MarketDataProvider:
             info = await provider.get_symbol_info("EURUSD")
             assert info["name"] == "EURUSD"
             assert info["digits"] == 5
+            assert info["trade_tick_size"] == 0.00001
+            assert info["trade_tick_value"] == 1.0
+            assert info["trade_contract_size"] == 100000
 
     @pytest.mark.asyncio
     async def test_get_available_symbols_mt5_unavailable(self):
@@ -298,6 +304,9 @@ class TestMT5MarketDataProvider:
                 assert info["point"] == 0.00001
                 assert info["volume_min"] == 0.01
                 assert info["volume_max"] == 100.0
+                assert info["trade_tick_size"] == 0.00001
+                assert info["trade_tick_value"] == 1.0
+                assert info["trade_contract_size"] == 100000
 
     @pytest.mark.asyncio
     async def test_get_available_symbols_with_mock_mt5(self, mock_symbols_list):

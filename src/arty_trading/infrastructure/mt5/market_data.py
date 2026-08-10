@@ -104,7 +104,7 @@ class MT5MarketDataProvider(IMarketDataProvider):
 
     def __init__(
         self,
-        cache_ttl: float = 30.0,
+        cache_ttl: float = 5.0,
         spread_ttl: float = 5.0,
         symbol_info_ttl: float = 300.0,
     ) -> None:
@@ -112,7 +112,7 @@ class MT5MarketDataProvider(IMarketDataProvider):
         Initialise le provider de données de marché.
 
         Args:
-            cache_ttl: TTL du cache pour les bougies (30s par défaut)
+            cache_ttl: TTL du cache pour les bougies (5s par défaut - court pour détecter les nouvelles bougies rapidement)
             spread_ttl: TTL du cache pour le spread (5s par défaut)
             symbol_info_ttl: TTL du cache pour les infos symbole (300s par défaut)
         """
@@ -396,6 +396,9 @@ class MT5MarketDataProvider(IMarketDataProvider):
                 "volume_step": 0.01,
                 "trade_mode": 0,
                 "spread": 0,
+                "trade_tick_size": 0.00001,
+                "trade_tick_value": 1.0,
+                "trade_contract_size": 100000,
             }
 
         try:
@@ -416,6 +419,9 @@ class MT5MarketDataProvider(IMarketDataProvider):
             "volume_step": info.volume_step,
             "trade_mode": info.trade_mode,
             "spread": info.spread,
+            "trade_tick_size": info.trade_tick_size,
+            "trade_tick_value": info.trade_tick_value,
+            "trade_contract_size": info.trade_contract_size,
         }
 
         self._cache.set(cache_key, result, ttl=self._symbol_info_ttl)

@@ -54,7 +54,7 @@ from arty_trading.core.interfaces import (
 )
 from arty_trading.logging import get_logger
 from arty_trading.modules.decision import MultiTimeframeAnalyzer
-from arty_trading.modules.execution import PositionManager
+from arty_trading.modules.execution import OrderExecutor, PaperOrderExecutor, PositionManager
 from arty_trading.modules.risk import RiskManager
 from arty_trading.modules.signals import SignalGenerator
 from arty_trading.modules.signals.news import EconomicCalendar
@@ -687,6 +687,68 @@ class TradingEngine:
                     exc_info=True,
                 )
 
+    async def _reconcile_open_positions(self) -> None:
+        """
+        Réconcilie les positions déjà ouvertes sur le compte au démarrage.
+
+        Dans les modes PAPER et LIVE, un compte peut déjà comporter des
+        positions (ex: positions restantes d'une session précédente). Cette
+        étape récupère ces positions via l'exécuteur (``get_open_positions``)
+        et les enregistre auprès ::
+
+        - du ``RiskManager`` (``register_trade``) pour que ``can_open_trade``
+          et ``validate_signal`` respectent ``max_open_positions`` et
+          ``one_trade_per_symbol`` ;
+        - du ``PositionManager`` (``register``) et de ``_managed_trades`` pour
+          que les règles de suivi actif (break-even, TP partiel, trailing)
+          s'appliquent aussi aux positions existantes.
+
+        En mode ANALYSIS, aucune position n'est gérée : la réconciliation est
+        simplement ignorée.
+        """
+        # En mode ANALYSIS, aucune position n'est ouverte ni gérée.
+        if self._trading_mode == TradingMode.ANALYSIS:
+            logger.info("Mode ANALYSIS | réconciliation des positions ignorée")
+            return
+
+        # Seuls les exécuteurs concrets supportent la récupération des
+        # positions (un mock en test ne l'implémente pas).
+        if not isinstance(self._executor, (OrderExecutor, PaperOrderExecutor)):
+            logger.warning(
+                "Réconciliation des positions ignorée | exécuteur=%s",
+                type(self._executor).__name__,
+            )
+            return
+
+        try:
+            positions = await self._executor.get_open_positions()
+        except Exception as exc:
+            logger.error("Erreur réconciliation des positions | %s", exc)
+            return
+
+        for trade in positions:
+            if not trade.is_open:
+                continue
+            if isinstance(self._risk_manager, RiskManager):
+                self._risk_manager.register_trade(trade)
+            if self._position_manager is not None:
+                self._position_manager.register(trade)
+                self._managed_trades[str(trade.id)] = trade
+            logger.info(
+                "Position réconciliée | %s | ticket=%s | volume=%s | entrée=%s",
+                trade.symbol,
+                trade.ticket,
+                trade.volume,
+                trade.entry_price,
+            )
+
+        if positions:
+            logger.info(
+                "Réconciliation terminée | %d position(s) ouverte(s) | mode=%s",
+                len(positions),
+                self._trading_mode.value,
+            )
+
     async def run_forever(self) -> None:
         """
         Boucle principale du moteur.
@@ -714,6 +776,9 @@ class TradingEngine:
         try:
             # Phase 1 : Initialisation
             await self._initialize_symbols()
+
+            # Phase 1bis : Réconciliation des positions ouvertes (modes PAPER/LIVE)
+            await self._reconcile_open_positions()
 
             # Phase 2 : Boucle de polling
             while self._running:

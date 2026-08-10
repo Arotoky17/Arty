@@ -108,13 +108,17 @@ class TestNotificationManager:
         manager.remove_notifier("telegram")
         assert len(manager.notifiers) == 0
 
-    def test_from_settings(self):
+    def test_from_settings(self, monkeypatch):
         from arty_trading.config import get_settings
+
+        monkeypatch.setenv("TELEGRAM_CHAT_ID", "+261348896324")
+        get_settings.cache_clear()
         settings = get_settings()
         manager = NotificationManager.from_settings(settings.notifications)
         assert "telegram" in manager.notifiers
         assert "discord" in manager.notifiers
         assert "email" in manager.notifiers
+        get_settings.cache_clear()
 
     @pytest.mark.asyncio
     async def test_send_no_notifiers(self):

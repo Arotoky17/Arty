@@ -205,6 +205,14 @@ class PaperOrderExecutor(IOrderExecutor):
         )
         return open_trade
 
+    async def get_open_positions(self) -> list[Trade]:
+        """Retourne la liste des trades simulés actuellement ouverts.
+
+        Implémente ``IOrderExecutor.get_open_positions`` : en mode PAPER, les
+        positions ouvertes sont celles maintenues en mémoire par l'exécuteur.
+        """
+        return self.get_open_trades()
+
     async def close_partial_order(self, trade: Trade, fraction: float) -> Trade | None:
         """Réduit une position simulée et retourne la portion clôturée."""
         if not 0 < fraction < 1:

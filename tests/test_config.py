@@ -66,9 +66,12 @@ class TestSettings:
             get_settings.cache_clear()
 
     def test_default_timeframe(self):
-        settings = Settings()
-        # Le .env contient DEFAULT_TIMEFRAME=M5
-        assert settings.default_timeframe == TimeFrame.M5
+        """Le timeframe doit être injecté explicitement via l'environnement."""
+        with patch.dict(os.environ, {"DEFAULT_TIMEFRAME": "M5"}):
+            get_settings.cache_clear()
+            settings = Settings()
+            assert settings.default_timeframe == TimeFrame.M5
+            get_settings.cache_clear()
 
     def test_risk_settings_defaults(self):
         settings = Settings()

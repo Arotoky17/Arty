@@ -9,6 +9,7 @@ Le mode LIVE est désactivé par défaut pour la sécurité.
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import Any
 
 from arty_trading.config.settings import get_settings
 from arty_trading.core.entities import Signal, Trade
@@ -142,6 +143,51 @@ class OrderExecutor(IOrderExecutor):
         trade.volume -= closed_volume
         logger.info("TP partiel | ticket=%s | volume=%s", trade.ticket, closed_volume)
         return closed
+
+    async def get_open_positions(self) -> list[Trade]:
+        """Retourne la liste des positions actuellement ouvertes sur le compte.
+
+        En mode mock ou si MT5 est indisponible, retourne les trades simulés.
+        Sinon, interroge ``mt5.positions_get()`` et convertit chaque position
+        en entité ``Trade``. Utilisée au démarrage pour réconcilier les
+        positions existantes avant de passer en mode PAPER/LIVE.
+
+        Returns:
+            Liste des positions ouvertes (vide si aucune / erreur).
+        """
+        if self._mock_mode or not MT5_AVAILABLE:
+            return list(self._mock_trades.values())
+
+        if not mt5.initialize():
+            logger.warning("MT5 initialize() a échoué - réconciliation vide")
+            return []
+
+        raw_positions = mt5.positions_get()
+        if raw_positions is None:
+            return []
+
+        trades: list[Trade] = []
+        for pos in raw_positions:
+            try:
+                trades.append(self._position_to_trade(pos))
+            except Exception as exc:  # noqa: BLE001 - une position invalide ne doit pas bloquer
+                logger.warning("Position ignorée | ticket=%s | %s", pos.ticket, exc)
+        return trades
+
+    def _position_to_trade(self, pos: Any) -> Trade:
+        """Convertit une position MT5 brute en entité ``Trade``."""
+        direction = Direction.BUY if pos.type == mt5.POSITION_TYPE_BUY else Direction.SELL
+        return Trade(
+            symbol=pos.symbol,
+            direction=direction,
+            entry_price=Decimal(str(pos.price_open)),
+            stop_loss=Decimal(str(pos.sl)),
+            take_profit=Decimal(str(pos.tp)),
+            volume=Decimal(str(pos.volume)),
+            ticket=int(pos.ticket),
+            profit=Decimal(str(pos.profit)),
+            is_open=True,
+        )
 
     # =========================================================================
     # Trailing Stop & Break-Even

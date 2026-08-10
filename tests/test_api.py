@@ -1,14 +1,34 @@
 """Tests de l'API FastAPI."""
 
+import os
+from unittest.mock import patch
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 
 from arty_trading.api.main import create_app
+from arty_trading.config.settings import get_settings
 
 
 @pytest.fixture
 def app():
-    return create_app()
+    """Crée l'application avec un environnement injecté explicitement.
+
+    Les variables sont fournies directement par le test (et non issues d'un
+    fichier ``.env`` local) afin de rendre la suite indépendante de la machine.
+    """
+    with patch.dict(
+        os.environ,
+        {
+            "TRADING_MODE": "analysis",
+            "ALLOW_LIVE_TRADING": "false",
+            "DEFAULT_SYMBOLS": "EURUSD,GBPUSD,USDJPY,XAUUSD",
+            "DEFAULT_TIMEFRAME": "M5",
+        },
+    ):
+        get_settings.cache_clear()
+        yield create_app()
+        get_settings.cache_clear()
 
 
 @pytest.mark.asyncio

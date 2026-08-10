@@ -17,6 +17,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from arty_trading.application.trading_engine import TradingEngine
+from arty_trading.config.settings import PositionSettings
 from arty_trading.core.entities import Candle, Signal, Trade, TradingAccount
 from arty_trading.core.enums import (
     Direction,
@@ -24,6 +25,8 @@ from arty_trading.core.enums import (
     TimeFrame,
     TradingMode,
 )
+from arty_trading.modules.execution import PaperOrderExecutor
+from arty_trading.modules.risk import RiskManager
 
 # =============================================================================
 # Helpers
@@ -919,3 +922,72 @@ class TestStatistics:
         engine = build_engine([])
         assert engine.statistics is not None
         assert engine.statistics.total_analyses == 0
+
+
+# =============================================================================
+# Tests : Réconciliation des positions ouvertes au démarrage
+# =============================================================================
+
+
+class TestPositionReconciliation:
+    """Vérifie la réconciliation des positions ouvertes avant PAPER/LIVE."""
+
+    def _build_engine_with_executor(
+        self,
+        executor: PaperOrderExecutor,
+        trading_mode: TradingMode = TradingMode.PAPER,
+    ) -> TradingEngine:
+        """Construit un moteur réel (RiskManager + PaperOrderExecutor)."""
+        settings = make_settings(trading_mode)
+        settings.risk = RiskManager().settings
+        settings.position = PositionSettings(enabled=True)
+        settings.news = None
+        settings.journal = None
+        settings.decision = None
+
+        market_data = MagicMock()
+        smc_detector = MagicMock()
+        signal_generator = MagicMock()
+        mt5_connector = MagicMock()
+        risk_manager = RiskManager(settings=settings.risk)
+
+        return TradingEngine(
+            settings=settings,  # type: ignore[arg-type]
+            market_data=market_data,  # type: ignore[arg-type]
+            smc_detector=smc_detector,  # type: ignore[arg-type]
+            signal_generator=signal_generator,  # type: ignore[arg-type]
+            risk_manager=risk_manager,
+            executor=executor,
+            mt5_connector=mt5_connector,  # type: ignore[arg-type]
+        )
+
+    @pytest.mark.asyncio
+    async def test_reconcile_registers_open_positions(self) -> None:
+        """Les positions ouvertes existantes doivent être enregistrées."""
+        executor = PaperOrderExecutor()
+        # Simuler une position déjà ouverte sur le compte
+        await executor.open_order(make_signal("EURUSD"), 0.1)
+
+        engine = self._build_engine_with_executor(executor)
+
+        await engine._reconcile_open_positions()
+
+        # Le risk manager doit suivre la position réconciliée
+        assert engine._risk_manager.open_positions_count == 1
+        # Le gestionnaire de positions doit la suivre aussi
+        assert engine._managed_trades != {}
+
+    @pytest.mark.asyncio
+    async def test_reconcile_ignored_in_analysis_mode(self) -> None:
+        """En mode ANALYSIS, aucune position ne doit être réconciliée."""
+        executor = PaperOrderExecutor()
+        await executor.open_order(make_signal("EURUSD"), 0.1)
+
+        engine = self._build_engine_with_executor(
+            executor, trading_mode=TradingMode.ANALYSIS
+        )
+
+        await engine._reconcile_open_positions()
+
+        assert engine._risk_manager.open_positions_count == 0
+        assert engine._managed_trades == {}

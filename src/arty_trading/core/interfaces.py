@@ -92,6 +92,14 @@ class IOrderExecutor(ABC):
     ) -> Trade:
         """Modifie SL/TP d'un ordre existant."""
 
+    @abstractmethod
+    async def get_open_positions(self) -> list[Trade]:
+        """Retourne la liste des positions actuellement ouvertes sur le compte.
+
+        Utilisée au démarrage pour réconcilier les positions existantes
+        avant de passer en mode PAPER/LIVE.
+        """
+
 
 class ISMCDetector(ABC):
     """Port pour la détection des concepts SMC."""

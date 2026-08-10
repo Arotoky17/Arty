@@ -161,13 +161,17 @@ class TestAIAssistant:
         })
         assert response.content != ""
 
-    def test_from_settings(self):
+    def test_from_settings(self, monkeypatch):
         """Test la creation depuis les settings."""
         from arty_trading.config import get_settings
+
+        monkeypatch.setenv("AI_PROVIDER", "openai")
+        get_settings.cache_clear()
         settings = get_settings()
         assistant = AIAssistant.from_settings(settings.ai)
         assert assistant.provider is not None
         assert assistant.provider.name in ("openai", "anthropic")
+        get_settings.cache_clear()
 
 
 class TestAIRoutes:

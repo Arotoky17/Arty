@@ -24,7 +24,7 @@ from arty_trading.api.routes import (
 )
 from arty_trading.application import TradingEngine
 from arty_trading.config import get_settings
-from arty_trading.core.enums import LogCategory, TimeFrame, TradingMode
+from arty_trading.core.enums import LogCategory, TimeFrame
 from arty_trading.infrastructure.mt5 import MT5Connector, MT5MarketDataProvider
 from arty_trading.infrastructure.notifications import NotificationManager
 from arty_trading.logging import get_logger, setup_logging
@@ -88,19 +88,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     )
     app.state.trading_engine = trading_engine
 
-    # Démarrer le moteur pour les modes PAPER et LIVE
-    # (ANALYSIS ne fait que générer des signaux sans ouvrir de positions)
-    if settings.trading_mode in (TradingMode.PAPER, TradingMode.LIVE):
-        app.state.engine_task = trading_engine.start()
-        logger.info(
-            "TradingEngine lancé en tâche de fond | mode=%s",
-            settings.trading_mode.value,
-        )
-    else:
-        logger.info(
-            "TradingEngine non démarré | mode=%s (ANALYSIS)",
-            settings.trading_mode.value,
-        )
+    # Démarrer le moteur pour tous les modes (ANALYSIS, PAPER, LIVE).
+    # En mode ANALYSIS, le moteur exécute le pipeline d'analyse et génère des
+    # signaux mais n'ouvre jamais de position (géré dans analyze_symbol).
+    app.state.engine_task = trading_engine.start()
+    logger.info(
+        "TradingEngine lancé en tâche de fond | mode=%s",
+        settings.trading_mode.value,
+    )
 
     yield
 

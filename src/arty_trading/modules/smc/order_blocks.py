@@ -28,14 +28,14 @@ class OrderBlockDetector(BaseDetector):
     def __init__(
         self,
         enabled: bool = True,
-        displacement_threshold: float = 1.2,
+        displacement_threshold: float = 2.0,
         mitigation_lookback: int = 20,
     ) -> None:
         """
         Args:
             enabled: Activer/désactiver le détecteur
             displacement_threshold: Facteur minimum du corps de la bougie de
-                déplacement par rapport à la moyenne (ex: 1.2 = 1.2x la moyenne)
+                déplacement par rapport à la moyenne (ex: 2.0 = 2x la moyenne)
             mitigation_lookback: Nombre de bougies en arrière pour vérifier
                 la mitigation
         """

@@ -10,7 +10,7 @@ class TradingMode(str, Enum):
     """
     Mode de trading de la plateforme.
 
-    Trois modes sont disponibles :
+    Quatre modes sont disponibles :
 
     - **ANALYSIS** : Aucune position, uniquement les analyses.
       Le moteur exécute le pipeline jusqu'à la génération du signal
@@ -20,6 +20,12 @@ class TradingMode(str, Enum):
       Le moteur exécute le pipeline complet (risque, exécution, monitoring)
       mais les ordres sont simulés (PaperOrderExecutor).
 
+    - **DEMO** : Connexion réelle à un compte **DÉMO** MT5 + exécution réelle
+      des ordres sur ce compte démo. Contrairement à ``LIVE``, ce mode ne
+      nécessite **pas** ``ALLOW_LIVE_TRADING=true`` (aucun argent réel engagé).
+      Garde-fou : si le compte connecté s'avère **réel** (trade_mode=1),
+      le trading est bloqué pour ne jamais risquer de fonds réels.
+
     - **LIVE** : Trading réel.
       Le moteur exécute le pipeline complet avec des ordres MT5 réels.
       Nécessite ``ALLOW_LIVE_TRADING=true``.
@@ -27,6 +33,7 @@ class TradingMode(str, Enum):
 
     ANALYSIS = "analysis"
     PAPER = "paper"
+    DEMO = "demo"
     LIVE = "live"
 
 

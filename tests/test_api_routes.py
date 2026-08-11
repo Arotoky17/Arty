@@ -69,7 +69,7 @@ class TestSMCRoutes:
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
-        assert len(data["enabled"]) == 5
+        assert len(data["enabled"]) == 6
 
     @pytest.mark.asyncio
     async def test_disable_all(self, client):

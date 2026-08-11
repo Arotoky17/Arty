@@ -77,6 +77,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         logger.warning("Échec connexion MT5 au démarrage: %s", exc)
 
     # Initialisation du moteur de trading (orchestration live)
+    notifier = getattr(app.state, "notification_manager", None)
     trading_engine = TradingEngine(
         settings=settings,
         market_data=market_data,
@@ -85,6 +86,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         risk_manager=app.state.risk_manager,
         executor=app.state.executor,
         mt5_connector=mt5_connector,
+        notifier=notifier,
     )
     app.state.trading_engine = trading_engine
 
@@ -154,7 +156,16 @@ def create_app() -> FastAPI:
 
     @app.get("/health", tags=["Système"])
     async def health_check() -> dict:
-        """Vérification de l'état du service."""
+        """Vérification de l'état du service (heartbeat + connexion MT5)."""
+        mt5_connector = getattr(app.state, "mt5_connector", None)
+        mt5_connected = False
+        if mt5_connector is not None:
+            try:
+                mt5_connected = await mt5_connector.is_connected()
+            except Exception:
+                mt5_connected = False
+        engine = getattr(app.state, "trading_engine", None)
+        engine_running = engine.is_running if engine is not None else False
         return {
             "status": "healthy",
             "bot": "Arty",
@@ -162,6 +173,10 @@ def create_app() -> FastAPI:
             "version": __version__,
             "trading_mode": settings.trading_mode.value,
             "live_trading_enabled": settings.is_live_trading_enabled,
+            "demo_mode": settings.is_demo_mode,
+            "mt5_connected": mt5_connected,
+            "engine_running": engine_running,
+            "timestamp": datetime.utcnow().isoformat() + "Z",
         }
 
     @app.get("/config/symbols", tags=["Configuration"])

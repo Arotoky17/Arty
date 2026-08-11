@@ -26,6 +26,7 @@ async def list_concepts() -> dict:
             "order_blocks",
             "liquidity",
             "premium_discount",
+            "sessions",
         ]
     }
 

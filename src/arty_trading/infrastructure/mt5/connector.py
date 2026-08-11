@@ -389,6 +389,27 @@ class MT5Connector(IMT5Connector):
         """
         # trade_mode: 0 = démo, 1 = réel, 2 = concours
         is_real = account.trade_mode == 1
+        is_demo = account.trade_mode == 0
+
+        # En mode DEMO : un compte démo est mappé sur TradingMode.DEMO.
+        if self._settings.trading_mode == TradingMode.DEMO and is_demo:
+            mode = TradingMode.DEMO
+            logger.info(
+                "Compte démo détecté (login=%s) - mode DEMO", account.login,
+            )
+            return TradingAccount(
+                login=account.login,
+                server=account.server,
+                name=account.name,
+                currency=account.currency,
+                balance=Decimal(str(account.balance)),
+                equity=Decimal(str(account.equity)),
+                margin=Decimal(str(account.margin)),
+                free_margin=Decimal(str(account.margin_free)),
+                leverage=account.leverage,
+                mode=mode,
+                is_connected=True,
+            )
 
         # Sécurité : forcer le mode PAPER si le trading LIVE n'est pas autorisé
         if is_real and not self._settings.allow_live_trading:

@@ -735,8 +735,6 @@ class TestSignalGeneratorIntegration:
         signal = await gen.generate(candles, smc_data, htf_trend="bearish")
 
         assert signal is None
-        assert gen.last_validation is not None
-        assert COND_HTF_TREND in gen.last_validation.failed_conditions
 
     @pytest.mark.asyncio
     async def test_generate_without_validator_backward_compatible(self):

@@ -12,10 +12,9 @@ from decimal import Decimal
 from typing import Any
 
 from arty_trading.core.entities import Candle, Signal
-from arty_trading.core.enums import Direction, SignalType, TimeFrame
+from arty_trading.core.enums import Direction, LogCategory, SignalType, TimeFrame
 from arty_trading.core.interfaces import IStrategy
 from arty_trading.logging.logger import get_logger
-from arty_trading.core.enums import LogCategory
 
 logger = get_logger(LogCategory.STRATEGY)
 
@@ -223,5 +222,84 @@ class BaseStrategy(IStrategy):
         else:
             sl = entry + risk
             tp = entry - reward
+
+        return sl, tp
+
+    def _calculate_atr(self, candles: list[Candle], period: int = 14) -> Decimal:
+        """
+        Calcule l'Average True Range (ATR) sur les bougies fournies.
+
+        L'ATR mesure la volatilité du marché et permet d'adapter
+        le SL/TP à la volatilité actuelle.
+
+        Args:
+            candles: Liste des bougies (du plus ancien au plus récent)
+            period: Période de calcul (défaut 14)
+
+        Returns:
+            Valeur ATR en prix (pas en pips)
+        """
+        if len(candles) < period + 1:
+            return Decimal("0")
+
+        true_ranges: list[Decimal] = []
+        for i in range(1, len(candles)):
+            current = candles[i]
+            previous = candles[i - 1]
+            tr = max(
+                current.high - current.low,
+                abs(current.high - previous.close),
+                abs(current.low - previous.close),
+            )
+            true_ranges.append(tr)
+
+        if len(true_ranges) < period:
+            return Decimal("0")
+
+        # Première moyenne simple
+        atr = sum(true_ranges[:period]) / period
+        # Puis moyenne lissée (Wilder)
+        for tr in true_ranges[period:]:
+            atr = (atr * (period - 1) + tr) / period
+
+        return atr
+
+    def _calculate_atr_based_sl_tp(
+        self,
+        entry: Decimal,
+        direction: Direction,
+        candles: list[Candle],
+        atr_multiplier_sl: float = 1.5,
+        atr_multiplier_tp: float = 3.0,
+        pip_size: float = 0.0001,
+    ) -> tuple[Decimal, Decimal]:
+        """
+        Calcule SL/TP basés sur l'ATR pour adapter à la volatilité.
+
+        Args:
+            entry: Prix d'entrée
+            direction: BUY ou SELL
+            candles: Liste des bougies pour calculer l'ATR
+            atr_multiplier_sl: Multiplicateur ATR pour le SL (défaut 1.5)
+            atr_multiplier_tp: Multiplicateur ATR pour le TP (défaut 3.0)
+            pip_size: Taille d'un pip
+
+        Returns:
+            Tuple (stop_loss, take_profit)
+        """
+        atr = self._calculate_atr(candles)
+        if atr == 0:
+            # Fallback sur les valeurs fixes si ATR impossible
+            return self._calculate_sl_tp(entry, direction, pip_size=pip_size)
+
+        sl_distance = atr * Decimal(str(atr_multiplier_sl))
+        tp_distance = atr * Decimal(str(atr_multiplier_tp))
+
+        if direction == Direction.BUY:
+            sl = entry - sl_distance
+            tp = entry + tp_distance
+        else:
+            sl = entry + sl_distance
+            tp = entry - tp_distance
 
         return sl, tp

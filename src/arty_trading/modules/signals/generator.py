@@ -24,7 +24,7 @@ afin de pouvoir retracer pourquoi un signal a été émis ou ignoré.
 from __future__ import annotations
 
 from arty_trading.core.entities import Candle, Signal
-from arty_trading.core.enums import LogCategory
+from arty_trading.core.enums import Direction, LogCategory
 from arty_trading.logging.logger import get_logger
 from arty_trading.modules.decision import DecisionEngine
 from arty_trading.modules.signals.validator import SignalValidator, ValidationResult
@@ -229,6 +229,8 @@ class SignalGenerator:
         htf_trends: dict[str, str] | None = None,
         spread: int | None = None,
         has_high_impact_news: bool = False,
+        master_trend: str | None = None,
+        market_context: Any | None = None,
     ) -> Signal | None:
         """
         Génère le meilleur signal parmi les stratégies activées.
@@ -236,9 +238,14 @@ class SignalGenerator:
         Règles :
         1. Seuls les signaux de la stratégie active sont acceptés (garde-fou).
         2. La confiance doit être >= ``min_confidence``.
-        3. Si un ``SignalValidator`` est configuré, le signal est validé avant
+        3. **Master Direction Gate** : le signal DOIT respecter la tendance 1H.
+           - 1H BULLISH → seulement BUY autorisé
+           - 1H BEARISH → seulement SELL autorisé
+           - 1H NEUTRAL → aucun trade
+           Ce filtre est ABSOLU et ne peut PAS être contourné.
+        4. Si un ``SignalValidator`` est configuré, le signal est validé avant
            d'être retourné. Le générateur ne décide plus seul.
-        4. Si aucun signal n'est accepté, retourne ``None`` (NO_SIGNAL).
+        5. Si aucun signal n'est accepté, retourne ``None`` (NO_SIGNAL).
 
         Args:
             candles: Liste des bougies OHLCV
@@ -247,6 +254,10 @@ class SignalGenerator:
             htf_trend: Tendance HTF explicite (optionnel)
             spread: Spread actuel en points (optionnel)
             has_high_impact_news: True s'il y a des news à impact élevé
+            master_trend: Tendance maître 1H ("bullish", "bearish", "neutral")
+                (optionnel). Si fournie, elle prime sur htf_trend pour le
+                Master Direction Gate.
+            market_context: Contexte marché centralisé (optionnel)
 
         Returns:
             Le meilleur signal validé ou ``None`` (NO_SIGNAL)
@@ -257,10 +268,11 @@ class SignalGenerator:
 
         enabled = self.get_enabled_strategies()
         logger.debug(
-            "Génération de signal | stratégies activées=%s | active=%s | min_confidence=%.2f",
+            "Génération de signal | stratégies activées=%s | active=%s | min_confidence=%.2f | master_trend=%s",
             enabled,
             self._active_strategy,
             self._min_confidence,
+            master_trend,
         )
 
         signals: list[Signal] = []
@@ -269,9 +281,6 @@ class SignalGenerator:
             if not strategy.enabled:
                 continue
 
-            # Garde-fou : ignorer toute stratégie non-active, même si elle est
-            # activée manuellement. Le SignalGenerator ne doit jamais retourner
-            # un signal provenant d'une autre stratégie.
             if not self._is_strategy_allowed(name):
                 logger.debug(
                     "Stratégie ignorée (non-active) | %s | active=%s",
@@ -290,7 +299,35 @@ class SignalGenerator:
                 logger.debug("Aucun signal produit | stratégie=%s", name)
                 continue
 
-            # Vérification du seuil de confiance
+            direction_str = "bullish" if signal.direction == Direction.BUY else "bearish"
+
+            gate_rejection = self._check_master_direction_gate(
+                master_trend, direction_str, signal
+            )
+            if gate_rejection is not None:
+                logger.info(
+                    "Signal REJETÉ (Master Direction Gate) | %s | %s | master=%s | reason=%s | justification=%s",
+                    signal.symbol,
+                    direction_str,
+                    master_trend,
+                    gate_rejection,
+                    signal.justification,
+                )
+                continue
+
+            htf_trend_for_gate = master_trend or htf_trend or (
+                htf_trends.get("H1") if htf_trends else None
+            )
+            if htf_trend_for_gate and self._htf_conflicts(htf_trend_for_gate, direction_str):
+                logger.info(
+                    "Signal REJETÉ (HTF conflict) | %s | %s | htf=%s | justification=%s",
+                    signal.symbol,
+                    direction_str,
+                    htf_trend_for_gate,
+                    signal.justification,
+                )
+                continue
+
             if signal.confidence < self._min_confidence:
                 logger.info(
                     "Signal REJETÉ (confiance insuffisante) | stratégie=%s | "
@@ -303,7 +340,6 @@ class SignalGenerator:
                 )
                 continue
 
-            # Signal accepté
             logger.info(
                 "Signal ACCEPTÉ | stratégie=%s | confiance=%.2f | seuil=%.2f | "
                 "direction=%s | type=%s | R/R=%.2f | concepts=%s | justification=%s",
@@ -321,14 +357,14 @@ class SignalGenerator:
         if not signals:
             logger.info(
                 "NO_SIGNAL | aucun signal accepté | stratégies_activées=%s | active=%s | "
-                "seuil=%.2f",
+                "seuil=%.2f | master_trend=%s",
                 enabled,
                 self._active_strategy,
                 self._min_confidence,
+                master_trend,
             )
             return None
 
-        # Sélectionner le signal avec la plus grande confiance.
         best = max(signals, key=lambda s: s.confidence)
         logger.info(
             "Meilleur signal sélectionné | stratégie=%s | confiance=%.2f | direction=%s",
@@ -337,7 +373,6 @@ class SignalGenerator:
             best.direction.value,
         )
 
-        # Validation par le SignalValidator (le générateur ne décide plus seul)
         if self._validator is not None:
             result = self._validator.validate(
                 signal=best,
@@ -366,7 +401,7 @@ class SignalGenerator:
             )
 
         if self._decision_engine is not None:
-            decision_trends = htf_trends or ({"H4": htf_trend} if htf_trend else None)
+            decision_trends = htf_trends or ({"H1": htf_trend} if htf_trend else None)
             decision = self._decision_engine.decide(
                 best,
                 candles,
@@ -374,6 +409,8 @@ class SignalGenerator:
                 htf_trends=decision_trends,
                 spread=spread,
                 has_high_impact_news=has_high_impact_news,
+                master_trend=master_trend,
+                market_context=market_context,
             )
             enriched = self._decision_engine.enrich(best, decision)
             if enriched is None:
@@ -397,6 +434,8 @@ class SignalGenerator:
         htf_trend: str | None = None,
         spread: int | None = None,
         has_high_impact_news: bool = False,
+        master_trend: str | None = None,
+        market_context: Any | None = None,
     ) -> ValidationResult | None:
         """
         Valide un signal avec le SignalValidator.
@@ -411,6 +450,8 @@ class SignalGenerator:
             htf_trend: Tendance HTF explicite (optionnel)
             spread: Spread actuel en points (optionnel)
             has_high_impact_news: True s'il y a des news à impact élevé
+            master_trend: Tendance maître 1H (optionnel)
+            market_context: Contexte marché centralisé (optionnel)
 
         Returns:
             ValidationResult ou None si aucun validateur configuré
@@ -524,6 +565,56 @@ class SignalGenerator:
     # -------------------------------------------------------------------------
     # Helpers internes
     # -------------------------------------------------------------------------
+
+    def _check_master_direction_gate(
+        self, master_trend: str | None, direction: str, signal: Signal
+    ) -> str | None:
+        """
+        Vérifie le Master Direction Gate : filtre ABSOLU basé sur la tendance 1H.
+
+        Règles :
+        - 1H BULLISH → SELL interdit
+        - 1H BEARISH → BUY interdit
+        - 1H NEUTRAL → BUY et SELL interdits
+
+        Ce filtre ne peut PAS être contourné par le score ou toute autre confluence.
+
+        Args:
+            master_trend: Tendance maître ("bullish", "bearish", "neutral")
+            direction: Direction du signal ("bullish" ou "bearish")
+            signal: Signal candidat
+
+        Returns:
+            None si le filtre passe, sinon le nom du rejet
+        """
+        if master_trend is None:
+            return None
+
+        if master_trend == "neutral":
+            return "MASTER_TREND_CONFLICT"
+
+        if master_trend == "bullish" and direction == "bearish":
+            return "MASTER_TREND_CONFLICT"
+
+        if master_trend == "bearish" and direction == "bullish":
+            return "MASTER_TREND_CONFLICT"
+
+        return None
+
+    def _htf_conflicts(self, htf_trend: str | None, direction: str) -> bool:
+        """
+        Vérifie si la tendance HTF entre en conflit avec la direction du signal.
+
+        Args:
+            htf_trend: Tendance HTF ("bullish", "bearish", "neutral")
+            direction: Direction du signal ("bullish" ou "bearish")
+
+        Returns:
+            True si conflit, False sinon
+        """
+        if htf_trend is None or htf_trend == "neutral":
+            return False
+        return htf_trend != direction
 
     def _is_strategy_allowed(self, name: str) -> bool:
         """Vérifie si une stratégie est autorisée à produire des signaux.

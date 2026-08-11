@@ -9,8 +9,14 @@ Deux exécuteurs sont disponibles :
   aucun ordre MT5 n'est envoyé.
 """
 
-from arty_trading.modules.execution.executor import OrderExecutor
+from arty_trading.modules.execution.executor import MT5OrderError, OrderExecutor
 from arty_trading.modules.execution.paper_executor import PaperOrderExecutor
 from arty_trading.modules.execution.position_manager import PositionAction, PositionManager
 
-__all__ = ["OrderExecutor", "PaperOrderExecutor", "PositionAction", "PositionManager"]
+__all__ = [
+    "OrderExecutor",
+    "PaperOrderExecutor",
+    "PositionAction",
+    "PositionManager",
+    "MT5OrderError",
+]

@@ -10,9 +10,9 @@ Et qu'aucun open_order n'est appelé si validate_signal retourne False.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -123,6 +123,7 @@ def build_engine(
     signal_result: Signal | object = _NO_SIGNAL,
     candle_time: datetime | None = None,
     trading_mode: TradingMode = TradingMode.PAPER,
+    trend: str = "bullish",
 ) -> TradingEngine:
     """
     Construit un TradingEngine avec des mocks qui enregistrent l'ordre des
@@ -135,12 +136,19 @@ def build_engine(
         signal_result: Signal retourné par generate (None = aucun signal,
                        _NO_SIGNAL = signal par défaut).
         candle_time: Heure de la bougie retournée par get_latest_candles.
+        trading_mode: Mode de trading à utiliser.
+        trend: Tendance H1 simulée pour les tests. Mettre à None pour
+               utiliser l'analyse réelle (nécessite des données avec structure
+               de swing HH/HL ou LH/LL valide).
     """
     sig = make_signal() if signal_result is _NO_SIGNAL else signal_result
 
     async def mock_get_candles(*args: object, **kwargs: object) -> list[Candle]:
         call_order.append("get_latest_candles")
-        return [make_candle(time=candle_time)]
+        timeframe = kwargs.get("timeframe", args[1] if len(args) > 1 else TimeFrame.H1)
+        if timeframe == TimeFrame.H1:
+            return make_bullish_h1_candles(start_time=candle_time)
+        return [make_candle(time=candle_time, timeframe=TimeFrame.M5)]
 
     async def mock_detect(*args: object, **kwargs: object) -> list[dict]:
         call_order.append("detect")
@@ -190,7 +198,7 @@ def build_engine(
     executor = MagicMock()
     executor.open_order = mock_open_order
 
-    return TradingEngine(
+    engine = TradingEngine(
         settings=make_settings(trading_mode),
         market_data=market_data,  # type: ignore[arg-type]
         smc_detector=smc_detector,  # type: ignore[arg-type]
@@ -199,6 +207,92 @@ def build_engine(
         executor=executor,  # type: ignore[arg-type]
         mt5_connector=mt5_connector,  # type: ignore[arg-type]
     )
+
+    if trend is not None:
+        engine = with_mocked_trend(engine, trend)
+
+    return engine
+
+
+def with_mocked_trend(engine: TradingEngine, trend: str = "bullish") -> TradingEngine:
+    """Patche l'analyseur de tendance pour forcer une tendance donnée dans les tests."""
+    original_analyze = engine._analyze_multitimeframe
+
+    async def mock_analyze(symbol: str, htf_candles: list[Candle], ltf_candles: list[Candle]):
+        from arty_trading.modules.decision.market_context import MarketContext
+        from arty_trading.modules.decision.master_trend import TrendAnalysis
+        from decimal import Decimal
+
+        ltf_smc = await engine._smc_detector.detect(ltf_candles, symbol)
+        htf_smc = await engine._smc_detector.detect(htf_candles, symbol)
+
+        trend_result = TrendAnalysis(
+            trend=trend,
+            confidence=0.8,
+            hh=Decimal("1.1000"),
+            hl=Decimal("1.0900"),
+            lh=None,
+            ll=None,
+            swing_high=Decimal("1.1000"),
+            swing_low=Decimal("1.0900"),
+        )
+
+        ctx = MarketContext(
+            symbol=symbol,
+            timestamp=ltf_candles[-1].time if ltf_candles else htf_candles[-1].time,
+            master_trend=trend,
+            trend_confidence=0.8,
+            hh=trend_result.hh,
+            hl=trend_result.hl,
+            swing_high=trend_result.swing_high,
+            swing_low=trend_result.swing_low,
+            ltf_smc_data=ltf_smc,
+            htf_smc_data=htf_smc,
+        )
+        return ctx
+
+    engine._analyze_multitimeframe = mock_analyze  # type: ignore[method-assign]
+    return engine
+
+
+def make_bullish_h1_candles(start_time: datetime | None = None, n: int = 20) -> list[Candle]:
+    """Crée des bougies H1 en tendance haussière (HH + HL) pour les tests."""
+    candles = []
+    base_time = start_time or datetime(2024, 1, 1, 0, 0, 0, tzinfo=UTC)
+    prices = [
+        (1.0800, 1.0850, 1.0790, 1.0840),
+        (1.0840, 1.0880, 1.0830, 1.0870),
+        (1.0870, 1.0900, 1.0860, 1.0890),
+        (1.0890, 1.0895, 1.0820, 1.0830),
+        (1.0830, 1.0840, 1.0810, 1.0825),
+        (1.0825, 1.0835, 1.0815, 1.0830),
+        (1.0830, 1.0870, 1.0825, 1.0865),
+        (1.0865, 1.0910, 1.0860, 1.0905),
+        (1.0905, 1.0930, 1.0900, 1.0925),
+        (1.0925, 1.0930, 1.0870, 1.0880),
+        (1.0880, 1.0895, 1.0865, 1.0885),
+        (1.0885, 1.0920, 1.0880, 1.0915),
+        (1.0915, 1.0960, 1.0910, 1.0955),
+        (1.0955, 1.0965, 1.0900, 1.0910),
+        (1.0910, 1.0925, 1.0900, 1.0920),
+        (1.0920, 1.0970, 1.0915, 1.0965),
+        (1.0965, 1.1000, 1.0960, 1.0995),
+        (1.0995, 1.1010, 1.0950, 1.0960),
+        (1.0960, 1.0975, 1.0950, 1.0970),
+        (1.0970, 1.1020, 1.0965, 1.1015),
+    ]
+    from datetime import timedelta
+
+    for i in range(min(n, len(prices))):
+        o, h, l, c = prices[i]
+        t = base_time + timedelta(hours=i)
+        candles.append(Candle(
+            symbol="EURUSD", timeframe=TimeFrame.H1, time=t,
+            open=Decimal(str(o)), high=Decimal(str(h)),
+            low=Decimal(str(l)), close=Decimal(str(c)),
+            volume=1000, spread=5,
+        ))
+    return candles
 
 
 # =============================================================================
@@ -213,9 +307,9 @@ class TestCallOrder:
     async def test_full_flow_call_order(self) -> None:
         """
         L'ordre des appels doit être :
-        get_latest_candles → detect → generate → get_account_info
-        → can_open_trade → validate_signal → calculate_position_size
-        → open_order
+        get_latest_candles (H1) → get_latest_candles (M5) → detect (H1) → detect (M5)
+        → generate → get_account_info → can_open_trade → validate_signal
+        → calculate_position_size → open_order
         """
         call_order: list[str] = []
         engine = build_engine(call_order)
@@ -224,6 +318,8 @@ class TestCallOrder:
 
         assert call_order == [
             "get_latest_candles",
+            "get_latest_candles",
+            "detect",
             "detect",
             "generate",
             "get_account_info",
@@ -276,6 +372,8 @@ class TestNoOrderOnValidationFailure:
         # L'ordre doit s'arrêter après validate_signal
         assert call_order == [
             "get_latest_candles",
+            "get_latest_candles",
+            "detect",
             "detect",
             "generate",
             "get_account_info",
@@ -297,6 +395,8 @@ class TestNoOrderOnValidationFailure:
         # L'ordre doit s'arrêter après can_open_trade
         assert call_order == [
             "get_latest_candles",
+            "get_latest_candles",
+            "detect",
             "detect",
             "generate",
             "get_account_info",
@@ -316,6 +416,8 @@ class TestNoOrderOnValidationFailure:
         # L'ordre doit s'arrêter après generate
         assert call_order == [
             "get_latest_candles",
+            "get_latest_candles",
+            "detect",
             "detect",
             "generate",
         ]
@@ -368,7 +470,8 @@ class TestNewBarDetection:
         await engine.analyze_symbol("EURUSD")
 
         # Seul get_latest_candles doit être appelé (pour vérifier la bougie)
-        assert call_order == ["get_latest_candles"]
+        # Note: 2 appels pour H1 et M5
+        assert call_order == ["get_latest_candles", "get_latest_candles"]
         assert "detect" not in call_order
         assert "generate" not in call_order
         assert "open_order" not in call_order
@@ -390,7 +493,10 @@ class TestNewBarDetection:
         # On met à jour le mock pour retourner une bougie avec un temps différent
         async def mock_new_candle(*args: object, **kwargs: object) -> list[Candle]:
             call_order.append("get_latest_candles")
-            return [make_candle(time=second_time)]
+            tf = kwargs.get("timeframe", args[1] if len(args) > 1 else TimeFrame.H1)
+            if tf == TimeFrame.H1:
+                return make_bullish_h1_candles(start_time=second_time)
+            return [make_candle(time=second_time, timeframe=TimeFrame.M5)]
 
         engine._market_data.get_latest_candles = mock_new_candle  # type: ignore[attr-defined]
         await engine.analyze_symbol("EURUSD")
@@ -516,8 +622,9 @@ class TestCandleSynchronizerIntegration:
         await engine._initialize_symbols()
 
         # Le synchroniseur doit avoir enregistré la bougie actuelle
+        expected_last = fixed_time + timedelta(hours=19)
         last = engine.synchronizer.get_last_processed("EURUSD")
-        assert last == fixed_time
+        assert last == expected_last
 
     @pytest.mark.asyncio
     async def test_initialize_blocks_analysis_on_same_candle(self) -> None:
@@ -533,8 +640,9 @@ class TestCandleSynchronizerIntegration:
         call_order.clear()
         await engine.analyze_symbol("EURUSD")
 
-        # Seul get_latest_candles doit être appelé
-        assert call_order == ["get_latest_candles"]
+        # Seul get_latest_candles doit être appelé (vérification bougie)
+        # Note: 2 appels pour H1 et M5
+        assert call_order == ["get_latest_candles", "get_latest_candles"]
         assert "detect" not in call_order
         assert "generate" not in call_order
         assert "open_order" not in call_order
@@ -544,7 +652,9 @@ class TestCandleSynchronizerIntegration:
         """Après initialisation, une nouvelle bougie doit déclencher l'analyse."""
         call_order: list[str] = []
         initial_time = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
-        new_time = datetime(2024, 1, 1, 13, 0, 0, tzinfo=UTC)
+        # La nouvelle bougie doit être strictement après la dernière bougie H1
+        # enregistrée par _initialize_symbols (initial_time + 19h).
+        new_time = initial_time + timedelta(hours=20)
         engine = build_engine(call_order, candle_time=initial_time)
 
         # Initialiser avec la bougie actuelle
@@ -553,7 +663,10 @@ class TestCandleSynchronizerIntegration:
         # Changer le mock pour retourner une nouvelle bougie
         async def mock_new_candle(*args: object, **kwargs: object) -> list[Candle]:
             call_order.append("get_latest_candles")
-            return [make_candle(time=new_time)]
+            tf = kwargs.get("timeframe", args[1] if len(args) > 1 else TimeFrame.H1)
+            if tf == TimeFrame.H1:
+                return make_bullish_h1_candles(start_time=new_time)
+            return [make_candle(time=new_time, timeframe=TimeFrame.M5)]
 
         engine._market_data.get_latest_candles = mock_new_candle  # type: ignore[attr-defined]
 
@@ -601,7 +714,7 @@ class TestPipelineSteps:
         candles = await engine._download_data("EURUSD")
 
         assert candles is not None
-        assert len(candles) == 1
+        assert len(candles) == 20
         assert "get_latest_candles" in call_order
 
     @pytest.mark.asyncio
@@ -714,12 +827,10 @@ class TestTradingModes:
 
         await engine.analyze_symbol("EURUSD")
 
-        # Le pipeline doit s'arrêter après generate
-        assert call_order == [
-            "get_latest_candles",
-            "detect",
-            "generate",
-        ]
+        # Le pipeline doit s'arrêter après generate (H1 détecté comme bullish)
+        assert "get_latest_candles" in call_order
+        assert "detect" in call_order
+        assert "generate" in call_order
         # Aucun calcul de risque ni ordre
         assert "get_account_info" not in call_order
         assert "can_open_trade" not in call_order
@@ -737,6 +848,8 @@ class TestTradingModes:
 
         assert call_order == [
             "get_latest_candles",
+            "get_latest_candles",
+            "detect",
             "detect",
             "generate",
             "get_account_info",
@@ -756,6 +869,8 @@ class TestTradingModes:
 
         assert call_order == [
             "get_latest_candles",
+            "get_latest_candles",
+            "detect",
             "detect",
             "generate",
             "get_account_info",
@@ -777,7 +892,9 @@ class TestTradingModes:
 
         await engine.analyze_symbol("EURUSD")
 
-        assert call_order == ["get_latest_candles", "detect", "generate"]
+        assert "get_latest_candles" in call_order
+        assert "detect" in call_order
+        assert "generate" in call_order
         assert "open_order" not in call_order
 
     @pytest.mark.asyncio

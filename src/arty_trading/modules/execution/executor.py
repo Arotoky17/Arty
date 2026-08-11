@@ -8,6 +8,7 @@ Le mode LIVE est désactivé par défaut pour la sécurité.
 
 from __future__ import annotations
 
+import asyncio
 from decimal import Decimal
 from typing import Any
 
@@ -21,9 +22,36 @@ logger = get_logger(LogCategory.EXECUTION)
 
 try:
     import MetaTrader5 as mt5
+
     MT5_AVAILABLE = True
 except ImportError:
+    mt5 = None  # type: ignore[assignment]
     MT5_AVAILABLE = False
+
+# Erreurs MT5 transitoires -> retry automatique.
+_TRANSIENT_RETCODES: set[int] = set()
+if MT5_AVAILABLE and mt5 is not None:
+    for _name in (
+        "TRADE_RETCODE_REQUOTE",
+        "TRADE_RETCODE_PRICE_CHANGED",
+        "TRADE_RETCODE_TIMEOUT",
+        "TRADE_RETCODE_REJECT",
+    ):
+        _code = getattr(mt5, _name, None)
+        if _code is not None:
+            _TRANSIENT_RETCODES.add(_code)
+
+
+class MT5OrderError(Exception):
+    """
+    Erreur d'exécution d'ordre MT5.
+
+    Levée lorsqu'un ordre réel (démo ou live) ne peut pas être exécuté
+    (requote, marché fermé, fonds insuffisants, etc.). Contrairement au
+    mode mock, aucune simulation silencieuse ne doit masquer l'échec d'un
+    ordre réel : l'erreur doit remonter jusqu'au moteur pour être
+    journalisée et notifiée.
+    """
 
 
 class OrderExecutor(IOrderExecutor):
@@ -58,6 +86,17 @@ class OrderExecutor(IOrderExecutor):
         self._mock_mode = mock_mode if mock_mode is not None else not MT5_AVAILABLE
         self._mock_ticket = 10000
         self._mock_trades: dict[int, Trade] = {}
+        # Paramètres d'exécution MT5 (démo/live).
+        self._max_deviation: int = 20
+        self._magic_number: int = 123456
+        # Métriques d'exécution pour le monitoring.
+        self._execution_metrics: dict[str, Any] = {
+            "total_attempts": 0,
+            "successes": 0,
+            "failures": 0,
+            "retries": 0,
+            "last_error": None,
+        }
 
     @property
     def is_mock_mode(self) -> bool:
@@ -67,6 +106,11 @@ class OrderExecutor(IOrderExecutor):
     def is_live_trading_enabled(self) -> bool:
         """Vérifie si le trading réel est autorisé."""
         return self._settings.is_live_trading_enabled
+
+    @property
+    def execution_metrics(self) -> dict[str, Any]:
+        """Métriques d'exécution pour le monitoring."""
+        return dict(self._execution_metrics)
 
     # =========================================================================
     # IOrderExecutor
@@ -91,8 +135,8 @@ class OrderExecutor(IOrderExecutor):
         if self._mock_mode or not MT5_AVAILABLE:
             return self._mock_open_order(signal, volume)
 
-        # Exécution MT5 réelle
-        return await self._mt5_open_order(signal, volume)
+        # Exécution MT5 réelle avec retry
+        return await self._mt5_open_order_with_retry(signal, volume)
 
     async def close_order(self, trade: Trade) -> Trade:
         """
@@ -107,7 +151,7 @@ class OrderExecutor(IOrderExecutor):
         if self._mock_mode or not MT5_AVAILABLE:
             return self._mock_close_order(trade)
 
-        return await self._mt5_close_order(trade)
+        return await self._mt5_close_order_with_retry(trade)
 
     async def modify_order(
         self,
@@ -129,7 +173,7 @@ class OrderExecutor(IOrderExecutor):
         if self._mock_mode or not MT5_AVAILABLE:
             return self._mock_modify_order(trade, stop_loss, take_profit)
 
-        return await self._mt5_modify_order(trade, stop_loss, take_profit)
+        return await self._mt5_modify_order_with_retry(trade, stop_loss, take_profit)
 
     async def close_partial_order(self, trade: Trade, fraction: float) -> Trade | None:
         """Clôture une fraction d'une position MT5 et conserve le reliquat ouvert."""
@@ -312,6 +356,119 @@ class OrderExecutor(IOrderExecutor):
         return trade
 
     # =========================================================================
+    # Retry Helpers
+    # =========================================================================
+
+    async def _mt5_open_order_with_retry(
+        self, signal: Signal, volume: float, max_retries: int = 3
+    ) -> Trade:
+        """Ouvre un ordre via MT5 avec retry sur erreurs transitoires."""
+        last_error: Exception | None = None
+        for attempt in range(1, max_retries + 1):
+            self._execution_metrics["total_attempts"] += 1
+            try:
+                trade = await self._mt5_open_order(signal, volume)
+                self._execution_metrics["successes"] += 1
+                return trade
+            except MT5OrderError as exc:
+                last_error = exc
+                retcode = self._extract_retcode(exc)
+                if retcode in _TRANSIENT_RETCODES and attempt < max_retries:
+                    self._execution_metrics["retries"] += 1
+                    delay = min(2 ** attempt, 10)
+                    logger.warning(
+                        "Retry ouverture ordre | tentative=%d/%d | retcode=%s | attente %ds",
+                        attempt, max_retries, retcode, delay,
+                    )
+                    await asyncio.sleep(delay)
+                    continue
+                self._execution_metrics["failures"] += 1
+                self._execution_metrics["last_error"] = str(exc)
+                raise
+        raise last_error  # type: ignore[misc]
+
+    async def _mt5_close_order_with_retry(
+        self, trade: Trade, max_retries: int = 3
+    ) -> Trade:
+        """Ferme un ordre via MT5 avec retry sur erreurs transitoires."""
+        last_error: Exception | None = None
+        for attempt in range(1, max_retries + 1):
+            self._execution_metrics["total_attempts"] += 1
+            try:
+                closed = await self._mt5_close_order(trade)
+                self._execution_metrics["successes"] += 1
+                return closed
+            except MT5OrderError as exc:
+                last_error = exc
+                retcode = self._extract_retcode(exc)
+                if retcode in _TRANSIENT_RETCODES and attempt < max_retries:
+                    self._execution_metrics["retries"] += 1
+                    delay = min(2 ** attempt, 10)
+                    logger.warning(
+                        "Retry fermeture ordre | ticket=%d | tentative=%d/%d "
+                        "| retcode=%s | attente %ds",
+                        trade.ticket,
+                        attempt,
+                        max_retries,
+                        retcode,
+                        delay,
+                    )
+                    await asyncio.sleep(delay)
+                    continue
+                self._execution_metrics["failures"] += 1
+                self._execution_metrics["last_error"] = str(exc)
+                raise
+        raise last_error  # type: ignore[misc]
+
+    async def _mt5_modify_order_with_retry(
+        self,
+        trade: Trade,
+        stop_loss: float | None = None,
+        take_profit: float | None = None,
+        max_retries: int = 3,
+    ) -> Trade:
+        """Modifie un ordre via MT5 avec retry sur erreurs transitoires."""
+        last_error: Exception | None = None
+        for attempt in range(1, max_retries + 1):
+            self._execution_metrics["total_attempts"] += 1
+            try:
+                modified = await self._mt5_modify_order(trade, stop_loss, take_profit)
+                self._execution_metrics["successes"] += 1
+                return modified
+            except MT5OrderError as exc:
+                last_error = exc
+                retcode = self._extract_retcode(exc)
+                if retcode in _TRANSIENT_RETCODES and attempt < max_retries:
+                    self._execution_metrics["retries"] += 1
+                    delay = min(2 ** attempt, 10)
+                    logger.warning(
+                        "Retry modification ordre | ticket=%d | tentative=%d/%d "
+                        "| retcode=%s | attente %ds",
+                        trade.ticket,
+                        attempt,
+                        max_retries,
+                        retcode,
+                        delay,
+                    )
+                    await asyncio.sleep(delay)
+                    continue
+                self._execution_metrics["failures"] += 1
+                self._execution_metrics["last_error"] = str(exc)
+                raise
+        raise last_error  # type: ignore[misc]
+
+    @staticmethod
+    def _extract_retcode(exc: Exception) -> Any:
+        """Extrait le retcode depuis un MT5OrderError."""
+        message = str(exc)
+        if "retcode=" in message:
+            try:
+                return int(message.split("retcode=")[1].split(" ")[0].split("|")[0].strip())
+            except (ValueError, IndexError):
+                pass
+        return None
+
+    # =========================================================================
     # MT5 Implementation (quand MT5 disponible)
     # =========================================================================
 
@@ -320,10 +477,13 @@ class OrderExecutor(IOrderExecutor):
         # Vérifier que MT5 est initialisé
         if not mt5.initialize():
             logger.error("MT5 initialize() a échoué")
-            return self._mock_open_order(signal, volume)
+            raise MT5OrderError("MT5 non initialisé")
 
         # Préparer la requête
-        order_type = mt5.ORDER_TYPE_BUY if signal.direction == Direction.BUY else mt5.ORDER_TYPE_SELL
+        if signal.direction == Direction.BUY:
+            order_type = mt5.ORDER_TYPE_BUY
+        else:
+            order_type = mt5.ORDER_TYPE_SELL
         request = {
             "action": mt5.TRADE_ACTION_DEAL,
             "symbol": signal.symbol,
@@ -332,19 +492,25 @@ class OrderExecutor(IOrderExecutor):
             "price": float(signal.entry_price),
             "sl": float(signal.stop_loss),
             "tp": float(signal.take_profit),
-            "deviation": 20,
-            "magic": 123456,
+            "deviation": self._max_deviation,
+            "magic": self._magic_number,
             "comment": signal.strategy_name,
             "type_time": mt5.ORDER_TIME_GTC,
-            "type_filling": mt5.ORDER_FILLING_IOC,
+            "type_filling": mt5.ORDER_FILLING_FOK,
         }
 
         result = mt5.order_send(request)
 
         if result is None or result.retcode != mt5.TRADE_RETCODE_DONE:
             retcode = result.retcode if result else "None"
-            logger.error("MT5 order_send échec | retcode=%s", retcode)
-            return self._mock_open_order(signal, volume)
+            reason = self._describe_retcode(retcode)
+            logger.error(
+                "MT5 order_send échec | %s | retcode=%s | %s",
+                signal.symbol, retcode, reason,
+            )
+            raise MT5OrderError(
+                f"Échec ouverture ordre {signal.symbol} | retcode={retcode} | {reason}"
+            )
 
         # Créer le trade
         trade = Trade(
@@ -364,21 +530,62 @@ class OrderExecutor(IOrderExecutor):
         )
         return trade
 
+    @staticmethod
+    def _describe_retcode(retcode: Any) -> str:
+        """
+        Traduit un code retour MT5 en message lisible pour les logs.
+
+        Couvre les erreurs fréquentes : requote, marché fermé, volume
+        invalide, fonds insuffisants, etc.
+
+        Note : certaines constantes ``TRADE_RETCODE_*`` ne sont pas
+        disponibles dans toutes les versions du package ``MetaTrader5``.
+        On utilise donc ``getattr`` avec un repli sûr pour ne jamais lever
+        d'``AttributeError`` (ce qui masquerait l'erreur réelle d'exécution).
+        """
+        if retcode in (None, "", "None"):
+            return "aucune réponse de MT5"
+
+        def rc(name: str) -> Any:
+            """Retourne la constante MT5 si elle existe, sinon un code sentinelle."""
+            return getattr(mt5, name, -1)
+
+        mapping = {
+            rc("TRADE_RETCODE_REQUOTE"): "requote (prix modifié)",
+            rc("TRADE_RETCODE_REJECT"): "requête rejetée",
+            rc("TRADE_RETCODE_ERROR"): "erreur d'exécution",
+            rc("TRADE_RETCODE_TIMEOUT"): "timeout",
+            rc("TRADE_RETCODE_INVALID_PRICE"): "prix invalide",
+            rc("TRADE_RETCODE_INVALID_STOPS"): "stops invalides",
+            rc("TRADE_RETCODE_INVALID_VOLUME"): "volume invalide",
+            rc("TRADE_RETCODE_MARKET_CLOSED"): "marché fermé",
+            rc("TRADE_RETCODE_NO_MONEY"): "fonds insuffisants",
+            rc("TRADE_RETCODE_MARGIN"): "marge insuffisante",
+            rc("TRADE_RETCODE_PRICE_CHANGED"): "prix modifié",
+            rc("TRADE_RETCODE_PRICE_OFF"): "prix hors limite",
+            rc("TRADE_RETCODE_SERVER_DISABLES_AT"): "trading auto désactivé à l'exécution",
+        }
+        return mapping.get(retcode, f"code {retcode}")
+
     async def _mt5_close_order(self, trade: Trade) -> Trade:
         """Ferme un ordre via MT5."""
         if not mt5.initialize():
             logger.error("MT5 initialize() a échoué")
-            return self._mock_close_order(trade)
+            raise MT5OrderError("MT5 non initialisé")
 
         # Récupérer la position
         positions = mt5.positions_get(ticket=trade.ticket)
         if not positions:
             logger.warning("Position %d introuvable", trade.ticket)
-            return self._mock_close_order(trade)
+            raise MT5OrderError(f"Position {trade.ticket} introuvable")
 
         pos = positions[0]
-        close_type = mt5.ORDER_TYPE_SELL if trade.direction == Direction.BUY else mt5.ORDER_TYPE_BUY
-        close_price = mt5.symbol_info_tick(trade.symbol).bid if trade.direction == Direction.BUY else mt5.symbol_info_tick(trade.symbol).ask
+        if trade.direction == Direction.BUY:
+            close_type = mt5.ORDER_TYPE_SELL
+            close_price = mt5.symbol_info_tick(trade.symbol).bid
+        else:
+            close_type = mt5.ORDER_TYPE_BUY
+            close_price = mt5.symbol_info_tick(trade.symbol).ask
 
         request = {
             "action": mt5.TRADE_ACTION_DEAL,
@@ -387,19 +594,25 @@ class OrderExecutor(IOrderExecutor):
             "type": close_type,
             "price": close_price,
             "position": trade.ticket,
-            "deviation": 20,
-            "magic": 123456,
+            "deviation": self._max_deviation,
+            "magic": self._magic_number,
             "comment": "Close",
             "type_time": mt5.ORDER_TIME_GTC,
-            "type_filling": mt5.ORDER_FILLING_IOC,
+            "type_filling": mt5.ORDER_FILLING_FOK,
         }
 
         result = mt5.order_send(request)
 
         if result is None or result.retcode != mt5.TRADE_RETCODE_DONE:
             retcode = result.retcode if result else "None"
-            logger.error("MT5 close_order échec | retcode=%s", retcode)
-            return self._mock_close_order(trade)
+            reason = self._describe_retcode(retcode)
+            logger.error(
+                "MT5 close_order échec | ticket=%s | retcode=%s | %s",
+                trade.ticket, retcode, reason,
+            )
+            raise MT5OrderError(
+                f"Échec fermeture position {trade.ticket} | retcode={retcode} | {reason}"
+            )
 
         trade.close_price = Decimal(str(result.price))
         trade.profit = Decimal(str(pos.profit))
@@ -418,7 +631,7 @@ class OrderExecutor(IOrderExecutor):
         """Modifie un ordre via MT5."""
         if not mt5.initialize():
             logger.error("MT5 initialize() a échoué")
-            return self._mock_modify_order(trade, stop_loss, take_profit)
+            raise MT5OrderError("MT5 non initialisé")
 
         new_sl = float(stop_loss) if stop_loss is not None else float(trade.stop_loss)
         new_tp = float(take_profit) if take_profit is not None else float(trade.take_profit)
@@ -435,8 +648,14 @@ class OrderExecutor(IOrderExecutor):
 
         if result is None or result.retcode != mt5.TRADE_RETCODE_DONE:
             retcode = result.retcode if result else "None"
-            logger.error("MT5 modify_order échec | retcode=%s", retcode)
-            return self._mock_modify_order(trade, stop_loss, take_profit)
+            reason = self._describe_retcode(retcode)
+            logger.error(
+                "MT5 modify_order échec | ticket=%s | retcode=%s | %s",
+                trade.ticket, retcode, reason,
+            )
+            raise MT5OrderError(
+                f"Échec modification position {trade.ticket} | retcode={retcode} | {reason}"
+            )
 
         if stop_loss is not None:
             trade.stop_loss = Decimal(str(new_sl))

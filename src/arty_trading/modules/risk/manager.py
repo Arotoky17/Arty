@@ -76,6 +76,9 @@ class RiskManager(IRiskManager):
             return False
         if signal.confidence < self._min_confidence:
             return False
+        # Blocage si le spread est trop élevé (conditions de marché dégradées).
+        if not await self._spread_within_limit(signal.symbol):
+            return False
         rr = signal.risk_reward_ratio
         if rr < self._min_rr:
             return False
@@ -144,6 +147,36 @@ class RiskManager(IRiskManager):
         )
         return volume
 
+    async def _spread_within_limit(self, symbol: str) -> bool:
+        """
+        Vérifie que le spread actuel du symbole reste sous le seuil configuré.
+
+        Si le provider de données de marché n'est pas disponible, la règle
+        est considérée comme respectée (on ne bloque pas par défaut).
+
+        Returns:
+            True si le spread est acceptable (ou inconnu), sinon False.
+        """
+        if self._market_data is None:
+            return True
+        try:
+            spread = await self._market_data.get_spread(symbol)
+        except Exception as exc:  # noqa: BLE001 - on ne bloque pas sur une erreur de lecture
+            logger.warning(
+                "Impossible de lire le spread | %s | %s", symbol, exc,
+            )
+            return True
+        max_spread = self._settings.max_spread_by_symbol.get(
+            symbol.upper(), self._settings.max_spread
+        )
+        if spread > max_spread:
+            logger.warning(
+                "Spread trop élevé | %s | spread=%d points | max=%d points - trade bloqué",
+                symbol, spread, max_spread,
+            )
+            return False
+        return True
+
     async def _get_tick_info(self, symbol: str) -> tuple[float | None, float | None]:
         """Interroge les vraies infos du symbole (tick size/value).
 
@@ -211,9 +244,14 @@ class RiskManager(IRiskManager):
             )
 
     def reset_daily(self) -> None:
-        """Réinitialise les compteurs journaliers."""
+        """
+        Réinitialise les compteurs journaliers (perte du jour).
+
+        Exécuté automatiquement par le ``TradingEngine`` à minuit UTC afin
+        de garantir un reset journalier fiable des circuit breakers.
+        """
         self._daily_loss = Decimal("0")
-        logger.info("Compteurs journaliers réinitialisés")
+        logger.info("Compteurs journaliers réinitialisés (reset UTC)")
 
     def get_risk_report(self) -> dict:
         """Retourne un rapport de l'état du risque."""

@@ -51,6 +51,7 @@ def main() -> None:
         logger.info("Symboles: %s", ", ".join(settings.symbols_list))
         logger.info("Timeframe: %s", settings.default_timeframe.value)
         logger.info("Live trading: %s", settings.is_live_trading_enabled)
+        logger.info("Trading actif MT5 (demo/live): %s", settings.is_trading_active)
     elif args.command == "version":
         print(f"Arty {__version__}")
     else:

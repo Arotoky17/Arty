@@ -36,6 +36,7 @@ les logs.
 from __future__ import annotations
 
 import asyncio
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 
@@ -44,7 +45,7 @@ from arty_trading.application.statistics import TradingStatistics
 from arty_trading.application.trade_journal import TradeJournal
 from arty_trading.config.settings import Settings
 from arty_trading.core.entities import Candle, Signal, Trade
-from arty_trading.core.enums import LogCategory, TimeFrame, TradingMode
+from arty_trading.core.enums import Direction, LogCategory, TimeFrame, TradingMode
 from arty_trading.core.interfaces import (
     IMarketDataProvider,
     IMT5Connector,
@@ -54,7 +55,12 @@ from arty_trading.core.interfaces import (
 )
 from arty_trading.logging import get_logger
 from arty_trading.modules.decision import MultiTimeframeAnalyzer
-from arty_trading.modules.execution import OrderExecutor, PaperOrderExecutor, PositionManager
+from arty_trading.modules.execution import (
+    MT5OrderError,
+    OrderExecutor,
+    PaperOrderExecutor,
+    PositionManager,
+)
 from arty_trading.modules.risk import RiskManager
 from arty_trading.modules.signals import SignalGenerator
 from arty_trading.modules.signals.news import EconomicCalendar
@@ -114,6 +120,7 @@ class TradingEngine:
         mt5_connector: IMT5Connector,
         poll_interval: float = 5.0,
         candle_count: int = 100,
+        notifier: Any | None = None,
     ) -> None:
         """
         Initialise le moteur de trading.
@@ -128,6 +135,9 @@ class TradingEngine:
             mt5_connector: Connecteur MT5 (pour les infos du compte)
             poll_interval: Intervalle de polling en secondes (défaut 5s)
             candle_count: Nombre de bougies à récupérer (défaut 100)
+            notifier: Gestionnaire de notifications (NotificationManager) pour
+                les alertes critiques (trade ouvert/fermé, erreurs, rapport
+                journalier). Optionnel — désactivé si None.
         """
         self._settings = settings
         self._market_data = market_data
@@ -138,6 +148,7 @@ class TradingEngine:
         self._mt5_connector = mt5_connector
         self._poll_interval = poll_interval
         self._candle_count = candle_count
+        self._notifier = notifier
 
         self._symbols: list[str] = list(settings.symbols_list)
         self._timeframe: TimeFrame = settings.default_timeframe
@@ -176,6 +187,14 @@ class TradingEngine:
             if getattr(journal_settings, "enabled", False) is True
             else None
         )
+
+        # --- Robustesse 24/7 ---
+        # Date UTC du dernier reset journalier (au premier cycle, il est nul).
+        self._last_daily_reset: str | None = None
+        # Séquence de reconnexion pour éviter une boucle de retry agressive.
+        self._reconnect_attempts: int = 0
+        # Dernière alerte de déconnexion envoyée (anti-spam).
+        self._disconnected_notified: bool = False
 
     # -------------------------------------------------------------------------
     # Propriétés
@@ -227,7 +246,7 @@ class TradingEngine:
 
         1. Téléchargement des données (``_download_data``)
         2. Vérification nouvelle bougie (``CandleSynchronizer``)
-        3. Analyse SMC (``_analyze_smc``)
+        3. Analyse MTF (H1 direction + M5 confirmation)
         4. Validation / génération de signal (``_generate_signal``)
         5. Calcul du risque (``_calculate_risk``)
         6. Trade / exécution (``_execute_trade``)
@@ -237,16 +256,20 @@ class TradingEngine:
             symbol: Symbole à analyser (ex: EURUSD)
         """
         # ------------------------------------------------------------------
-        # Étape 1 : Téléchargement des données
+        # Étape 1 : Téléchargement des données H1 + M5
         # ------------------------------------------------------------------
-        candles = await self._download_data(symbol)
-        if candles is None:
+        htf_candles = await self._download_data(symbol, self._settings.default_timeframe)
+        if htf_candles is None:
+            return
+
+        ltf_candles = await self._download_data(symbol, TimeFrame.M5)
+        if ltf_candles is None:
             return
 
         # ------------------------------------------------------------------
-        # Étape 2 : Vérification nouvelle bougie
+        # Étape 2 : Vérification nouvelle bougie (sur le LTF)
         # ------------------------------------------------------------------
-        latest_candle = max(candles, key=lambda c: c.time)
+        latest_candle = max(ltf_candles, key=lambda c: c.time)
 
         if not self._synchronizer.is_new_candle(symbol, latest_candle.time):
             logger.debug(
@@ -257,64 +280,67 @@ class TradingEngine:
             )
             return
 
-        # Marquer la bougie comme traitée **immédiatement** pour garantir
-        # qu'elle ne sera jamais ré-analysée, même si l'analyse échoue.
         self._synchronizer.mark_processed(symbol, latest_candle.time)
-
-        # Enregistrer l'analyse dans les statistiques (tous les modes)
         self._statistics.record_analysis(symbol)
 
         logger.info("╔════════════════════════════════════════════════════════════")
         logger.info(
-            "║ Nouvelle bougie détectée | %s | %s | time=%s",
+            "║ Nouvelle bougie détectée | %s | M5 | time=%s",
             symbol,
-            self._timeframe.value,
             latest_candle.time.isoformat(),
         )
         logger.info("╚════════════════════════════════════════════════════════════")
 
         # ------------------------------------------------------------------
-        # Étape 3 : Analyse SMC
+        # Étape 3 : Analyse MTF (H1 direction + M5 confirmation)
         # ------------------------------------------------------------------
-        smc_data = await self._analyze_smc(symbol, candles)
-        if smc_data is None:
+        market_context = await self._analyze_multitimeframe(symbol, htf_candles, ltf_candles)
+        if market_context is None:
+            logger.info("Pipeline arrete (Etape 3) | %s | analyse MTF echouee", symbol)
+            return
+
+        self._log_market_context(market_context)
+
+        if market_context.is_neutral():
+            logger.info(
+                "NO_TRADE | %s | H1=NEUTRAL | aucune direction claire",
+                symbol,
+            )
             return
 
         # ------------------------------------------------------------------
-        # Étape 4 : Validation (génération de signal)
+        # Étape 4 : Validation / génération de signal
         # ------------------------------------------------------------------
-        htf_trends: dict[str, str] | None = None
-        htf_smc_data: list[dict] | None = None
-        decision_settings = getattr(self._settings, "decision", None)
-        if (
-            getattr(decision_settings, "enabled", False) is True
-            and getattr(decision_settings, "enable_mtf", False) is True
-        ):
-            try:
-                mtf = await self._mtf_analyzer.analyze(symbol, self._candle_count)
-                htf_trends = mtf.trends
-                htf_smc_data = mtf.detections.get(TimeFrame.H1, [])
-            except Exception as exc:
-                logger.error("Analyse multi-timeframe échouée | %s | %s", symbol, exc)
-                return
-
         signal = await self._generate_signal(
             symbol,
-            candles,
-            smc_data,
-            htf_smc_data=htf_smc_data,
-            htf_trends=htf_trends,
+            ltf_candles,
+            market_context.ltf_smc_data,
+            htf_smc_data=market_context.htf_smc_data,
+            htf_trend=market_context.master_trend,
+            htf_trends={"H1": market_context.master_trend},
             has_high_impact_news=(
                 self._economic_calendar.is_blocked(symbol)
                 if self._economic_calendar is not None
                 else False
             ),
+            master_trend=market_context.master_trend,
+            market_context=market_context,
         )
         if signal is None:
+            logger.info("Pipeline arrete (Etape 4) | %s | aucun signal genere", symbol)
             return
 
-        # Mode ANALYSIS : arrêter après la génération du signal
-        # (aucune position ouverte, uniquement les analyses)
+        # Revalidation juste avant exécution (étape 5)
+        revalidation_passed = await self._revalidate_before_execution(
+            symbol, signal, market_context
+        )
+        if not revalidation_passed:
+            logger.info(
+                "Pipeline arrete (Revalidation) | %s | signal devenu invalide",
+                symbol,
+            )
+            return
+
         if self._trading_mode == TradingMode.ANALYSIS:
             logger.info(
                 "Mode ANALYSIS | signal généré, aucune position ouverte | %s | %s",
@@ -328,6 +354,7 @@ class TradingEngine:
         # ------------------------------------------------------------------
         volume = await self._calculate_risk(symbol, signal)
         if volume is None:
+            logger.info("Pipeline arrete (Etape 5) | %s | calcul du risque refuse", symbol)
             return
 
         # ------------------------------------------------------------------
@@ -335,9 +362,9 @@ class TradingEngine:
         # ------------------------------------------------------------------
         trade = await self._execute_trade(symbol, signal, volume)
         if trade is None:
+            logger.info("Pipeline arrete (Etape 6) | %s | execution ordre echouee", symbol)
             return
 
-        # Enregistrer le trade dans les statistiques (modes PAPER et LIVE)
         self._statistics.record_trade_opened(trade)
         if self._journal is not None:
             self._journal.record(trade, "opened")
@@ -351,7 +378,7 @@ class TradingEngine:
     # Étapes du pipeline
     # -------------------------------------------------------------------------
 
-    async def _download_data(self, symbol: str) -> list[Candle] | None:
+    async def _download_data(self, symbol: str, timeframe: TimeFrame | None = None) -> list[Candle] | None:
         """
         Étape 1 — Téléchargement des données de marché.
 
@@ -359,30 +386,149 @@ class TradingEngine:
 
         Args:
             symbol: Symbole à analyser (ex: EURUSD)
+            timeframe: Timeframe à télécharger (défaut: timeframe du moteur)
 
         Returns:
             Liste de bougies, ou ``None`` si la récupération échoue.
         """
         market_logger = get_logger(LogCategory.MARKET_DATA)
+        tf = timeframe or self._timeframe
         try:
             candles = await self._market_data.get_latest_candles(
-                symbol, self._timeframe, self._candle_count
+                symbol, tf, self._candle_count
             )
         except Exception as exc:
-            market_logger.error("Erreur récupération bougies | %s | %s", symbol, exc)
+            market_logger.error("Erreur récupération bougies | %s | %s | %s", symbol, tf.value, exc)
             return None
 
         if not candles:
-            market_logger.warning("Aucune bougie reçue | %s", symbol)
+            market_logger.warning("Aucune bougie reçue | %s | %s", symbol, tf.value)
             return None
 
         market_logger.info(
             "Bougies récupérées | %s | %s | %d bougies",
             symbol,
-            self._timeframe.value,
+            tf.value,
             len(candles),
         )
         return candles
+
+    async def _analyze_multitimeframe(
+        self, symbol: str, htf_candles: list[Candle], ltf_candles: list[Candle]
+    ) -> Any | None:
+        """
+        Étape 3 — Analyse multi-timeframe (MTF).
+
+        Détermine la tendance maître sur le timeframe supérieur (1H) et
+        analyse les concepts SMC sur le timeframe d'entrée (5M).
+
+        Args:
+            symbol: Symbole à analyser
+            htf_candles: Bougies du timeframe supérieur (1H)
+            ltf_candles: Bougies du timeframe d'entrée (5M)
+
+        Returns:
+            MarketContext ou None si l'analyse échoue
+        """
+        from arty_trading.modules.decision.master_trend import MasterTrendAnalyzer
+
+        trend_analyzer = MasterTrendAnalyzer(htf=TimeFrame.H1)
+        master_trend = trend_analyzer.get_master_trend(htf_candles)
+
+        htf_smc_data: list[dict] = []
+        ltf_smc_data: list[dict] = []
+
+        try:
+            htf_smc_data = await self._smc_detector.detect(htf_candles, symbol)
+        except Exception as exc:
+            logger.error("Erreur analyse SMC H1 | %s | %s", symbol, exc)
+
+        try:
+            ltf_smc_data = await self._smc_detector.detect(ltf_candles, symbol)
+        except Exception as exc:
+            logger.error("Erreur analyse SMC M5 | %s | %s", symbol, exc)
+
+        market_context = trend_analyzer.build_market_context(
+            symbol=symbol,
+            htf_candles=htf_candles,
+            ltf_candles=ltf_candles,
+            htf_smc_data=htf_smc_data,
+            ltf_smc_data=ltf_smc_data,
+        )
+
+        logger.info(
+            "Analyse MTF | %s | H1=%s | M5 detections=%d | H1 detections=%d",
+            symbol,
+            market_context.master_trend,
+            len(ltf_smc_data),
+            len(htf_smc_data),
+        )
+
+        return market_context
+
+    def _log_market_context(self, ctx: Any) -> None:
+        """Log structuré du contexte marché."""
+        data = ctx.to_dict()
+        logger.info("[MARKET] symbol=%s HTF=%s LTF=%s", data["symbol"], data["htf"], data["ltf"])
+        logger.info("[TREND] H1=%s structure=%s", data["master_trend"], data.get("trend_details", {}).get("pattern", "N/A"))
+        logger.info("[LEVEL] premium=%s discount=%s", data["premium"], data["discount"])
+        logger.info("[5M] LTF detections=%d", len(ctx.ltf_smc_data))
+        logger.info("[DIRECTION GATE] master=%s allows_buy=%s allows_sell=%s",
+                     data["master_trend"], data["allows_buy"], data["allows_sell"])
+
+    async def _revalidate_before_execution(
+        self, symbol: str, signal: Signal, market_context: Any
+    ) -> bool:
+        """
+        Revalidation finale d'un signal juste avant l'exécution.
+
+        Vérifie que le contexte n'a pas changé entre la génération du signal
+        et l'envoi de l'ordre. Un signal devenu invalide est rejeté.
+
+        Args:
+            symbol: Symbole du trade.
+            signal: Signal à revalider.
+            market_context: Contexte marché actuel.
+
+        Returns:
+            True si le signal est toujours valide, False sinon.
+        """
+        reval_logger = get_logger(LogCategory.SIGNAL)
+
+        direction_str = "bullish" if signal.direction == Direction.BUY else "bearish"
+        current_trend = market_context.master_trend
+
+        reval_logger.info(
+            "[REVALIDATION] %s | direction=%s | master_trend=%s",
+            symbol, direction_str, current_trend,
+        )
+
+        if current_trend == "neutral":
+            reval_logger.warning(
+                "Signal REJETÉ (revalidation) | %s | H1=NEUTRAL | BUY et SELL interdits",
+                symbol,
+            )
+            return False
+
+        if current_trend == "bullish" and direction_str == "bearish":
+            reval_logger.warning(
+                "Signal REJETÉ (revalidation) | %s | H1=BULLISH + SELL → MASTER_TREND_CONFLICT",
+                symbol,
+            )
+            return False
+
+        if current_trend == "bearish" and direction_str == "bullish":
+            reval_logger.warning(
+                "Signal REJETÉ (revalidation) | %s | H1=BEARISH + BUY → MASTER_TREND_CONFLICT",
+                symbol,
+            )
+            return False
+
+        reval_logger.info(
+            "[REVALIDATION] %s | PASS | signal toujours valide",
+            symbol,
+        )
+        return True
 
     async def _analyze_smc(self, symbol: str, candles: list[Candle]) -> list[dict] | None:
         """
@@ -413,8 +559,11 @@ class TradingEngine:
         candles: list[Candle],
         smc_data: list[dict],
         htf_smc_data: list[dict] | None = None,
+        htf_trend: str | None = None,
         htf_trends: dict[str, str] | None = None,
         has_high_impact_news: bool = False,
+        master_trend: str | None = None,
+        market_context: Any | None = None,
     ) -> Signal | None:
         """
         Étape 4 — Validation : génération du signal de trading.
@@ -424,8 +573,14 @@ class TradingEngine:
 
         Args:
             symbol: Symbole à analyser.
-            candles: Liste des bougies OHLCV.
-            smc_data: Détections SMC.
+            candles: Liste des bougies OHLCV (LTF - 5M).
+            smc_data: Détections SMC (LTF).
+            htf_smc_data: Détections SMC (HTF - 1H).
+            htf_trend: Tendance HTF explicite (optionnel).
+            htf_trends: Tendance HTF par timeframe (optionnel).
+            has_high_impact_news: Présence de news à impact élevé.
+            master_trend: Tendance maître 1H.
+            market_context: Contexte marché centralisé.
 
         Returns:
             Le signal généré, ou ``None`` si aucun signal n'est produit.
@@ -436,9 +591,11 @@ class TradingEngine:
                 candles,
                 smc_data,
                 htf_smc_data=htf_smc_data,
-                htf_trend=htf_trends.get("H1") if htf_trends else None,
+                htf_trend=htf_trend or (htf_trends.get("H1") if htf_trends else None),
                 htf_trends=htf_trends,
                 has_high_impact_news=has_high_impact_news,
+                master_trend=master_trend,
+                market_context=market_context,
             )
         except Exception as exc:
             signal_logger.error("Erreur génération signal | %s | %s", symbol, exc)
@@ -448,7 +605,6 @@ class TradingEngine:
             signal_logger.info("Aucun signal généré | %s", symbol)
             return None
 
-        # Enregistrer le dernier signal pour le statut / endpoint
         self._last_signal[symbol] = {
             "direction": signal.direction.value,
             "signal_type": signal.signal_type.value,
@@ -461,7 +617,6 @@ class TradingEngine:
             "time": signal.created_at.isoformat(),
         }
 
-        # Enregistrer le signal dans les statistiques (tous les modes)
         self._statistics.record_signal(signal)
 
         signal_logger.info(
@@ -500,6 +655,18 @@ class TradingEngine:
             account = await self._mt5_connector.get_account_info()
         except Exception as exc:
             risk_logger.error("Erreur récupération compte | %s | %s", symbol, exc)
+            return None
+
+        # Garde-fou : en mode DEMO, refuser si le compte s'avère réel.
+        if self._trading_mode == TradingMode.DEMO and account.mode == TradingMode.LIVE:
+            risk_logger.error(
+                "SECURITE : mode DEMO mais compte réel détecté (login=%s) - trade refusé",
+                account.login,
+            )
+            await self._notify_critical(
+                "Sécurité DEMO",
+                f"Compte réel détecté (login={account.login}) en mode DEMO - trade bloqué.",
+            )
             return None
 
         # b. can_open_trade
@@ -567,17 +734,29 @@ class TradingEngine:
         exec_logger = get_logger(LogCategory.EXECUTION)
         try:
             trade = await self._executor.open_order(signal, volume)
+        except MT5OrderError as exc:
+            exec_logger.error(
+                "Échec exécution ordre | %s | %s | %s", symbol, signal.direction.value, exc,
+            )
+            await self._notify_critical(
+                "Échec exécution ordre",
+                f"{symbol} | {signal.direction.value} | {exc}",
+            )
+            return None
         except Exception as exc:
             exec_logger.error("Erreur ouverture ordre | %s | %s", symbol, exc)
             return None
 
         exec_logger.info(
-            "Ordre ouvert | %s | %s | volume=%s | ticket=%s",
+            "Ordre ouvert | %s | %s | volume=%s | ticket=%s | entrée=%s",
             trade.symbol,
             trade.direction.value,
             trade.volume,
             trade.ticket,
+            trade.entry_price,
         )
+        # Alerte Telegram : nouveau trade ouvert.
+        await self._notify_trade_opened(trade)
         return trade
 
     async def _monitor_trade(self, symbol: str, trade: Trade) -> None:
@@ -626,7 +805,28 @@ class TradingEngine:
                     if action.kind == "modify" and action.stop_loss is not None:
                         await self._executor.modify_order(trade, stop_loss=float(action.stop_loss))
                     elif action.kind == "close":
-                        closed = await self._executor.close_order(trade)
+                        try:
+                            closed = await self._executor.close_order(trade)
+                        except MT5OrderError as exc:
+                            error_msg = str(exc)
+                            if "introuvable" in error_msg:
+                                logger.warning(
+                                    "Position fantôme supprimée du suivi | ticket=%s | %s",
+                                    trade.ticket, exc,
+                                )
+                                self._position_manager.forget(trade)
+                                self._managed_trades.pop(key, None)
+                                if isinstance(self._risk_manager, RiskManager):
+                                    self._risk_manager.close_trade(
+                                        trade, Decimal("0")
+                                    )
+                                continue
+                            logger.error("Échec fermeture position | %s | %s", trade.ticket, exc)
+                            await self._notify_critical(
+                                "Échec fermeture position",
+                                f"ticket={trade.ticket} | {exc}",
+                            )
+                            continue
                         self._statistics.record_trade_closed(closed)
                         if self._journal is not None:
                             self._journal.record(closed, action.reason)
@@ -634,12 +834,17 @@ class TradingEngine:
                             self._risk_manager.close_trade(closed, closed.profit or Decimal("0"))
                         self._position_manager.forget(trade)
                         self._managed_trades.pop(key, None)
+                        await self._notify_trade_closed(closed, action.reason)
                     elif action.kind == "partial_close":
                         partial_close = getattr(self._executor, "close_partial_order", None)
                         if partial_close is None or action.close_fraction is None:
                             logger.warning("TP partiel non supporté | ticket=%s", trade.ticket)
                             continue
-                        closed = await partial_close(trade, float(action.close_fraction))
+                        try:
+                            closed = await partial_close(trade, float(action.close_fraction))
+                        except MT5OrderError as exc:
+                            logger.error("Échec TP partiel | %s | %s", trade.ticket, exc)
+                            continue
                         if closed is not None:
                             self._statistics.record_trade_closed(closed)
                             if self._journal is not None:
@@ -749,6 +954,176 @@ class TradingEngine:
                 self._trading_mode.value,
             )
 
+    # -------------------------------------------------------------------------
+    # Robustesse 24/7 : heartbeat, reset UTC, équité, notifications
+    # -------------------------------------------------------------------------
+
+    async def _heartbeat(self) -> None:
+        """
+        Vérifie la connexion MT5 et tente une reconnexion automatique.
+
+        En modes DEMO/LIVE, si la connexion est perdue, le moteur tente de
+        se reconnecter avec un backoff simple (1, 2, 4, ... 60 s d'écart
+        entre les tentatives) pour éviter une boucle de retry agressive.
+        Une alerte est envoyée à la perte de connexion et au retour.
+        """
+        # Heartbeat uniquement pertinent quand vrais ordres MT5 (démo/live).
+        if not self._settings.is_trading_active:
+            return
+
+        try:
+            connected = await self._mt5_connector.is_connected()
+        except Exception as exc:
+            logger.warning("Heartbeat : erreur lecture connexion | %s", exc)
+            return
+
+        if connected:
+            # Reconnexion réussie : réinitialiser l'état et notifier.
+            if self._disconnected_notified:
+                logger.info("MT5 reconnexion réussie")
+                await self._notify_critical(
+                    "MT5 reconnecté",
+                    "La connexion MetaTrader 5 a été rétablie automatiquement.",
+                )
+            self._disconnected_notified = False
+            self._reconnect_attempts = 0
+            return
+
+        # Déconnecté : tenter une reconnexion avec backoff.
+        delay = min(60, 2 ** self._reconnect_attempts)
+        self._reconnect_attempts += 1
+        logger.warning(
+            "MT5 déconnecté | tentative=%d | prochaine tentative dans %ds",
+            self._reconnect_attempts, delay,
+        )
+        if not self._disconnected_notified:
+            await self._notify_critical(
+                "MT5 déconnecté",
+                "Perte de connexion MetaTrader 5 - reconnexion automatique en cours.",
+            )
+            self._disconnected_notified = True
+
+        try:
+            ok = await self._mt5_connector.reconnect()
+            if ok:
+                logger.info("MT5 reconnecté avec succès")
+                self._disconnected_notified = False
+                self._reconnect_attempts = 0
+        except Exception as exc:
+            logger.error("Erreur reconnexion MT5 | %s", exc)
+
+    async def _daily_utc_reset(self) -> None:
+        """
+        Réinitialise les circuit breakers journaliers à minuit UTC.
+
+        Compare la date UTC courante à celle du dernier reset. Si elle a
+        changé, appelle ``RiskManager.reset_daily()`` et envoie un rapport
+        journalier simple résumant la journée écoulée.
+        """
+        if not isinstance(self._risk_manager, RiskManager):
+            return
+
+        today = datetime.now(UTC).date().isoformat()
+        if today == self._last_daily_reset:
+            return
+
+        # Premier cycle : initialiser sans reset (le jour n'a pas changé).
+        if self._last_daily_reset is not None:
+            logger.info("Reset journalier UTC | %s", today)
+            self._risk_manager.reset_daily()
+            await self._notify_daily_report()
+        self._last_daily_reset = today
+
+    async def _update_equity_tracking(self) -> None:
+        """
+        Met à jour l'équité courante pour le calcul du drawdown (RiskManager).
+
+        Appelée à chaque cycle en modes DEMO/LIVE : récupère l'équité
+        réelle du compte et alimente ``update_equity`` pour surveiller le
+        drawdown maximal et déclencher le circuit breaker si nécessaire.
+        """
+        if not isinstance(self._risk_manager, RiskManager):
+            return
+        if not self._settings.is_trading_active:
+            return
+        try:
+            account = await self._mt5_connector.get_account_info()
+            self._risk_manager.update_equity(account.equity)
+            # Alerte si le drawdown maximal est atteint.
+            if self._risk_manager.current_drawdown >= self._risk_manager.settings.max_drawdown:
+                await self._notify_critical(
+                    "Drawdown atteint",
+                    f"Drawdown courant {self._risk_manager.current_drawdown * 100:.1f}% "
+                    f"≥ max {self._risk_manager.settings.max_drawdown * 100:.0f}%.",
+                )
+        except Exception as exc:
+            logger.warning("Erreur suivi équité | %s", exc)
+
+    # -------------------------------------------------------------------------
+    # Notifications (Telegram / Discord / Email)
+    # -------------------------------------------------------------------------
+
+    async def _notify_critical(self, title: str, message: str) -> None:
+        """Envoie une alerte critique si un notificateur est configuré."""
+        if self._notifier is None:
+            return
+        try:
+            await self._notifier.send_critical(title, message)
+        except Exception as exc:
+            logger.warning("Notification critique échouée | %s | %s", title, exc)
+
+    async def _notify_trade_opened(self, trade: Trade) -> None:
+        """Envoie une alerte de nouveau trade ouvert."""
+        if self._notifier is None:
+            return
+        try:
+            await self._notifier.send_trade_notification(
+                {
+                    "action": "ouvert",
+                    "symbol": trade.symbol,
+                    "direction": trade.direction.value,
+                    "volume": str(trade.volume),
+                    "entry_price": str(trade.entry_price),
+                    "stop_loss": str(trade.stop_loss),
+                    "take_profit": str(trade.take_profit),
+                    "ticket": trade.ticket,
+                }
+            )
+        except Exception as exc:
+            logger.warning("Notification trade ouvert échouée | %s", exc)
+
+    async def _notify_trade_closed(self, trade: Trade, reason: str) -> None:
+        """Envoie une alerte de trade fermé (avec résultat)."""
+        if self._notifier is None:
+            return
+        profit = trade.profit if trade.profit is not None else Decimal("0")
+        result = "win" if profit > 0 else "loss" if profit < 0 else "breakeven"
+        try:
+            await self._notifier.send_trade_notification(
+                {
+                    "action": "fermé",
+                    "result": result,
+                    "symbol": trade.symbol,
+                    "direction": trade.direction.value,
+                    "volume": str(trade.volume),
+                    "entry_price": str(trade.entry_price),
+                    "profit": str(profit),
+                    "reason": reason,
+                }
+            )
+        except Exception as exc:
+            logger.warning("Notification trade fermé échouée | %s", exc)
+
+    async def _notify_daily_report(self) -> None:
+        """Envoie un rapport journalier simple."""
+        if self._notifier is None:
+            return
+        try:
+            summary = self._statistics.get_summary()
+            await self._notifier.send_daily_report(summary)
+        except Exception as exc:
+            logger.warning("Rapport journalier échoué | %s", exc)
+
     async def run_forever(self) -> None:
         """
         Boucle principale du moteur.
@@ -782,7 +1157,18 @@ class TradingEngine:
 
             # Phase 2 : Boucle de polling
             while self._running:
+                # Heartbeat : vérifie/relance la connexion MT5 (modes actifs).
+                await self._heartbeat()
+
+                # Monitoring actif des positions ouvertes (BE, TP partiel, trailing).
                 await self._monitor_open_positions()
+
+                # Reset journalier fiable des circuit breakers (UTC).
+                await self._daily_utc_reset()
+
+                # Suivi du drawdown à partir de l'équité réelle du compte.
+                await self._update_equity_tracking()
+
                 for symbol in self._symbols:
                     try:
                         await self.analyze_symbol(symbol)

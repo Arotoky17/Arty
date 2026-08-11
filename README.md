@@ -363,6 +363,70 @@ Ouvrir http://localhost:8000/health
 
 ---
 
+## 🧪 Lancer Arty sur un compte DÉMO MT5
+
+Le mode **`demo`** connecte réellement le bot à votre compte démo MetaTrader 5
+et exécute de **vrais ordres sur ce compte démo** (aucun argent réel engagé).
+
+### 1. Configurer le compte démo dans `.env`
+
+```env
+# Mode démo : connexion réelle au compte démo + exécution réelle des ordres
+TRADING_MODE=demo
+ALLOW_LIVE_TRADING=false
+
+# Identifiants de VOTRE compte démo MetaTrader 5
+MT5_LOGIN=12345678
+MT5_PASSWORD=VotreMotDePasse
+MT5_SERVER=MetaQuotes-Demo
+MT5_PATH=C:\Program Files\MetaTrader 5\terminal64.exe
+```
+
+> 💡 `ALLOW_LIVE_TRADING` reste `false` : le mode démo n'en exige pas.
+> Le trading réel (`live`) reste donc **strictement désactivé**.
+
+### 2. Vérifications de sécurité automatiques
+
+- **Compte réel bloqué** : si le compte connecté s'avère être un compte
+  **réel** (et non démo), le trading est automatiquement refusé et une alerte
+  critique est envoyée. Aucun ordre ne sera exécuté sur un compte réel.
+- **Spread filtré** : les trades sont bloqués si le spread dépasse
+  `MAX_SPREAD_POINTS` (défaut 30).
+- **Circuit breakers** : perte journalière max, pertes consécutives max et
+  drawdown max — le reset journalier se fait automatiquement à minuit UTC.
+
+### 3. Lancer
+
+```powershell
+.\run.ps1
+# ou
+python -m arty_trading.cli serve
+```
+
+Vérifier l'état :
+
+```powershell
+Invoke-RestMethod http://localhost:8000/health
+```
+
+La réponse indique `trading_mode: demo`, `mt5_connected`, et `engine_running`.
+
+### 4. Alertes Telegram (optionnel mais recommandé)
+
+Renseigner dans `.env` :
+
+```env
+TELEGRAM_BOT_TOKEN=123456:ABC-DEF...   # obtenu via @BotFather
+TELEGRAM_CHAT_ID=123456789
+```
+
+Le bot enverra alors :
+- 🔔 nouveau trade ouvert / fermé (avec résultat)
+- ❌ erreurs critiques (échec d'exécution, perte de connexion MT5, drawdown atteint)
+- 📊 rapport journalier simple (à chaque reset UTC)
+
+---
+
 ## Structure du projet
 
 ```

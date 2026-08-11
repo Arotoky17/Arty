@@ -67,8 +67,16 @@ class DecisionEngine:
         htf_trends: dict[str, str] | None = None,
         spread: int | None = None,
         has_high_impact_news: bool = False,
+        master_trend: str | None = None,
+        market_context: Any | None = None,
     ) -> DecisionResult:
-        """Score et valide un signal sans effet de bord."""
+        """Score et valide un signal sans effet de bord.
+
+        Le Master Direction Gate est un filtre ABSOLU :
+        - 1H BULLISH → SELL rejeté
+        - 1H BEARISH → BUY rejeté
+        - 1H NEUTRAL → BUY et SELL rejetés
+        """
         direction = "bullish" if signal.direction == Direction.BUY else "bearish"
         current_spread = spread if spread is not None else (
             candles[-1].spread if candles else 0
@@ -114,7 +122,6 @@ class DecisionEngine:
         ):
             rejected.append("atr")
 
-        # Une entrée ICT requiert retracement dans une zone et confirmation.
         has_zone = bool(
             {
                 SMCConcept.ORDER_BLOCK.value,
@@ -131,6 +138,11 @@ class DecisionEngine:
         sl, tp = self._structural_levels(signal, candles, smc_data, atr)
         if self._rr(signal.entry_price, sl, tp) < self._settings.minimum_risk_reward:
             rejected.append("risk_reward")
+
+        master_trend_result = self._check_master_trend(master_trend, direction, signal)
+        if master_trend_result is not None:
+            rejected.append(master_trend_result)
+
         tier = (
             "premium"
             if score >= 90
@@ -209,6 +221,41 @@ class DecisionEngine:
         if not ranges:
             return Decimal("0")
         return sum(ranges, Decimal("0")) / Decimal(len(ranges))
+
+    def _check_master_trend(
+        self, master_trend: str | None, direction: str, signal: Signal
+    ) -> str | None:
+        """
+        Vérifie le Master Direction Gate : filtre ABSOLU basé sur la tendance 1H.
+
+        Règles :
+        - 1H BULLISH → SELL interdit → REJECT avec reason=MASTER_TREND_CONFLICT
+        - 1H BEARISH → BUY interdit → REJECT avec reason=MASTER_TREND_CONFLICT
+        - 1H NEUTRAL → BUY et SELL interdits → REJECT avec reason=MASTER_TREND_CONFLICT
+
+        Ce filtre ne peut PAS être contourné par le score ou toute autre confluence.
+
+        Args:
+            master_trend: Tendance maître ("bullish", "bearish", "neutral")
+            direction: Direction du signal ("bullish" ou "bearish")
+            signal: Signal candidat
+
+        Returns:
+            None si le filtre passe, sinon le nom du rejet
+        """
+        if master_trend is None:
+            return None
+
+        if master_trend == "neutral":
+            return "MASTER_TREND_CONFLICT"
+
+        if master_trend == "bullish" and direction == "bearish":
+            return "MASTER_TREND_CONFLICT"
+
+        if master_trend == "bearish" and direction == "bullish":
+            return "MASTER_TREND_CONFLICT"
+
+        return None
 
     @staticmethod
     def _ema_alignment(candles: list[Candle], direction: str) -> bool:

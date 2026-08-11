@@ -152,6 +152,31 @@ class NotificationManager:
         )
         return await self.send(notif)
 
+    async def send_critical(self, title: str, message: str) -> dict[str, bool]:
+        """Envoie une alerte critique (erreur, déconnexion, drawdown...)."""
+        notif = Notification(title=title, message=message, level="error")
+        return await self.send(notif)
+
+    async def send_daily_report(self, summary: dict) -> dict[str, bool]:
+        """Envoie un rapport journalier simple à partir du résumé de stats."""
+        lines = [
+            f"Analyses: {summary.get('total_analyses', 0)}",
+            f"Signaux: {summary.get('total_signals', 0)}",
+            f"Trades: {summary.get('total_trades', 0)}",
+        ]
+        wins = summary.get("winning_trades", 0)
+        losses = summary.get("losing_trades", 0)
+        total = wins + losses
+        win_rate = summary.get("win_rate", 0.0)
+        lines.append(f"Win rate: {win_rate:.1%}" if total else "Win rate: N/A")
+        lines.append(f"Profit: {summary.get('total_profit', 0)}")
+        notif = Notification(
+            title="📊 Rapport journalier",
+            message="\n".join(lines),
+            level="info",
+        )
+        return await self.send(notif)
+
     async def test_all(self) -> dict[str, bool]:
         """Teste tous les notificateurs."""
         results = {}

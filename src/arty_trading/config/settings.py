@@ -45,6 +45,21 @@ class RiskSettings(BaseSettings):
     max_open_positions: int = Field(default=3, alias="MAX_OPEN_POSITIONS")
     max_consecutive_losses: int = Field(default=3, alias="MAX_CONSECUTIVE_LOSSES")
     one_trade_per_symbol: bool = Field(default=True, alias="ONE_TRADE_PER_SYMBOL")
+    max_spread: int = Field(
+        default=30,
+        alias="MAX_SPREAD_POINTS",
+        description="Spread maximum autorisé en points ; au-delà, le trade est bloqué",
+    )
+    max_spread_by_symbol: dict[str, int] = Field(
+        default_factory=lambda: {
+            "EURUSD": 30,
+            "GBPUSD": 40,
+            "USDJPY": 30,
+            "XAUUSD": 200,
+        },
+        alias="MAX_SPREAD_BY_SYMBOL",
+        description="Spread maximum par symbole en points",
+    )
 
     @field_validator("risk_per_trade", "max_daily_risk", "max_drawdown")
     @classmethod
@@ -139,6 +154,18 @@ class DecisionSettings(BaseSettings):
     min_atr: float = Field(default=0.0, alias="MIN_ATR", ge=0.0)
     max_atr: float = Field(default=999999.0, alias="MAX_ATR", gt=0.0)
     atr_multiplier: float = Field(default=1.0, alias="ATR_MULTIPLIER", gt=0.0)
+    htf_timeframe: str = Field(default="H1", alias="HTF_TIMEFRAME")
+    entry_timeframe: str = Field(default="M5", alias="ENTRY_TIMEFRAME")
+    master_trend_enabled: bool = Field(default=True, alias="MASTER_TREND_ENABLED")
+    allow_counter_trend: bool = Field(default=False, alias="ALLOW_COUNTER_TREND")
+    use_bos: bool = Field(default=True, alias="USE_BOS")
+    use_choch: bool = Field(default=True, alias="USE_CHOCH")
+    use_mss: bool = Field(default=True, alias="USE_MSS")
+    use_ob: bool = Field(default=True, alias="USE_OB")
+    use_fvg: bool = Field(default=True, alias="USE_FVG")
+    use_ifvg: bool = Field(default=True, alias="USE_IFVG")
+    use_liquidity: bool = Field(default=True, alias="USE_LIQUIDITY")
+    use_premium_discount: bool = Field(default=True, alias="USE_PREMIUM_DISCOUNT")
 
 
 class PositionSettings(BaseSettings):
@@ -146,7 +173,7 @@ class PositionSettings(BaseSettings):
 
     model_config = SettingsConfigDict(env_prefix="", populate_by_name=True)
 
-    enabled: bool = Field(default=False, alias="POSITION_MANAGER_ENABLED")
+    enabled: bool = Field(default=True, alias="POSITION_MANAGER_ENABLED")
     enable_break_even: bool = Field(default=True, alias="ENABLE_BREAK_EVEN")
     enable_partial_tp: bool = Field(default=True, alias="ENABLE_PARTIAL_TP")
     enable_trailing_stop: bool = Field(default=True, alias="ENABLE_TRAILING_STOP")
@@ -319,6 +346,11 @@ class Settings(BaseSettings):
 
         Si le mode LIVE est demandé sans autorisation, le moteur bascule
         en mode PAPER (simulation complète sans ordres MT5 réels).
+
+        Le mode **DEMO** n'est pas concerné : il connecte un compte démo
+        MT5 et exécute de vrais ordres sur ce compte démo (aucun argent
+        réel). La vérification du type de compte (démo vs réel) est faite
+        au moment de la connexion par le ``MT5Connector``.
         """
         if self.trading_mode == TradingMode.LIVE and not self.allow_live_trading:
             self.trading_mode = TradingMode.PAPER
@@ -340,14 +372,29 @@ class Settings(BaseSettings):
         return self.trading_mode == TradingMode.PAPER
 
     @property
+    def is_demo_mode(self) -> bool:
+        """Indique si le moteur est en mode démo (compte démo MT5 réel)."""
+        return self.trading_mode == TradingMode.DEMO
+
+    @property
     def is_live_mode(self) -> bool:
         """Indique si le moteur est en mode live (trading réel)."""
         return self.trading_mode == TradingMode.LIVE
 
     @property
     def is_live_trading_enabled(self) -> bool:
-        """Indique si le trading réel est autorisé ET activé."""
+        """Indique si le trading réel (argent réel) est autorisé ET activé."""
         return self.allow_live_trading and self.trading_mode == TradingMode.LIVE
+
+    @property
+    def is_trading_active(self) -> bool:
+        """
+        Indique si le moteur exécute de **vrais** ordres MT5 (démo ou live).
+
+        True en mode ``DEMO`` ou ``LIVE`` (avec autorisation), False dans
+        les modes ``ANALYSIS`` et ``PAPER``.
+        """
+        return self.is_demo_mode or self.is_live_trading_enabled
 
     @property
     def logs_dir(self) -> str:

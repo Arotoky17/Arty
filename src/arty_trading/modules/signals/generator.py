@@ -290,7 +290,12 @@ class SignalGenerator:
                 continue
 
             try:
-                signal = await strategy.analyze(candles, smc_data)
+                signal = await strategy.analyze(
+                    candles,
+                    smc_data,
+                    htf_smc_data=htf_smc_data,
+                    htf_trend=htf_trend,
+                )
             except Exception as exc:
                 logger.error("Erreur stratégie %s | %s", name, exc, exc_info=True)
                 continue
@@ -301,8 +306,12 @@ class SignalGenerator:
 
             direction_str = "bullish" if signal.direction == Direction.BUY else "bearish"
 
+            market_regime = None
+            if market_context is not None:
+                market_regime = getattr(market_context, "regime", None)
+
             gate_rejection = self._check_master_direction_gate(
-                master_trend, direction_str, signal
+                master_trend, direction_str, signal, regime=market_regime
             )
             if gate_rejection is not None:
                 logger.info(
@@ -508,7 +517,12 @@ class SignalGenerator:
                 continue
 
             try:
-                signal = await strategy.analyze(candles, smc_data)
+                signal = await strategy.analyze(
+                    candles,
+                    smc_data,
+                    htf_smc_data=htf_smc_data,
+                    htf_trend=htf_trend,
+                )
             except Exception as exc:
                 logger.error("Erreur stratégie %s | %s", name, exc, exc_info=True)
                 continue
@@ -567,15 +581,31 @@ class SignalGenerator:
     # -------------------------------------------------------------------------
 
     def _check_master_direction_gate(
-        self, master_trend: str | None, direction: str, signal: Signal
+        self,
+        master_trend: str | None,
+        direction: str,
+        signal: Signal,
+        regime: str | None = None,
     ) -> str | None:
         """
-        Vérifie le Master Direction Gate : filtre ABSOLU basé sur la tendance 1H.
+        Vérifie le Master Direction Gate : filtre ABSOLU basé sur la tendance 1H
+        et le régime de marché.
 
-        Règles :
+        Hiérarchie des timeframes (rôle explicite de chacun) :
+        - H4 : Contexte macro — **informatif seulement**, n'autorise ni ne bloque
+          un trade. Utilisé pour le rapport et la compréhension du contexte large.
+        - H1 : Master trend — **Gate absolu**. Détermine la direction autorisée.
+        - M15 : Contexte intermédiaire — Bonus de confluence uniquement, jamais
+          un hard reject.
+        - M5 : Confirmation + entrée — CHoCH/BOS/displacement/retest/rejection
+          se jouent ici.
+
+        Règles du gate :
         - 1H BULLISH → SELL interdit
         - 1H BEARISH → BUY interdit
         - 1H NEUTRAL → BUY et SELL interdits
+        - Régime H1 = RANGE → BUY et SELL interdits (pas de tendance claire)
+        - Régime H1 = TRANSITION → BUY et SELL interdits (bascule non confirmée)
 
         Ce filtre ne peut PAS être contourné par le score ou toute autre confluence.
 
@@ -583,6 +613,9 @@ class SignalGenerator:
             master_trend: Tendance maître ("bullish", "bearish", "neutral")
             direction: Direction du signal ("bullish" ou "bearish")
             signal: Signal candidat
+            regime: Régime de marché H1 ("strong_bullish", "bullish",
+                "weak_bullish", "range", "weak_bearish", "bearish",
+                "strong_bearish", "transition")
 
         Returns:
             None si le filtre passe, sinon le nom du rejet
@@ -592,6 +625,9 @@ class SignalGenerator:
 
         if master_trend == "neutral":
             return "MASTER_TREND_CONFLICT"
+
+        if regime in ("range", "transition"):
+            return f"H1_{regime.upper()}"
 
         if master_trend == "bullish" and direction == "bearish":
             return "MASTER_TREND_CONFLICT"

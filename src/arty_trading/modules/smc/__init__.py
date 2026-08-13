@@ -8,6 +8,7 @@ Détecteurs disponibles :
 - Liquidité (Sweep, Equal High, Equal Low)
 - Premium/Discount et OTE
 - Sessions (Asia, London, New York, Kill Zones)
+- Suivi d'état des setups (SetupTracker, SetupStateMachine)
 
 Chaque détecteur est indépendant et retourne uniquement des informations de
 marché. Aucune fonction n'ouvre de trade.
@@ -29,6 +30,7 @@ from arty_trading.modules.smc.liquidity import LiquidityDetector
 from arty_trading.modules.smc.order_blocks import OrderBlockDetector
 from arty_trading.modules.smc.premium_discount import PremiumDiscountDetector
 from arty_trading.modules.smc.sessions import SessionDetector, SessionWindow
+from arty_trading.modules.smc.setup_tracker import Setup, SetupState, SetupStateMachine, SetupTracker
 from arty_trading.modules.smc.structure import StructureDetector
 
 __all__ = [
@@ -43,6 +45,10 @@ __all__ = [
     "PremiumDiscountDetector",
     "SessionDetector",
     "SessionWindow",
+    "Setup",
+    "SetupState",
+    "SetupStateMachine",
+    "SetupTracker",
     "find_swing_points",
     "find_swing_highs",
     "find_swing_lows",

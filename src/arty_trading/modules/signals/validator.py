@@ -35,6 +35,7 @@ from arty_trading.core.entities import Candle, Signal
 from arty_trading.core.enums import Direction, LogCategory, SMCConcept, TradingSession
 from arty_trading.logging.logger import get_logger
 from arty_trading.modules.smc.sessions import SessionDetector
+from arty_trading.utils.helpers import is_fresh_structure
 
 logger = get_logger(LogCategory.SIGNAL)
 
@@ -68,6 +69,33 @@ ALL_CONDITIONS: tuple[str, ...] = (
     COND_RR,
 )
 
+# Couverture de la logique de validation :
+# - Les conditions HARD sont OBLIGATOIRES : un seul échec rejette le signal
+#   (aucun trade possible). Ce sont les garde-fous de sécurité.
+# - Les conditions CONFLUENCE sont des indicateurs de QUALITÉ comptabilisés :
+#   il suffit d'en valider un minimum (``min_confluence_count``) pour que le
+#   signal passe. Un signal n'est donc plus rejeté pour un simple concept
+#   ICT manquant, tout en restant filtré sur la solidité de la confluence.
+HARD_CONDITIONS: tuple[str, ...] = (
+    COND_HTF_TREND,
+    COND_BOS,
+    COND_CHOCH,
+    COND_SESSION,
+    COND_SPREAD,
+    COND_NEWS,
+    COND_RR,
+)
+
+CONFLUENCE_CONDITIONS: tuple[str, ...] = (
+    COND_ORDER_BLOCK,
+    COND_FVG,
+    COND_LIQUIDITY_SWEEP,
+    COND_PREMIUM_DISCOUNT,
+)
+
+# Nombre de confluences dont la validation est nécessaire par défaut.
+DEFAULT_MIN_CONFLUENCE_COUNT = 2
+
 
 # =============================================================================
 # Résultat de validation
@@ -79,13 +107,25 @@ class ValidationResult:
     """
     Résultat de la validation d'un signal.
 
+    ``failed_conditions`` ne contient que les conditions **HARD** (bloquantes)
+    : tant qu'une seule d'entre elles échoue, ``is_valid`` est False.
+    Les confluences optionnelles (FVG, Order Block, Liquidity Sweep,
+    Premium/Discount) ne bloquent pas : elles sont comptabilisées dans
+    ``confluence_score`` / ``confluence_passed``. Le signal est accepté si
+    aucune condition HARD n'échoue **et** si suffisamment de confluences sont
+    présentes (``confluence_passed >= min_confluence_count``).
+
     Attributes:
-        is_valid: True si toutes les conditions sont validées
-        score: Proportion de conditions validées (0.0 à 1.0)
-        failed_conditions: Liste des noms des conditions échouées
-        explanation: Résumé textuel du résultat
-        checked_conditions: Détail condition par condition (nom → bool)
-        details: Détail textuel par condition (nom → description)
+        is_valid: True si toutes les conditions HARD sont validées ET si le
+            nombre minimum de confluences est atteint.
+        score: Proportion de conditions validées sur l'ensemble (0.0 à 1.0).
+        failed_conditions: Liste des conditions HARD échouées (bloquantes).
+        explanation: Résumé textuel du résultat.
+        checked_conditions: Détail condition par condition (nom → bool).
+        details: Détail textuel par condition (nom → description).
+        confluence_score: Proportion de confluences validées (0.0 à 1.0).
+        confluence_passed: Nombre de confluences validées (sur 4).
+        confluence_total: Nombre total de confluences évaluées (toujours 4).
     """
 
     is_valid: bool
@@ -94,6 +134,9 @@ class ValidationResult:
     explanation: str = ""
     checked_conditions: dict[str, bool] = field(default_factory=dict)
     details: dict[str, str] = field(default_factory=dict)
+    confluence_score: float = 0.0
+    confluence_passed: int = 0
+    confluence_total: int = 0
 
     def to_dict(self) -> dict[str, Any]:
         """Convertit le résultat en dictionnaire."""
@@ -104,6 +147,9 @@ class ValidationResult:
             "explanation": self.explanation,
             "checked_conditions": dict(self.checked_conditions),
             "details": dict(self.details),
+            "confluence_score": round(self.confluence_score, 4),
+            "confluence_passed": self.confluence_passed,
+            "confluence_total": self.confluence_total,
         }
 
 
@@ -114,13 +160,18 @@ class ValidationResult:
 
 class SignalValidator:
     """
-    Validateur de signaux de trading.
+    Validateur de signaux de trading (SMC/ICT).
 
-    Vérifie que toutes les conditions SMC/ICT sont réunies avant d'autoriser
-    un trade. Chaque condition est vérifiée indépendamment et journalisée.
+    Deux catégories de conditions :
+    - **HARD** (bloquantes) : tendance HTF, BOS, absence de CHoCH
+      contradictoire, session, spread, news, R/R minimum. Un seul échec
+      rejette le signal.
+    - **CONFLUENCE** (qualité comptabilisée) : Order Block, FVG, Liquidity
+      Sweep, Premium/Discount. Il suffit d'en valider au moins
+      ``min_confluence_count`` (défaut 2 sur 4) pour que le signal passe.
 
-    Le trade est autorisé uniquement si **toutes** les conditions sont
-    validées. Le score représente la proportion de conditions validées.
+    Cela évite qu'un signal solide soit rejeté pour un simple concept ICT
+    manquant, tout en gardant les garde-fous de sécurité obligatoires.
 
     Usage typique ::
 
@@ -139,6 +190,7 @@ class SignalValidator:
         require_htf_alignment: bool = True,
         require_news_filter: bool = True,
         session_detector: SessionDetector | None = None,
+        min_confluence_count: int = DEFAULT_MIN_CONFLUENCE_COUNT,
     ) -> None:
         """
         Initialise le validateur de signaux.
@@ -151,7 +203,14 @@ class SignalValidator:
             require_htf_alignment: Vérifier l'alignement de la tendance HTF
             require_news_filter: Vérifier le filtre de news
             session_detector: Détecteur de sessions (créé par défaut si None)
+            min_confluence_count: Nombre minimum de confluences à valider parmi
+                les 4 confluences optionnelles (défaut 2 sur 4).
         """
+        if not 0 <= min_confluence_count <= len(CONFLUENCE_CONDITIONS):
+            raise ValueError(
+                f"min_confluence_count doit être entre 0 et "
+                f"{len(CONFLUENCE_CONDITIONS)}"
+            )
         self._min_rr = min_risk_reward
         self._max_spread = max_spread
         self._authorized_sessions = authorized_sessions or [
@@ -162,15 +221,19 @@ class SignalValidator:
         self._require_htf_alignment = require_htf_alignment
         self._require_news_filter = require_news_filter
         self._session_detector = session_detector or SessionDetector()
+        self._min_confluence_count = min_confluence_count
 
         logger.info(
             "SignalValidator initialisé | min_rr=%.2f | max_spread=%d | "
-            "sessions=%s | htf_alignment=%s | news_filter=%s",
+            "sessions=%s | htf_alignment=%s | news_filter=%s | "
+            "min_confluence=%d/%d",
             self._min_rr,
             self._max_spread,
             [s.value for s in self._authorized_sessions],
             self._require_htf_alignment,
             self._require_news_filter,
+            self._min_confluence_count,
+            len(CONFLUENCE_CONDITIONS),
         )
 
     # -------------------------------------------------------------------------
@@ -209,6 +272,11 @@ class SignalValidator:
     def require_news_filter(self) -> bool:
         """Indique si le filtre de news est actif."""
         return self._require_news_filter
+
+    @property
+    def min_confluence_count(self) -> int:
+        """Nombre minimum de confluences à valider (parmi les 4 optionnelles)."""
+        return self._min_confluence_count
 
     # -------------------------------------------------------------------------
     # Validation principale
@@ -352,24 +420,43 @@ class SignalValidator:
         if not ok:
             failed.append(COND_RR)
 
-        # Calcul du score
+        # Calcul du score global (sur l'ensemble des 11 conditions).
         total = len(checked)
         passed = sum(1 for v in checked.values() if v)
         score = passed / total if total > 0 else 0.0
-        is_valid = len(failed) == 0
+
+        # Partition : seules les conditions HARD bloquent le trade. Les
+        # confluences optionnelles sont comptabilisées avec un seuil minimum.
+        hard_failed = [c for c in failed if c in HARD_CONDITIONS]
+        confluence_total = sum(1 for c in CONFLUENCE_CONDITIONS if c in checked)
+        confluence_passed = confluence_total - sum(
+            1 for c in CONFLUENCE_CONDITIONS if c in failed
+        )
+        hard_ok = len(hard_failed) == 0
+        confluence_ok = confluence_passed >= self._min_confluence_count
+        is_valid = hard_ok and confluence_ok
+        confluence_str = f"{confluence_passed}/{confluence_total}"
+
+        if confluence_total > 0:
+            confluence_score = confluence_passed / confluence_total
+        else:
+            confluence_score = 1.0
 
         # Explication textuelle
         if is_valid:
             explanation = (
                 f"Signal VALIDÉ | {signal.symbol} | {signal.direction.value} | "
                 f"score={score:.2f} | {passed}/{total} conditions | "
+                f"confluences={confluence_str} (min={self._min_confluence_count}) | "
                 f"stratégie={signal.strategy_name}"
             )
         else:
             explanation = (
                 f"Signal REJETÉ | {signal.symbol} | {signal.direction.value} | "
                 f"score={score:.2f} | {passed}/{total} conditions | "
-                f"échecs={failed} | stratégie={signal.strategy_name}"
+                f"échecs_hard={hard_failed} | "
+                f"confluences={confluence_str} (min={self._min_confluence_count}) | "
+                f"stratégie={signal.strategy_name}"
             )
 
         logger.info(explanation)
@@ -377,10 +464,13 @@ class SignalValidator:
         return ValidationResult(
             is_valid=is_valid,
             score=score,
-            failed_conditions=failed,
+            failed_conditions=hard_failed,
             explanation=explanation,
             checked_conditions=checked,
             details=details,
+            confluence_score=confluence_score,
+            confluence_passed=confluence_passed,
+            confluence_total=confluence_total,
         )
 
     # -------------------------------------------------------------------------
@@ -432,48 +522,34 @@ class SignalValidator:
         """
         Déduit la tendance à partir des détections SMC.
 
-        Utilise le dernier BOS (incluant internal/external) ou MSS pour
-        déterminer la direction de la tendance.
+        Utilise le dernier BOS (incluant internal/external) ou MSS **frais**
+        pour déterminer la direction de la tendance. Un événement trop ancien
+        est ignoré pour éviter qu'un BOS obsolète ne valide un signal contre
+        la structure actuelle.
         """
-        structure_detections = [
-            d
-            for d in smc_data
-            if d.get("concept")
-            in (
-                SMCConcept.BOS.value,
-                SMCConcept.INTERNAL_BOS.value,
-                SMCConcept.EXTERNAL_BOS.value,
-                SMCConcept.MSS.value,
-            )
-        ]
-        if not structure_detections:
+        total_candles = max((d.get("index", 0) for d in smc_data), default=0) + 1
+        latest = is_fresh_structure(smc_data, total_candles, max_age_bars=20)
+        if latest is None:
             return None
-
-        # Prendre la détection avec l'index le plus élevé (la plus récente)
-        latest = max(structure_detections, key=lambda d: d.get("index", 0))
         return latest.get("direction")
 
     def _check_bos(
         self, smc_data: list[dict], direction_str: str
     ) -> tuple[bool, str]:
-        """Vérifie qu'un BOS valide existe dans la direction du signal."""
-        bos_detections = [
-            d
-            for d in smc_data
-            if d.get("concept")
-            in (
-                SMCConcept.BOS.value,
-                SMCConcept.INTERNAL_BOS.value,
-                SMCConcept.EXTERNAL_BOS.value,
+        """Vérifie qu'un BOS valide et frais existe dans la direction du signal."""
+        total_candles = max((d.get("index", 0) for d in smc_data), default=0) + 1
+        latest = is_fresh_structure(smc_data, total_candles, max_age_bars=20)
+        if latest is None:
+            return False, "Aucune structure fraîche (BOS/CHoCH/MSS) disponible"
+        if latest.get("direction") != direction_str:
+            concept = latest.get("concept")
+            return False, (
+                f"Dernière structure fraîche opposée ({concept} "
+                f"{latest.get('direction')})"
             )
-            and d.get("direction") == direction_str
-        ]
-        if bos_detections:
-            latest = max(bos_detections, key=lambda d: d.get("index", 0))
-            return True, (
-                f"BOS valide ({latest['concept']}, index={latest.get('index')})"
-            )
-        return False, f"Aucun BOS dans la direction {direction_str}"
+        return True, (
+            f"BOS valide et frais ({latest['concept']}, index={latest.get('index')})"
+        )
 
     def _check_choch(
         self, smc_data: list[dict], direction_str: str
@@ -481,31 +557,38 @@ class SignalValidator:
         """
         Vérifie la validité du CHoCH.
 
-        Règle : un CHoCH dans la direction **opposée** du signal invalide le
-        signal. Un CHoCH dans la direction du signal est un plus (retournement
-        confirmé). Si aucun CHoCH n'est présent, la condition est validée (pas
-        de conflit).
+        Règle : un CHoCH **frais** dans la direction **opposée** du signal
+        invalide le signal. Un CHoCH frais dans la direction du signal est un
+        plus (retournement confirmé). Si aucun CHoCH frais n'est présent, la
+        condition est validée (pas de conflit).
         """
         opposite = "bearish" if direction_str == "bullish" else "bullish"
-        opposite_choch = [
-            d
-            for d in smc_data
-            if d.get("concept") == SMCConcept.CHOCH.value
-            and d.get("direction") == opposite
-        ]
+        total_candles = max((d.get("index", 0) for d in smc_data), default=0) + 1
+
+        opposite_choch = []
+        same_choch = []
+        for d in smc_data:
+            if d.get("concept") != SMCConcept.CHOCH.value:
+                continue
+            age = total_candles - 1 - d.get("index", 0)
+            if age > 20:
+                continue
+            if d.get("direction") == opposite:
+                opposite_choch.append(d)
+            elif d.get("direction") == direction_str:
+                same_choch.append(d)
+
         if opposite_choch:
             return False, (
                 f"CHoCH contradictoire détecté (direction={opposite})"
             )
 
-        same_choch = [
-            d
-            for d in smc_data
-            if d.get("concept") == SMCConcept.CHOCH.value
-            and d.get("direction") == direction_str
-        ]
         if same_choch:
-            return True, f"CHoCH valide dans la direction {direction_str}"
+            latest_same = max(same_choch, key=lambda d: d.get("index", 0))
+            idx = latest_same.get("index")
+            return True, (
+                f"CHoCH valide dans la direction {direction_str} (index={idx})"
+            )
 
         return True, "Aucun CHoCH contradictoire"
 
@@ -517,6 +600,9 @@ class SignalValidator:
 
         Un OB valide peut être mitigé (le prix est revenu le tester) ou non
         mitigé. Les Breaker Blocks ne sont pas considérés comme des OB valides.
+
+        Un Order Block est rejeté si le nombre de mitigations dépasse le
+        seuil maximal (zone considérée comme épuisée).
         """
         ob_detections = [
             d
@@ -526,13 +612,14 @@ class SignalValidator:
         ]
         if ob_detections:
             latest = max(ob_detections, key=lambda d: d.get("index", 0))
-            mitigated = latest.get("details", {}).get("mitigated", False)
-            if mitigated:
-                return True, (
-                    f"Order Block valide et mitigé (index={latest.get('index')})"
+            mitigation_count = latest.get("details", {}).get("mitigation_count", 0)
+            max_mitigations = 2
+            if mitigation_count > max_mitigations:
+                return False, (
+                    f"Order Block épuisé (mitigations={mitigation_count}, max={max_mitigations})"
                 )
             return True, (
-                f"Order Block valide non mitigé (index={latest.get('index')})"
+                f"Order Block valide (mitigations={mitigation_count}, index={latest.get('index')})"
             )
         return False, f"Aucun Order Block dans la direction {direction_str}"
 

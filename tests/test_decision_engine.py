@@ -93,3 +93,57 @@ def test_high_impact_news_is_a_hard_block() -> None:
     )
     assert decision.approved is False
     assert "high_impact_news" in decision.rejected_by
+
+
+# ---------------------------------------------------------------------------
+# Test de caractérisation du calcul ATR du DecisionEngine.
+# Fige le comportement ACTUEL (moyenne simple glissante sur `period` bougies),
+# qui est volontairement DIFFÉRENT du ATR Wilder de utils.helpers/strategies.
+# Tout refactor qui fusionnerait ces deux calculs changerait silencieusement
+# le score du DecisionEngine → ce test le bloquerait.
+# ---------------------------------------------------------------------------
+
+
+def _volatile_candles(n: int) -> list[Candle]:
+    """Bougies déterministes reproduisant exactement le jeu du probe de figer."""
+    o = Decimal("1.1000")
+    c = Decimal("1.1000")
+    out: list[Candle] = []
+    for i in range(n):
+        out.append(
+            Candle(
+                symbol="EURUSD",
+                timeframe=TimeFrame.M5,
+                time=datetime(2024, 1, 2, 8, i, tzinfo=UTC),
+                open=o,
+                high=o + Decimal("0.0020") + Decimal(i) * Decimal("0.0005"),
+                low=o - Decimal("0.0010"),
+                close=c + Decimal(i) * Decimal("0.0004"),
+                volume=100,
+                spread=3,
+            )
+        )
+        o = c + Decimal(i) * Decimal("0.0004")
+        c = o
+    return out
+
+
+def test_atr_characterization_simple_moving_average_window() -> None:
+    """La valeur ATR du DecisionEngine est une moyenne simple glissante, pas Wilder."""
+    # Moins d'une bougie → 0.
+    assert DecisionEngine._atr(_volatile_candles(1), 14) == Decimal("0")
+    # period=1, n=2 : un seul true range (moyenne simple sur la fenêtre).
+    assert DecisionEngine._atr(_volatile_candles(2), 1) == Decimal("0.0035")
+    # period=2, n=6 : moyenne simple sur les 2 derniers true ranges.
+    assert DecisionEngine._atr(_volatile_candles(6), 2) == Decimal("0.00525")
+    # period=14, n=8 : le zip limite naturellement à la fenêtre disponible.
+    assert DecisionEngine._atr(_volatile_candles(8), 14) == Decimal("0.0045")
+
+
+def test_atr_characterization_differs_from_wilder() -> None:
+    """Confirme que _atr ne produit PAS la valeur Wilder (helpers.calculate_atr)."""
+    candles_6 = _volatile_candles(6)
+    from arty_trading.utils.helpers import calculate_atr
+
+    # Wilder renvoie une valeur différente de la fenêtre glissante simple.
+    assert DecisionEngine._atr(candles_6, 2) != calculate_atr(candles_6, 2)

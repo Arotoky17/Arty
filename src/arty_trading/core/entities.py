@@ -65,6 +65,7 @@ class Signal(BaseModel):
     smc_concepts: list[str] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     metadata: dict[str, Any] = Field(default_factory=dict)
+    setup_id: str | None = Field(default=None, description="ID du setup SMC associé")
 
     @computed_field  # type: ignore[prop-decorator]
     @property

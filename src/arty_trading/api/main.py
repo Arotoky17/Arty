@@ -29,10 +29,10 @@ from arty_trading.infrastructure.mt5 import MT5Connector, MT5MarketDataProvider
 from arty_trading.infrastructure.notifications import NotificationManager
 from arty_trading.logging import get_logger, setup_logging
 from arty_trading.modules.ai import AIAssistant
+from arty_trading.modules.decision import DecisionEngine
 from arty_trading.modules.execution import OrderExecutor, PaperOrderExecutor
 from arty_trading.modules.risk import RiskManager
-from arty_trading.modules.signals import SignalGenerator
-from arty_trading.modules.decision import DecisionEngine
+from arty_trading.modules.signals import SignalGenerator, SignalValidator
 from arty_trading.modules.smc import SMCDetector
 
 logger = get_logger(LogCategory.SYSTEM)
@@ -138,10 +138,25 @@ def create_app() -> FastAPI:
 
     # Initialisation des modules metier (Phase 9)
     app.state.smc_detector = SMCDetector()
+    _signal_validator = SignalValidator(
+        min_risk_reward=settings.validator.min_risk_reward,
+        max_spread=settings.validator.max_spread,
+        require_htf_alignment=settings.validator.require_htf_alignment,
+        require_news_filter=settings.validator.require_news_filter,
+        min_confluence_count=settings.validator.min_confluence_count,
+    )
     app.state.signal_generator = SignalGenerator(
         min_confidence=settings.signals.min_confidence,
         active_strategy=settings.signals.active_strategy,
         decision_engine=DecisionEngine(settings.decision) if settings.decision.enabled else None,
+        validator=_signal_validator,
+    )
+    app.state.signal_validator = _signal_validator
+    logger.info(
+        "SignalValidator branché | min_confluence=%d | min_rr=%.2f | max_spread=%d",
+        settings.validator.min_confluence_count,
+        settings.validator.min_risk_reward,
+        settings.validator.max_spread,
     )
     app.state.risk_manager = RiskManager(settings=settings.risk)
     # Choisir l'exécuteur selon le mode de trading

@@ -41,6 +41,13 @@ from decimal import Decimal
 from typing import Any
 
 from arty_trading.application.candle_synchronizer import CandleSynchronizer
+from arty_trading.application.execution_guards import (
+    final_gate_before_execution,
+    revalidate_before_execution,
+)
+from arty_trading.application.market_context_builder import MarketContextBuilder
+from arty_trading.application.position_monitor import PositionMonitor
+from arty_trading.application.trade_orchestrator import TradeOrchestrator
 from arty_trading.application.statistics import TradingStatistics
 from arty_trading.application.trade_journal import TradeJournal
 from arty_trading.config.settings import Settings
@@ -56,7 +63,6 @@ from arty_trading.core.interfaces import (
 from arty_trading.logging import get_logger
 from arty_trading.modules.decision import MultiTimeframeAnalyzer
 from arty_trading.modules.execution import (
-    MT5OrderError,
     OrderExecutor,
     PaperOrderExecutor,
     PositionManager,
@@ -64,6 +70,8 @@ from arty_trading.modules.execution import (
 from arty_trading.modules.risk import RiskManager
 from arty_trading.modules.signals import SignalGenerator
 from arty_trading.modules.signals.news import EconomicCalendar
+from arty_trading.modules.smc import SetupState, SetupTracker
+
 
 logger = get_logger(LogCategory.SYSTEM)
 
@@ -168,6 +176,10 @@ class TradingEngine:
         self._running: bool = False
         self._task: asyncio.Task[None] | None = None
         self._mtf_analyzer = MultiTimeframeAnalyzer(market_data, smc_detector)
+        self._market_context_builder = MarketContextBuilder(
+            smc_detector=smc_detector,
+            download_data=self._download_data,
+        )
         position_settings = getattr(settings, "position", None)
         self._position_manager = (
             PositionManager(position_settings)
@@ -186,6 +198,27 @@ class TradingEngine:
             TradeJournal(journal_settings.directory)
             if getattr(journal_settings, "enabled", False) is True
             else None
+        )
+        self._position_monitor = PositionMonitor(
+            position_manager=self._position_manager,
+            market_data=self._market_data,
+            executor=self._executor,
+            risk_manager=self._risk_manager,
+            statistics=self._statistics,
+            journal=self._journal,
+            notify_critical=self._notify_critical,
+            notify_trade_closed=self._notify_trade_closed,
+        )
+        self._setup_tracker = SetupTracker()
+        self._trade_orchestrator = TradeOrchestrator(
+            mt5_connector=self._mt5_connector,
+            risk_manager=self._risk_manager,
+            executor=self._executor,
+            setup_tracker=self._setup_tracker,
+            trading_mode=self._trading_mode,
+            notify_critical=self._notify_critical,
+            notify_trade_opened=self._notify_trade_opened,
+            get_open_positions_count=self._get_open_positions_count,
         )
 
         # --- Robustesse 24/7 ---
@@ -255,6 +288,16 @@ class TradingEngine:
         Args:
             symbol: Symbole à analyser (ex: EURUSD)
         """
+        symbol_upper = symbol.upper()
+        if symbol_upper not in self._settings.supported_symbols:
+            logger.info(
+                "UNSUPPORTED_SYMBOL | %s | symbole non supporte par la strategie ICT/SMC | "
+                "symboles supportes=%s",
+                symbol,
+                self._settings.supported_symbols,
+            )
+            return
+
         # ------------------------------------------------------------------
         # Étape 1 : Téléchargement des données H1 + M5
         # ------------------------------------------------------------------
@@ -283,13 +326,13 @@ class TradingEngine:
         self._synchronizer.mark_processed(symbol, latest_candle.time)
         self._statistics.record_analysis(symbol)
 
-        logger.info("╔════════════════════════════════════════════════════════════")
+        logger.info("=" * 56)
         logger.info(
-            "║ Nouvelle bougie détectée | %s | M5 | time=%s",
+            "Nouvelle bougie détectée | %s | M5 | time=%s",
             symbol,
             latest_candle.time.isoformat(),
         )
-        logger.info("╚════════════════════════════════════════════════════════════")
+        logger.info("=" * 56)
 
         # ------------------------------------------------------------------
         # Étape 3 : Analyse MTF (H1 direction + M5 confirmation)
@@ -307,6 +350,20 @@ class TradingEngine:
                 symbol,
             )
             return
+
+        if market_context._regime_blocks_trade():
+            logger.info(
+                "NO_TRADE | %s | régime=%s | %s",
+                symbol,
+                market_context.regime,
+                market_context.no_trade_reasons,
+            )
+            return
+
+        # ------------------------------------------------------------------
+        # Suivi des setups (Phase 6 — state machine)
+        # ------------------------------------------------------------------
+        self._update_setups(symbol, market_context)
 
         # ------------------------------------------------------------------
         # Étape 4 : Validation / génération de signal
@@ -350,6 +407,19 @@ class TradingEngine:
             return
 
         # ------------------------------------------------------------------
+        # Étape 5bis : Gate final avant exécution (Phase 7)
+        # ------------------------------------------------------------------
+        final_gate_passed = await self._final_gate_before_execution(
+            symbol, signal, market_context
+        )
+        if not final_gate_passed:
+            logger.info(
+                "Pipeline arrete (Gate final) | %s | conditions critiques non remplies",
+                symbol,
+            )
+            return
+
+        # ------------------------------------------------------------------
         # Étape 5 : Calcul du risque
         # ------------------------------------------------------------------
         volume = await self._calculate_risk(symbol, signal)
@@ -373,6 +443,14 @@ class TradingEngine:
         # Étape 7 : Monitoring
         # ------------------------------------------------------------------
         await self._monitor_trade(symbol, trade)
+
+        logger.info(
+            "CYCLE COMPLETE | %s | TRADE | direction=%s | volume=%s | R/R=%.2f",
+            symbol,
+            trade.direction.value,
+            trade.volume,
+            signal.risk_reward_ratio,
+        )
 
     # -------------------------------------------------------------------------
     # Étapes du pipeline
@@ -419,8 +497,17 @@ class TradingEngine:
         """
         Étape 3 — Analyse multi-timeframe (MTF).
 
-        Détermine la tendance maître sur le timeframe supérieur (1H) et
-        analyse les concepts SMC sur le timeframe d'entrée (5M).
+        Hiérarchie des timeframes :
+        - H4 : Contexte macro — **informatif seulement**, loggé pour le rapport.
+          N'autorise ni ne bloque un trade.
+        - H1 : Master trend — **Gate absolu**. Détermine la direction autorisée.
+        - M15 : Contexte intermédiaire — Bonus de confluence uniquement.
+        - M5 : Confirmation + entrée — CHoCH/BOS/displacement/retest/rejection.
+
+        La structure H1 est calculée une seule fois par bougie H1 fermée
+        (cache). Le M5 est recalculé à chaque nouvelle bougie M5.
+
+        Délègue à ``application.market_context_builder.MarketContextBuilder``.
 
         Args:
             symbol: Symbole à analyser
@@ -430,41 +517,9 @@ class TradingEngine:
         Returns:
             MarketContext ou None si l'analyse échoue
         """
-        from arty_trading.modules.decision.master_trend import MasterTrendAnalyzer
-
-        trend_analyzer = MasterTrendAnalyzer(htf=TimeFrame.H1)
-        master_trend = trend_analyzer.get_master_trend(htf_candles)
-
-        htf_smc_data: list[dict] = []
-        ltf_smc_data: list[dict] = []
-
-        try:
-            htf_smc_data = await self._smc_detector.detect(htf_candles, symbol)
-        except Exception as exc:
-            logger.error("Erreur analyse SMC H1 | %s | %s", symbol, exc)
-
-        try:
-            ltf_smc_data = await self._smc_detector.detect(ltf_candles, symbol)
-        except Exception as exc:
-            logger.error("Erreur analyse SMC M5 | %s | %s", symbol, exc)
-
-        market_context = trend_analyzer.build_market_context(
-            symbol=symbol,
-            htf_candles=htf_candles,
-            ltf_candles=ltf_candles,
-            htf_smc_data=htf_smc_data,
-            ltf_smc_data=ltf_smc_data,
+        return await self._market_context_builder.build(
+            symbol, htf_candles, ltf_candles
         )
-
-        logger.info(
-            "Analyse MTF | %s | H1=%s | M5 detections=%d | H1 detections=%d",
-            symbol,
-            market_context.master_trend,
-            len(ltf_smc_data),
-            len(htf_smc_data),
-        )
-
-        return market_context
 
     def _log_market_context(self, ctx: Any) -> None:
         """Log structuré du contexte marché."""
@@ -476,6 +531,26 @@ class TradingEngine:
         logger.info("[DIRECTION GATE] master=%s allows_buy=%s allows_sell=%s",
                      data["master_trend"], data["allows_buy"], data["allows_sell"])
 
+    def _update_setups(self, symbol: str, market_context: Any) -> None:
+        """
+        Met à jour le state machine des setups pour le symbole.
+
+        - Expire les setups anciens
+        - Crée de nouveaux setups sur zones valides
+        - Détecte les setups dupliqués
+        """
+        tracker = self._setup_tracker
+        tracker.expire_old_setups(symbol)
+
+        active = tracker.get_active_setups(symbol)
+        logger.info(
+            "SETUPS | %s | actifs=%d | expirés/récemment traités=%d",
+            symbol,
+            len(active),
+            sum(1 for s in tracker._setups.get(symbol.upper(), [])
+                if s.state in (SetupState.CONSUMED, SetupState.SETUP_EXPIRED, SetupState.INVALID)),
+        )
+
     async def _revalidate_before_execution(
         self, symbol: str, signal: Signal, market_context: Any
     ) -> bool:
@@ -485,6 +560,8 @@ class TradingEngine:
         Vérifie que le contexte n'a pas changé entre la génération du signal
         et l'envoi de l'ordre. Un signal devenu invalide est rejeté.
 
+        Délègue à ``application.execution_guards.revalidate_before_execution``.
+
         Args:
             symbol: Symbole du trade.
             signal: Signal à revalider.
@@ -493,42 +570,31 @@ class TradingEngine:
         Returns:
             True si le signal est toujours valide, False sinon.
         """
-        reval_logger = get_logger(LogCategory.SIGNAL)
+        return await revalidate_before_execution(symbol, signal, market_context)
 
-        direction_str = "bullish" if signal.direction == Direction.BUY else "bearish"
-        current_trend = market_context.master_trend
+    async def _final_gate_before_execution(
+        self, symbol: str, signal: Signal, market_context: Any
+    ) -> bool:
+        """
+        Gate final avant OrderSend.
 
-        reval_logger.info(
-            "[REVALIDATION] %s | direction=%s | master_trend=%s",
-            symbol, direction_str, current_trend,
+        Revalide TOUTES les conditions critiques au moment de l'envoi.
+        Si une condition n'est plus valide → REJECT, même si elle était
+        valide lors de la génération du signal.
+
+        Délègue à ``application.execution_guards.final_gate_before_execution``.
+
+        Args:
+            symbol: Symbole du trade.
+            signal: Signal à revalider.
+            market_context: Contexte marché actuel.
+
+        Returns:
+            True si toutes les conditions sont remplies, False sinon.
+        """
+        return await final_gate_before_execution(
+            symbol, signal, market_context, self._settings
         )
-
-        if current_trend == "neutral":
-            reval_logger.warning(
-                "Signal REJETÉ (revalidation) | %s | H1=NEUTRAL | BUY et SELL interdits",
-                symbol,
-            )
-            return False
-
-        if current_trend == "bullish" and direction_str == "bearish":
-            reval_logger.warning(
-                "Signal REJETÉ (revalidation) | %s | H1=BULLISH + SELL → MASTER_TREND_CONFLICT",
-                symbol,
-            )
-            return False
-
-        if current_trend == "bearish" and direction_str == "bullish":
-            reval_logger.warning(
-                "Signal REJETÉ (revalidation) | %s | H1=BEARISH + BUY → MASTER_TREND_CONFLICT",
-                symbol,
-            )
-            return False
-
-        reval_logger.info(
-            "[REVALIDATION] %s | PASS | signal toujours valide",
-            symbol,
-        )
-        return True
 
     async def _analyze_smc(self, symbol: str, candles: list[Candle]) -> list[dict] | None:
         """
@@ -634,94 +700,22 @@ class TradingEngine:
         """
         Étape 5 — Calcul du risque et de la taille de position.
 
-        Sous-étapes :
-        a. Récupération des infos du compte (``get_account_info``)
-        b. ``can_open_trade`` — vérifie si un nouveau trade peut être ouvert
-        c. ``validate_signal`` — valide si le signal respecte les règles
-        d. ``calculate_position_size`` — calcule la taille optimale
+        Délègue à ``application.trade_orchestrator.TradeOrchestrator``.
 
         Args:
             symbol: Symbole à analyser.
             signal: Signal validé par le générateur.
 
         Returns:
-            La taille de position (volume), ou ``None`` si le risque est
-            refusé.
+            La taille de position (volume), ou ``None`` si le risque est refusé.
         """
-        risk_logger = get_logger(LogCategory.RISK)
-
-        # a. Récupérer les infos du compte
-        try:
-            account = await self._mt5_connector.get_account_info()
-        except Exception as exc:
-            risk_logger.error("Erreur récupération compte | %s | %s", symbol, exc)
-            return None
-
-        # Garde-fou : en mode DEMO, refuser si le compte s'avère réel.
-        if self._trading_mode == TradingMode.DEMO and account.mode == TradingMode.LIVE:
-            risk_logger.error(
-                "SECURITE : mode DEMO mais compte réel détecté (login=%s) - trade refusé",
-                account.login,
-            )
-            await self._notify_critical(
-                "Sécurité DEMO",
-                f"Compte réel détecté (login={account.login}) en mode DEMO - trade bloqué.",
-            )
-            return None
-
-        # b. can_open_trade
-        try:
-            can_open = await self._risk_manager.can_open_trade(symbol)
-        except Exception as exc:
-            risk_logger.error("Erreur can_open_trade | %s | %s", symbol, exc)
-            return None
-
-        if not can_open:
-            risk_logger.info(
-                "Trade refusé (can_open_trade=False) | %s | positions ouvertes=%d",
-                symbol,
-                self._get_open_positions_count(),
-            )
-            return None
-
-        # c. validate_signal
-        try:
-            is_valid = await self._risk_manager.validate_signal(signal, account)
-        except Exception as exc:
-            risk_logger.error("Erreur validate_signal | %s | %s", symbol, exc)
-            return None
-
-        if not is_valid:
-            risk_logger.info(
-                "Signal rejeté par le risk manager | %s | %s | confiance=%.2f | R/R=%.2f",
-                symbol,
-                signal.direction.value,
-                signal.confidence,
-                signal.risk_reward_ratio,
-            )
-            return None
-
-        risk_logger.info(
-            "Signal validé par le risk manager | %s | %s",
-            symbol,
-            signal.direction.value,
-        )
-
-        # d. calculate_position_size
-        try:
-            volume = await self._risk_manager.calculate_position_size(signal, account)
-        except Exception as exc:
-            risk_logger.error("Erreur calculate_position_size | %s | %s", symbol, exc)
-            return None
-
-        risk_logger.info("Taille de position calculée | %s | volume=%.2f", symbol, volume)
-        return volume
+        return await self._trade_orchestrator.calculate_risk(symbol, signal)
 
     async def _execute_trade(self, symbol: str, signal: Signal, volume: float) -> Trade | None:
         """
         Étape 6 — Trade : exécution de l'ordre.
 
-        Appelle ``OrderExecutor.open_order()`` avec le signal et le volume.
+        Délègue à ``application.trade_orchestrator.TradeOrchestrator``.
 
         Args:
             symbol: Symbole à trader.
@@ -731,33 +725,7 @@ class TradingEngine:
         Returns:
             Le trade ouvert, ou ``None`` si l'exécution échoue.
         """
-        exec_logger = get_logger(LogCategory.EXECUTION)
-        try:
-            trade = await self._executor.open_order(signal, volume)
-        except MT5OrderError as exc:
-            exec_logger.error(
-                "Échec exécution ordre | %s | %s | %s", symbol, signal.direction.value, exc,
-            )
-            await self._notify_critical(
-                "Échec exécution ordre",
-                f"{symbol} | {signal.direction.value} | {exc}",
-            )
-            return None
-        except Exception as exc:
-            exec_logger.error("Erreur ouverture ordre | %s | %s", symbol, exc)
-            return None
-
-        exec_logger.info(
-            "Ordre ouvert | %s | %s | volume=%s | ticket=%s | entrée=%s",
-            trade.symbol,
-            trade.direction.value,
-            trade.volume,
-            trade.ticket,
-            trade.entry_price,
-        )
-        # Alerte Telegram : nouveau trade ouvert.
-        await self._notify_trade_opened(trade)
-        return trade
+        return await self._trade_orchestrator.execute_trade(symbol, signal, volume)
 
     async def _monitor_trade(self, symbol: str, trade: Trade) -> None:
         """
@@ -787,70 +755,11 @@ class TradingEngine:
         )
 
     async def _monitor_open_positions(self) -> None:
-        """Applique les règles de position aux ticks disponibles du provider."""
-        if self._position_manager is None:
-            return
-        get_tick = getattr(self._market_data, "get_tick", None)
-        if get_tick is None:
-            logger.warning("Gestion de position inactive : provider sans get_tick")
-            return
-        for key, trade in list(self._managed_trades.items()):
-            try:
-                tick = await get_tick(trade.symbol)
-                if not tick:
-                    continue
-                raw_price = tick["bid"] if trade.direction.value == "buy" else tick["ask"]
-                actions = self._position_manager.evaluate(trade, Decimal(str(raw_price)))
-                for action in actions:
-                    if action.kind == "modify" and action.stop_loss is not None:
-                        await self._executor.modify_order(trade, stop_loss=float(action.stop_loss))
-                    elif action.kind == "close":
-                        try:
-                            closed = await self._executor.close_order(trade)
-                        except MT5OrderError as exc:
-                            error_msg = str(exc)
-                            if "introuvable" in error_msg:
-                                logger.warning(
-                                    "Position fantôme supprimée du suivi | ticket=%s | %s",
-                                    trade.ticket, exc,
-                                )
-                                self._position_manager.forget(trade)
-                                self._managed_trades.pop(key, None)
-                                if isinstance(self._risk_manager, RiskManager):
-                                    self._risk_manager.close_trade(
-                                        trade, Decimal("0")
-                                    )
-                                continue
-                            logger.error("Échec fermeture position | %s | %s", trade.ticket, exc)
-                            await self._notify_critical(
-                                "Échec fermeture position",
-                                f"ticket={trade.ticket} | {exc}",
-                            )
-                            continue
-                        self._statistics.record_trade_closed(closed)
-                        if self._journal is not None:
-                            self._journal.record(closed, action.reason)
-                        if isinstance(self._risk_manager, RiskManager):
-                            self._risk_manager.close_trade(closed, closed.profit or Decimal("0"))
-                        self._position_manager.forget(trade)
-                        self._managed_trades.pop(key, None)
-                        await self._notify_trade_closed(closed, action.reason)
-                    elif action.kind == "partial_close":
-                        partial_close = getattr(self._executor, "close_partial_order", None)
-                        if partial_close is None or action.close_fraction is None:
-                            logger.warning("TP partiel non supporté | ticket=%s", trade.ticket)
-                            continue
-                        try:
-                            closed = await partial_close(trade, float(action.close_fraction))
-                        except MT5OrderError as exc:
-                            logger.error("Échec TP partiel | %s | %s", trade.ticket, exc)
-                            continue
-                        if closed is not None:
-                            self._statistics.record_trade_closed(closed)
-                            if self._journal is not None:
-                                self._journal.record(closed, action.reason)
-            except Exception as exc:
-                logger.error("Erreur suivi position | ticket=%s | %s", trade.ticket, exc)
+        """Applique les règles de position aux ticks disponibles du provider.
+
+        Délègue à ``application.position_monitor.PositionMonitor``.
+        """
+        await self._position_monitor.monitor(self._managed_trades)
 
     # -------------------------------------------------------------------------
     # Boucle principale

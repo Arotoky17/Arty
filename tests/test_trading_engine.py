@@ -106,8 +106,20 @@ def make_settings(trading_mode: TradingMode = TradingMode.PAPER) -> MagicMock:
     """Crée un mock de Settings sans dépendre de pydantic-settings ni du .env."""
     settings = MagicMock()
     settings.symbols_list = ["EURUSD"]
+    settings.supported_symbols = ["EURUSD", "XAUUSD"]
+    settings.enable_legacy_symbols = False
     settings.default_timeframe = TimeFrame.H1
     settings.trading_mode = trading_mode
+
+    def get_profile(symbol: str):
+        if symbol.upper() == "EURUSD":
+            m = MagicMock()
+            m.min_risk_reward = 2.0
+            m.max_spread_points = 30
+            return m
+        return None
+
+    settings.get_instrument_profile = get_profile
     return settings
 
 

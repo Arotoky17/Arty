@@ -6,6 +6,9 @@ Détecteur d'Order Blocks, Breaker Blocks et Mitigation Blocks.
   - Bearish OB : dernière bougie haussière avant une forte baisse
 - **Breaker Block** : un OB échoué qui devient un niveau de résistance/support
 - **Mitigation Block** : similaire à l'OB mais après un liquidity sweep
+
+Le déplacement est validé relativement à l'ATR (seuil configurable),
+jamais en distance fixe.
 """
 
 from __future__ import annotations
@@ -15,6 +18,7 @@ from decimal import Decimal
 from arty_trading.core.entities import Candle
 from arty_trading.core.enums import SMCConcept
 from arty_trading.modules.smc.base import BaseDetector, SMCDetection
+from arty_trading.utils.helpers import calculate_atr
 
 
 class OrderBlockDetector(BaseDetector):
@@ -25,23 +29,30 @@ class OrderBlockDetector(BaseDetector):
     leurs ordres. Le prix a tendance à revenir mitiguer ces zones.
     """
 
+    MAX_ZONE_AGE = 30
+
     def __init__(
         self,
         enabled: bool = True,
-        displacement_threshold: float = 2.0,
+        displacement_threshold: float = 1.0,
         mitigation_lookback: int = 20,
+        max_mitigations: int = 2,
     ) -> None:
         """
         Args:
             enabled: Activer/désactiver le détecteur
             displacement_threshold: Facteur minimum du corps de la bougie de
-                déplacement par rapport à la moyenne (ex: 2.0 = 2x la moyenne)
+                déplacement par rapport à l'ATR (ex: 1.0 = 1x ATR).
+                L'ATR est calculée sur les bougies fournies.
             mitigation_lookback: Nombre de bougies en arrière pour vérifier
                 la mitigation
+            max_mitigations: Nombre maximum de retours sur la zone avant de
+                considérer celle-ci comme épuisée
         """
         super().__init__(enabled=enabled)
         self._displacement_threshold = displacement_threshold
         self._mitigation_lookback = mitigation_lookback
+        self._max_mitigations = max_mitigations
 
     @property
     def name(self) -> str:
@@ -52,8 +63,8 @@ class OrderBlockDetector(BaseDetector):
         Détecte les Order Blocks, Breaker Blocks et Mitigation Blocks.
 
         Algorithme :
-        1. Calculer la taille moyenne des corps de bougies
-        2. Identifier les bougies de déplacement (corps > seuil × moyenne)
+        1. Calculer l'ATR sur les bougies fournies
+        2. Identifier les bougies de déplacement (corps >= ATR × seuil)
         3. Bullish OB : dernière bougie baissière avant un déplacement haussier
         4. Bearish OB : dernière bougie haussière avant un déplacement baissier
         5. Breaker : un OB dont le prix a cassé le niveau opposé
@@ -64,14 +75,12 @@ class OrderBlockDetector(BaseDetector):
 
         detections: list[SMCDetection] = []
 
-        # Calculer la taille moyenne des corps
-        body_sizes = [float(abs(c.close - c.open)) for c in candles]
-        avg_body = sum(body_sizes) / len(body_sizes) if body_sizes else 0
+        atr = calculate_atr(candles, period=14)
+        if atr == 0:
+            atr = sum(float(abs(c.high - c.low)) for c in candles) / len(candles)
+            atr = Decimal(str(atr))
 
-        if avg_body == 0:
-            return []
-
-        displacement_min = avg_body * self._displacement_threshold
+        displacement_min = atr * Decimal(str(self._displacement_threshold))
 
         # Détecter les Order Blocks
         for i in range(1, len(candles) - 1):
@@ -79,12 +88,12 @@ class OrderBlockDetector(BaseDetector):
             if candles[i].close < candles[i].open:  # Bougie baissière
                 # Vérifier le déplacement haussier suivant
                 next_candle = candles[i + 1]
-                next_body = float(abs(next_candle.close - next_candle.open))
+                next_body = abs(next_candle.close - next_candle.open)
                 if next_candle.close > next_candle.open and next_body >= displacement_min:
                     ob_top = candles[i].high
                     ob_bottom = candles[i].low
                     # Vérifier si l'OB est mitigé plus tard
-                    mitigated = self._is_mitigated(candles, i + 2, ob_top, ob_bottom, "bullish")
+                    mitigated_count = self._is_mitigated(candles, i + 2, ob_top, ob_bottom, "bullish")
                     violated = self._is_violated(candles, i + 2, ob_bottom, "bullish")
 
                     if violated:
@@ -100,7 +109,7 @@ class OrderBlockDetector(BaseDetector):
                                     "ob_bottom": float(ob_bottom),
                                     "displacement_index": i + 1,
                                     "displacement_size": next_body,
-                                    "mitigated": mitigated,
+                                    "mitigation_count": mitigated_count,
                                 },
                             )
                         )
@@ -116,7 +125,7 @@ class OrderBlockDetector(BaseDetector):
                                     "ob_bottom": float(ob_bottom),
                                     "displacement_index": i + 1,
                                     "displacement_size": next_body,
-                                    "mitigated": mitigated,
+                                    "mitigation_count": mitigated_count,
                                 },
                             )
                         )
@@ -125,12 +134,12 @@ class OrderBlockDetector(BaseDetector):
             if candles[i].close > candles[i].open:  # Bougie haussière
                 # Vérifier le déplacement baissier suivant
                 next_candle = candles[i + 1]
-                next_body = float(abs(next_candle.close - next_candle.open))
+                next_body = abs(next_candle.close - next_candle.open)
                 if next_candle.close < next_candle.open and next_body >= displacement_min:
                     ob_top = candles[i].high
                     ob_bottom = candles[i].low
                     # Vérifier si l'OB est mitigé plus tard
-                    mitigated = self._is_mitigated(candles, i + 2, ob_top, ob_bottom, "bearish")
+                    mitigated_count = self._is_mitigated(candles, i + 2, ob_top, ob_bottom, "bearish")
                     violated = self._is_violated(candles, i + 2, ob_top, "bearish")
 
                     if violated:
@@ -146,7 +155,7 @@ class OrderBlockDetector(BaseDetector):
                                     "ob_bottom": float(ob_bottom),
                                     "displacement_index": i + 1,
                                     "displacement_size": next_body,
-                                    "mitigated": mitigated,
+                                    "mitigation_count": mitigated_count,
                                 },
                             )
                         )
@@ -162,13 +171,18 @@ class OrderBlockDetector(BaseDetector):
                                     "ob_bottom": float(ob_bottom),
                                     "displacement_index": i + 1,
                                     "displacement_size": next_body,
-                                    "mitigated": mitigated,
+                                    "mitigation_count": mitigated_count,
                                 },
                             )
                         )
 
         # Détecter les Mitigation Blocks (après un liquidity sweep)
         detections.extend(self._detect_mitigation_blocks(candles))
+
+        detections = [
+            d for d in detections
+            if (len(candles) - 1 - d.index) <= self.MAX_ZONE_AGE
+        ]
 
         return detections
 
@@ -179,9 +193,9 @@ class OrderBlockDetector(BaseDetector):
         ob_top: Decimal,
         ob_bottom: Decimal,
         direction: str,
-    ) -> bool:
+    ) -> int:
         """
-        Vérifie si un Order Block a été mitigé (le prix est revenu le tester).
+        Vérifie le nombre de fois où un Order Block a été mitigé (le prix est revenu le tester).
 
         Args:
             candles: Liste des bougies
@@ -191,21 +205,20 @@ class OrderBlockDetector(BaseDetector):
             direction: "bullish" ou "bearish"
 
         Returns:
-            True si l'OB a été mitigé
+            Nombre de fois où l'OB a été mitigé
         """
         end_idx = min(start_idx + self._mitigation_lookback, len(candles))
+        count = 0
 
         for i in range(start_idx, end_idx):
             if direction == "bullish":
-                # OB bullish mitigé si le prix redescend dans la zone
                 if candles[i].low <= ob_top:
-                    return True
+                    count += 1
             else:
-                # OB bearish mitigé si le prix remonte dans la zone
                 if candles[i].high >= ob_bottom:
-                    return True
+                    count += 1
 
-        return False
+        return count
 
     def _is_violated(
         self,

@@ -24,6 +24,8 @@ class FairValueGapDetector(BaseDetector):
     où le prix s'est déplacé trop rapidement pour que le marché l'absorbe.
     """
 
+    MAX_ZONE_AGE = 30
+
     def __init__(
         self,
         enabled: bool = True,
@@ -53,6 +55,7 @@ class FairValueGapDetector(BaseDetector):
         2. Bullish FVG : high[0] < low[2] → gap entre high[0] et low[2]
         3. Bearish FVG : low[0] > high[2] → gap entre low[0] et high[2]
         4. IFVG : vérifier si un FVG précédent a été rempli puis inversé
+        5. Filtrer les zones trop anciennes (MAX_ZONE_AGE bougies)
         """
         if not self._enabled or len(candles) < 3:
             return []
@@ -160,5 +163,10 @@ class FairValueGapDetector(BaseDetector):
                                 },
                             )
                         )
+
+        detections = [
+            d for d in detections
+            if (len(candles) - 1 - d.index) <= self.MAX_ZONE_AGE
+        ]
 
         return detections

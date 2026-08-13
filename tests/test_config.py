@@ -22,13 +22,22 @@ class TestSettings:
 
     """Tests de la configuration Pydantic."""
 
-    def test_default_symbols(self):
-        settings = Settings()
-        assert settings.symbols_list == ["EURUSD", "GBPUSD", "USDJPY", "XAUUSD"]
+    def test_default_symbols(self, monkeypatch):
+        """Le défaut ne doit pas dépendre du fichier .env local."""
+        monkeypatch.delenv("DEFAULT_SYMBOLS", raising=False)
+        settings = Settings(_env_file=None)
+        assert settings.symbols_list == ["EURUSD", "XAUUSD"]
 
-    def test_default_trading_mode_is_analysis(self):
-        """Le mode par défaut doit être ANALYSIS (sécurité)."""
-        settings = Settings()
+    def test_default_trading_mode_is_analysis(self, monkeypatch):
+        """Le mode par défaut doit être ANALYSIS (sécurité).
+
+        Important : ce test ne doit pas dépendre du fichier ``.env`` local
+        (qui peut activer DEMO/autre). On force donc l'ignorance du ``.env``
+        et l'absence de variable ``TRADING_MODE`` pour vérifier la vraie
+        valeur par défaut.
+        """
+        monkeypatch.delenv("TRADING_MODE", raising=False)
+        settings = Settings(_env_file=None)
         assert settings.trading_mode == TradingMode.ANALYSIS
         assert not settings.is_live_trading_enabled
         assert settings.is_analysis_mode

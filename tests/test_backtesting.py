@@ -93,28 +93,31 @@ class TestBacktestEngineInitialization:
 
 
 class TestBacktestRun:
-    def test_run_empty_candles(self):
+    @pytest.mark.asyncio
+    async def test_run_empty_candles(self):
         engine = BacktestEngine()
-        stats = engine.run([])
+        stats = await engine.run_async([])
         assert stats.total_trades == 0
         assert stats.final_balance == Decimal("10000")
 
-    def test_run_no_generator(self):
+    @pytest.mark.asyncio
+    async def test_run_no_generator(self):
         """Test sans générateur de signaux — juste vérifier que ça ne plante pas."""
         candles = make_candles(30)
         engine = BacktestEngine()
-        stats = engine.run(candles)
+        stats = await engine.run_async(candles)
         assert stats.total_trades == 0
         assert stats.final_balance == Decimal("10000")
         assert len(engine.equity_curve) == 31  # 1 initial + 30 bougies
 
-    def test_run_with_generator(self):
-        """Test avec un générateur mock."""
+    @pytest.mark.asyncio
+    async def test_run_with_generator(self):
+        """Test avec un générateur/détecteur mock (nouvelle API asynchrone run_async)."""
         candles = make_candles(50)
         engine = BacktestEngine()
 
         class MockGenerator:
-            def generate_best(self, candles, smc_data):
+            async def generate(self, candles, smc_data, **kwargs):
                 if len(candles) < 5:
                     return None
                 return Signal(
@@ -132,18 +135,30 @@ class TestBacktestRun:
                 )
 
         class MockDetector:
-            def detect_sync(self, candles, symbol):
-                return [{"concept": "BOS", "direction": "bullish"}]
+            async def detect(self, candles, symbol):
+                return [
+                    {
+                        "concept": "break_of_structure",
+                        "direction": "bullish",
+                        "index": len(candles) - 1,
+                        "details": {},
+                    }
+                ]
 
-        stats = engine.run(candles, signal_generator=MockGenerator(), smc_detector=MockDetector())
+        stats = await engine.run_async(
+            candles,
+            signal_generator=MockGenerator(),
+            smc_detector=MockDetector(),
+        )
         assert stats.total_trades > 0
         assert stats.initial_balance == Decimal("10000")
         assert stats.final_balance != Decimal("10000")  # Le solde a changé
 
-    def test_equity_curve_grows(self):
+    @pytest.mark.asyncio
+    async def test_equity_curve_grows(self):
         candles = make_candles(30)
         engine = BacktestEngine()
-        engine.run(candles)
+        await engine.run_async(candles)
         assert len(engine.equity_curve) == 31
 
 

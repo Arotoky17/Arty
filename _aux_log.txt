@@ -1,0 +1,117 @@
+﻿662e4e2 cline checkpoint session=1786598664299_qozmz run=5
+6125616 untracked files on cline checkpoint
+223ea83 index on main: 5d24c5a direction march├®
+1424c86 cline checkpoint session=1786598664299_qozmz run=4
+094e556 untracked files on cline checkpoint
+6b5e748 index on main: 5d24c5a direction march├®
+6a57264 cline checkpoint session=1786598664299_qozmz run=3
+16d0f8d untracked files on cline checkpoint
+5a48fee index on main: 5d24c5a direction march├®
+bcefa0b cline checkpoint session=1786598664299_qozmz run=2
+cdd7fa0 index on main: 5d24c5a direction march├®
+63ff87d untracked files on cline checkpoint
+dcd51c5 cline checkpoint session=1786598664299_qozmz run=1
+8b1af1a untracked files on cline checkpoint
+7ac05c5 index on main: 5d24c5a direction march├®
+07a7f18 cline checkpoint session=1786557077599_lp1k7 run=19
+06b0e66 untracked files on cline checkpoint
+78262ba index on main: 5d24c5a direction march├®
+fa6689d cline checkpoint session=1786557077599_lp1k7 run=18
+66db456 untracked files on cline checkpoint
+6295d39 index on main: 5d24c5a direction march├®
+2571cdf cline checkpoint session=1786557077599_lp1k7 run=17
+2911804 untracked files on cline checkpoint
+3ae502b index on main: 5d24c5a direction march├®
+880a344 cline checkpoint session=1786557077599_lp1k7 run=16
+2459c8a untracked files on cline checkpoint
+460158e index on main: 5d24c5a direction march├®
+7607003 cline checkpoint session=1786557077599_lp1k7 run=15
+f214798 untracked files on cline checkpoint
+8899e0c index on main: 5d24c5a direction march├®
+46abedf cline checkpoint session=1786557077599_lp1k7 run=14
+ec3f9d2 untracked files on cline checkpoint
+bf7a456 index on main: 5d24c5a direction march├®
+493bfe4 cline checkpoint session=1786557077599_lp1k7 run=13
+ceca85e untracked files on cline checkpoint
+28e54b6 index on main: 5d24c5a direction march├®
+2700541 cline checkpoint session=1786557077599_lp1k7 run=12
+240a979 untracked files on cline checkpoint
+5a7f9c8 index on main: 5d24c5a direction march├®
+f1831d6 cline checkpoint session=1786557077599_lp1k7 run=11
+b80ed82 untracked files on cline checkpoint
+d4cc6ef index on main: 5d24c5a direction march├®
+3d81c0d cline checkpoint session=1786557077599_lp1k7 run=10
+73f0039 untracked files on cline checkpoint
+67a04ab index on main: 5d24c5a direction march├®
+f6ad908 cline checkpoint session=1786557077599_lp1k7 run=9
+332a499 index on main: 5d24c5a direction march├®
+892d26c untracked files on cline checkpoint
+301aefb cline checkpoint session=1786557077599_lp1k7 run=8
+32e99db untracked files on cline checkpoint
+95c59f9 index on main: 5d24c5a direction march├®
+d5e8e8f cline checkpoint session=1786557077599_lp1k7 run=7
+ded17bf untracked files on cline checkpoint
+b8cc2ad index on main: 5d24c5a direction march├®
+392875a cline checkpoint session=1786557077599_lp1k7 run=6
+4d8aeb1 untracked files on cline checkpoint
+c55eb27 index on main: 5d24c5a direction march├®
+d40136d cline checkpoint session=1786557077599_lp1k7 run=5
+df090c2 untracked files on cline checkpoint
+0f29ee4 index on main: 5d24c5a direction march├®
+9699253 cline checkpoint session=1786557077599_lp1k7 run=4
+8d9d65a untracked files on cline checkpoint
+6498213 index on main: 5d24c5a direction march├®
+2ecb773 cline checkpoint session=1786557077599_lp1k7 run=3
+864c7ae untracked files on cline checkpoint
+b733043 index on main: 5d24c5a direction march├®
+ce5303c cline checkpoint session=1786557077599_lp1k7 run=2
+84106ba untracked files on cline checkpoint
+f566554 index on main: 5d24c5a direction march├®
+4819800 cline checkpoint session=1786557077599_lp1k7 run=1
+8c526ae untracked files on cline checkpoint
+e0537d2 index on main: 5d24c5a direction march├®
+feba553 cline checkpoint session=1786522635647_g4uhr run=8
+f2bfa3b untracked files on cline checkpoint
+50fc5b9 index on main: 5d24c5a direction march├®
+3f9e630 cline checkpoint session=1786522635647_g4uhr run=7
+66b133c untracked files on cline checkpoint
+4d982bc index on main: 5d24c5a direction march├®
+a4d194c cline checkpoint session=1786522635647_g4uhr run=6
+1fd23b1 untracked files on cline checkpoint
+44ab9e9 index on main: 5d24c5a direction march├®
+5c724c1 cline checkpoint session=1786522635647_g4uhr run=5
+f2184e3 index on main: 5d24c5a direction march├®
+5242080 untracked files on cline checkpoint
+cd59848 cline checkpoint session=1786522635647_g4uhr run=4
+15f1242 untracked files on cline checkpoint
+9f203d8 index on main: 5d24c5a direction march├®
+8b34c2c cline checkpoint session=1786522635647_g4uhr run=3
+076dcc6 untracked files on cline checkpoint
+2046bdd index on main: 5d24c5a direction march├®
+e59a59e cline checkpoint session=1786522635647_g4uhr run=2
+8e6cfc7 untracked files on cline checkpoint
+73b9c88 index on main: 5d24c5a direction march├®
+132dbc8 cline checkpoint session=1786522635647_g4uhr run=1
+71e3099 untracked files on cline checkpoint
+8ce4b64 index on main: 5d24c5a direction march├®
+385900e cline checkpoint session=1786472154874_n3v03 run=4
+4f842cd index on main: 5d24c5a direction march├®
+282c2e7 untracked files on cline checkpoint
+9ef663e cline checkpoint session=1786472154874_n3v03 run=3
+1e2d87b untracked files on cline checkpoint
+7b4a3a2 index on main: 5d24c5a direction march├®
+a973461 On main: cline checkpoint session=1786472154874_n3v03 run=2
+2dd21eb index on main: 5d24c5a direction march├®
+5d24c5a direction march├®
+e4ca157 cline checkpoint session=1786372652082_cq50a run=4
+6226938 untracked files on cline checkpoint
+da3f680 index on main: 46e178d fix: start engine in ANALYSIS mode, add position reconciliation, make tests .env-independent
+23a4694 On main: cline checkpoint session=1786372652082_cq50a run=3
+d5ddd7b index on main: 46e178d fix: start engine in ANALYSIS mode, add position reconciliation, make tests .env-independent
+1116eba On main: cline checkpoint session=1786372652082_cq50a run=2
+12714fa index on main: 46e178d fix: start engine in ANALYSIS mode, add position reconciliation, make tests .env-independent
+46e178d fix: start engine in ANALYSIS mode, add position reconciliation, make tests .env-independent
+ad9189d chore: remove obsolete files (src/arty, src/arty_trading/inf, test_mt5_smc, phase docs)
+c256a8e feat: add ANALYSIS mode, PaperOrderExecutor, CandleSynchronizer, tick-based position sizing and trade journal
+7fd8aa8 feat: add TradingEngine orchestration module with live trading loop
+0dbcb48 first commit

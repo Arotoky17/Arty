@@ -68,8 +68,8 @@ def make_uptrend_candles(n=20):
 def make_bullish_smc_data():
     return [
         {"concept": "break_of_structure", "direction": "bullish", "price": 1.0820, "index": 5, "details": {}},
-        {"concept": "fair_value_gap", "direction": "bullish", "price": 1.0810, "index": 6, "details": {}},
-        {"concept": "order_block", "direction": "bullish", "price": 1.0795, "index": 4, "details": {}},
+        {"concept": "fair_value_gap", "direction": "bullish", "price": 1.0810, "index": 6, "details": {"gap_top": 1.0815, "gap_bottom": 1.0805}},
+        {"concept": "order_block", "direction": "bullish", "price": 1.0795, "index": 4, "details": {"ob_top": 1.0800, "ob_bottom": 1.0790}},
         {"concept": "optimal_trade_entry", "direction": "bullish", "price": 1.0815, "index": 8, "details": {}},
         {"concept": "liquidity_sweep", "direction": "bullish", "price": 1.0790, "index": 7, "details": {}},
         {"concept": "premium_discount", "direction": "neutral", "price": 1.0810, "index": 8, "details": {"current_zone": "discount"}},
@@ -79,8 +79,8 @@ def make_bullish_smc_data():
 def make_bearish_smc_data():
     return [
         {"concept": "break_of_structure", "direction": "bearish", "price": 1.0790, "index": 5, "details": {}},
-        {"concept": "fair_value_gap", "direction": "bearish", "price": 1.0800, "index": 6, "details": {}},
-        {"concept": "order_block", "direction": "bearish", "price": 1.0815, "index": 4, "details": {}},
+        {"concept": "fair_value_gap", "direction": "bearish", "price": 1.0800, "index": 6, "details": {"gap_top": 1.0990, "gap_bottom": 1.0980}},
+        {"concept": "order_block", "direction": "bearish", "price": 1.0815, "index": 4, "details": {"ob_top": 1.0995, "ob_bottom": 1.0985}},
         {"concept": "optimal_trade_entry", "direction": "bearish", "price": 1.0795, "index": 8, "details": {}},
         {"concept": "liquidity_sweep", "direction": "bearish", "price": 1.0820, "index": 7, "details": {}},
         {"concept": "premium_discount", "direction": "neutral", "price": 1.0800, "index": 8, "details": {"current_zone": "premium"}},
@@ -104,14 +104,18 @@ class TestSMCTrendStrategy:
 
     @pytest.mark.asyncio
     async def test_bullish_signal(self):
-        signal = await SMCTrendStrategy(confidence_min=0.1).analyze(make_uptrend_candles(20), make_bullish_smc_data())
+        candles = make_uptrend_candles(20)
+        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) + 0.0020)
+        signal = await SMCTrendStrategy(confidence_min=0.1).analyze(candles, make_bullish_smc_data())
         assert signal is not None
         assert signal.signal_type == SignalType.BUY
         assert signal.direction == Direction.BUY
 
     @pytest.mark.asyncio
     async def test_bearish_signal(self):
-        signal = await SMCTrendStrategy(confidence_min=0.1).analyze(make_uptrend_candles(20), make_bearish_smc_data())
+        candles = make_uptrend_candles(20)
+        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) - 0.0020)
+        signal = await SMCTrendStrategy(confidence_min=0.1).analyze(candles, make_bearish_smc_data())
         assert signal is not None
         assert signal.signal_type == SignalType.SELL
 
@@ -126,6 +130,101 @@ class TestSMCTrendStrategy:
     @pytest.mark.asyncio
     async def test_empty_candles(self):
         assert await SMCTrendStrategy().analyze([], make_bullish_smc_data()) is None
+
+    @pytest.mark.asyncio
+    async def test_prioritizes_most_recent_bos(self):
+        """Le BOS le plus récent impose la direction (bearish récent > bullish ancien)."""
+        candles = make_uptrend_candles(20)
+        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) - 0.0020)
+        smc_data = [
+            {"concept": "break_of_structure", "direction": "bullish", "price": 1.0820, "index": 5, "details": {}},
+            {"concept": "fair_value_gap", "direction": "bullish", "price": 1.0810, "index": 6, "details": {"gap_top": 1.0815, "gap_bottom": 1.0805}},
+            {"concept": "break_of_structure", "direction": "bearish", "price": 1.0790, "index": 9, "details": {}},
+            {"concept": "fair_value_gap", "direction": "bearish", "price": 1.0800, "index": 10, "details": {"gap_top": 1.0990, "gap_bottom": 1.0980}},
+            {"concept": "order_block", "direction": "bearish", "price": 1.0815, "index": 8, "details": {"ob_top": 1.0995, "ob_bottom": 1.0985}},
+        ]
+        signal = await SMCTrendStrategy(confidence_min=0.1).analyze(candles, smc_data)
+        assert signal is not None
+        assert signal.direction == Direction.SELL
+
+    @pytest.mark.asyncio
+    async def test_htf_alignment_blocks_against_trend(self):
+        """BOS bullish le plus récent mais HTF baissier → pas de signal (alignement forcé)."""
+        signal = await SMCTrendStrategy(confidence_min=0.1).analyze(
+            make_uptrend_candles(20), make_bullish_smc_data(), htf_trend="bearish"
+        )
+        assert signal is None
+
+    @pytest.mark.asyncio
+    async def test_htf_alignment_allows_aligned(self):
+        """BOS bullish + HTF bullish → signal BUY autorisé."""
+        candles = make_uptrend_candles(20)
+        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) + 0.0020)
+        signal = await SMCTrendStrategy(confidence_min=0.1).analyze(
+            candles, make_bullish_smc_data(), htf_trend="bullish"
+        )
+        assert signal is not None
+        assert signal.direction == Direction.BUY
+
+    @pytest.mark.asyncio
+    async def test_htf_smc_data_derives_trend(self):
+        """La tendance HTF est dérivée du BOS HTF le plus récent (bearish → bloque BUY)."""
+        htf_smc_data = [
+            {"concept": "break_of_structure", "direction": "bearish", "price": 1.0750, "index": 3, "details": {}},
+        ]
+        signal = await SMCTrendStrategy(confidence_min=0.1).analyze(
+            make_uptrend_candles(20), make_bullish_smc_data(), htf_smc_data=htf_smc_data
+        )
+        assert signal is None
+
+    @pytest.mark.asyncio
+    async def test_htf_smc_data_aligned_allows_signal(self):
+        """Tendance HTF bullish dérivée → signal BUY autorisé."""
+        candles = make_uptrend_candles(20)
+        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) + 0.0020)
+        htf_smc_data = [
+            {"concept": "break_of_structure", "direction": "bullish", "price": 1.0850, "index": 3, "details": {}},
+        ]
+        signal = await SMCTrendStrategy(confidence_min=0.1).analyze(
+            candles, make_bullish_smc_data(), htf_smc_data=htf_smc_data
+        )
+        assert signal is not None
+        assert signal.direction == Direction.BUY
+
+    @pytest.mark.asyncio
+    async def test_falls_back_to_opposite_direction_when_primary_htf_blocked(self):
+        """Dernier BOS (pullback haussier) bloqué par un HTF baissier → SELL aligné capturé."""
+        candles = make_uptrend_candles(20)
+        # Dernière bougie baissière : confirme le retest baissier (~prix actuel).
+        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) - 0.0020)
+        smc_data = [
+            # BOS haussier (pullback) le plus récent, mais HTF = bearish.
+            {"concept": "break_of_structure", "direction": "bullish", "price": 1.0985, "index": 8, "details": {}},
+            {"concept": "order_block", "direction": "bullish", "price": 1.0980, "index": 7, "details": {"ob_top": 1.0990, "ob_bottom": 1.0975}},
+            # Setup baissier (plus ancien) aligné avec le HTF bearish.
+            {"concept": "break_of_structure", "direction": "bearish", "price": 1.0990, "index": 5, "details": {}},
+            {"concept": "fair_value_gap", "direction": "bearish", "price": 1.0985, "index": 6, "details": {"gap_top": 1.0990, "gap_bottom": 1.0980}},
+            {"concept": "order_block", "direction": "bearish", "price": 1.0990, "index": 4, "details": {"ob_top": 1.0995, "ob_bottom": 1.0980}},
+        ]
+        signal = await SMCTrendStrategy(confidence_min=0.1).analyze(
+            candles, smc_data, htf_trend="bearish"
+        )
+        assert signal is not None
+        assert signal.direction == Direction.SELL
+
+    @pytest.mark.asyncio
+    async def test_no_counter_trend_when_opposite_not_aligned(self):
+        """HTF baissier et aucun setup baissier → pas de signal (ni BUY ni SELL)."""
+        candles = make_uptrend_candles(20)
+        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) - 0.0020)
+        smc_data = [
+            {"concept": "break_of_structure", "direction": "bullish", "price": 1.0985, "index": 8, "details": {}},
+            {"concept": "order_block", "direction": "bullish", "price": 1.0980, "index": 7, "details": {"ob_top": 1.0990, "ob_bottom": 1.0975}},
+        ]
+        signal = await SMCTrendStrategy(confidence_min=0.1).analyze(
+            candles, smc_data, htf_trend="bearish"
+        )
+        assert signal is None
 
 
 class TestBreakoutStrategy:
@@ -277,8 +376,10 @@ class TestSignalGenerator:
     @pytest.mark.asyncio
     async def test_generate_best(self):
         """Le signal généré provient uniquement de SMC Trend Following."""
+        candles = make_uptrend_candles(20)
+        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) + 0.0020)
         gen = SignalGenerator(min_confidence=0.1)
-        signal = await gen.generate(make_uptrend_candles(20), make_bullish_smc_data())
+        signal = await gen.generate(candles, make_bullish_smc_data())
         assert signal is not None
         assert isinstance(signal, Signal)
         assert signal.confidence >= 0.1
@@ -295,8 +396,10 @@ class TestSignalGenerator:
 
     @pytest.mark.asyncio
     async def test_generate_all(self):
+        candles = make_uptrend_candles(20)
+        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) + 0.0020)
         gen = SignalGenerator(min_confidence=0.1)
-        signals = await gen.generate_all(make_uptrend_candles(20), make_bullish_smc_data())
+        signals = await gen.generate_all(candles, make_bullish_smc_data())
         assert isinstance(signals, list)
         for i in range(1, len(signals)):
             assert signals[i - 1].confidence >= signals[i].confidence
@@ -314,12 +417,14 @@ class TestSignalGenerator:
     async def test_never_returns_signal_from_other_strategy(self):
         """Le SignalGenerator ne doit jamais retourner un signal d'une autre stratégie,
         même si cette stratégie est activée manuellement."""
+        candles = make_uptrend_candles(20)
+        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) + 0.0020)
         gen = SignalGenerator(min_confidence=0.1)
         # Activer manuellement Breakout (qui produirait un signal avec ces données)
         gen.enable_strategy("Breakout")
         assert gen.strategies["Breakout"].enabled
         # Mais le garde-fou empêche ses signaux
-        signal = await gen.generate(make_uptrend_candles(20), make_bullish_smc_data())
+        signal = await gen.generate(candles, make_bullish_smc_data())
         if signal is not None:
             assert signal.strategy_name == "SMC Trend Following"
             assert signal.strategy_name != "Breakout"
@@ -340,37 +445,44 @@ class TestSignalGenerator:
     @pytest.mark.asyncio
     async def test_accepts_signal_at_min_confidence(self):
         """Un signal dont la confiance est >= au seuil est accepté."""
+        candles = make_uptrend_candles(20)
+        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) + 0.0020)
         gen = SignalGenerator(min_confidence=0.1)
-        signal = await gen.generate(make_uptrend_candles(20), make_bullish_smc_data())
+        signal = await gen.generate(candles, make_bullish_smc_data())
         assert signal is not None
         assert signal.confidence >= 0.1
 
     @pytest.mark.asyncio
     async def test_enable_all_does_not_bypass_guard(self):
         """Activer toutes les stratégies ne contourne pas le garde-fou."""
+        candles = make_uptrend_candles(20)
+        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) + 0.0020)
         gen = SignalGenerator(min_confidence=0.1)
         gen.enable_all()
-        signal = await gen.generate(make_uptrend_candles(20), make_bullish_smc_data())
+        signal = await gen.generate(candles, make_bullish_smc_data())
         if signal is not None:
             assert signal.strategy_name == "SMC Trend Following"
 
     @pytest.mark.asyncio
     async def test_generate_all_only_returns_active_strategy_signals(self):
         """generate_all ne retourne que les signaux de la stratégie active."""
+        candles = make_uptrend_candles(20)
+        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) + 0.0020)
         gen = SignalGenerator(min_confidence=0.1)
         gen.enable_all()  # Active toutes les stratégies
-        signals = await gen.generate_all(make_uptrend_candles(20), make_bullish_smc_data())
+        signals = await gen.generate_all(candles, make_bullish_smc_data())
         for s in signals:
             assert s.strategy_name == "SMC Trend Following"
 
     @pytest.mark.asyncio
     async def test_custom_active_strategy(self):
         """On peut configurer une autre stratégie active."""
+        candles = make_uptrend_candles(20)
+        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) + 0.0020)
         gen = SignalGenerator(min_confidence=0.1, active_strategy="Breakout")
         assert gen.active_strategy == "Breakout"
         assert gen.get_enabled_strategies() == ["Breakout"]
         # Les données bullish déclenchent Breakout avec volume élevé
-        candles = make_uptrend_candles(20)
         candles[-1] = make_candle(
             len(candles) - 1,
             float(candles[-1].open),

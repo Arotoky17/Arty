@@ -15,6 +15,7 @@ from arty_trading.core.entities import Candle, Signal
 from arty_trading.core.enums import Direction, LogCategory, SignalType, TimeFrame
 from arty_trading.core.interfaces import IStrategy
 from arty_trading.logging.logger import get_logger
+from arty_trading.utils.helpers import calculate_atr
 
 logger = get_logger(LogCategory.STRATEGY)
 
@@ -67,8 +68,18 @@ class BaseStrategy(IStrategy):
         self,
         candles: list[Candle],
         smc_data: list[dict],
+        htf_smc_data: list[dict] | None = None,
+        htf_trend: str | None = None,
     ) -> Signal | None:
-        """Analyse le marché et retourne un signal ou None."""
+        """Analyse le marché et retourne un signal ou None.
+
+        Args:
+            candles: Liste des bougies OHLCV
+            smc_data: Détections SMC sur le timeframe courant
+            htf_smc_data: Détections SMC sur le timeframe supérieur (optionnel)
+            htf_trend: Tendance HTF explicite (\"bullish\", \"bearish\",
+                \"neutral\") (optionnel)
+        """
 
     # =========================================================================
     # Helpers partagés
@@ -104,6 +115,54 @@ class BaseStrategy(IStrategy):
     ) -> bool:
         """Vérifie si un concept SMC est présent dans les données."""
         return len(self._filter_smc(smc_data, concept, direction)) > 0
+
+    def _is_htf_aligned(
+        self,
+        direction: Direction,
+        htf_trend: str | None = None,
+        htf_smc_data: list[dict] | None = None,
+    ) -> bool:
+        """
+        Vérifie si une direction de signal est alignée avec la tendance HTF /
+        la structure HTF.
+
+        La tendance HTF est dérivée, dans l'ordre :
+        1. ``htf_trend`` explicite (\"bullish\" / \"bearish\" / \"neutral\")
+        2. Le BOS le plus récent détecté sur ``htf_smc_data`` (si ``htf_trend``
+           n'est pas fourni)
+
+        Si aucune information HTF n'est disponible, la direction n'est **pas**
+        bloquée (l'alignement reste ensuite imposé par le ``SignalGenerator``
+        et le ``SignalValidator``).
+
+        Args:
+            direction: Direction du signal candidat (BUY ou SELL)
+            htf_trend: Tendance HTF explicite (optionnel)
+            htf_smc_data: Détections SMC HTF (optionnel)
+
+        Returns:
+            True si la direction est alignée (ou si l'info HTF est inconnue),
+            False si elle est en conflit avec la tendance HTF.
+        """
+        direction_str = "bullish" if direction == Direction.BUY else "bearish"
+
+        trend = htf_trend
+        if not trend and htf_smc_data:
+            # Dériver la tendance HTF depuis le BOS le plus récent.
+            htf_bulls = self._filter_smc(htf_smc_data, "break_of_structure", "bullish")
+            htf_bears = self._filter_smc(htf_smc_data, "break_of_structure", "bearish")
+            latest_bull = max(htf_bulls, key=lambda d: d.get("index", -1), default=None)
+            latest_bear = max(htf_bears, key=lambda d: d.get("index", -1), default=None)
+            if latest_bull and (
+                not latest_bear or latest_bull["index"] > latest_bear["index"]
+            ):
+                trend = "bullish"
+            elif latest_bear:
+                trend = "bearish"
+
+        if not trend or trend == "neutral":
+            return True
+        return trend == direction_str
 
     def _count_confluences(
         self,
@@ -226,11 +285,12 @@ class BaseStrategy(IStrategy):
         return sl, tp
 
     def _calculate_atr(self, candles: list[Candle], period: int = 14) -> Decimal:
-        """
-        Calcule l'Average True Range (ATR) sur les bougies fournies.
+        """Calcule l'Average True Range (ATR) d'une série de bougies.
 
-        L'ATR mesure la volatilité du marché et permet d'adapter
-        le SL/TP à la volatilité actuelle.
+        Délègue à ``utils.helpers.calculate_atr`` : c'est exactement la même
+        implémentation (moyenne simple initiale puis lissage Wilder), centralisée
+        ici afin d'avoir une source de vérité unique pour le calcul ATR des
+        stratégies. Le comportement est strictement identique.
 
         Args:
             candles: Liste des bougies (du plus ancien au plus récent)
@@ -239,30 +299,7 @@ class BaseStrategy(IStrategy):
         Returns:
             Valeur ATR en prix (pas en pips)
         """
-        if len(candles) < period + 1:
-            return Decimal("0")
-
-        true_ranges: list[Decimal] = []
-        for i in range(1, len(candles)):
-            current = candles[i]
-            previous = candles[i - 1]
-            tr = max(
-                current.high - current.low,
-                abs(current.high - previous.close),
-                abs(current.low - previous.close),
-            )
-            true_ranges.append(tr)
-
-        if len(true_ranges) < period:
-            return Decimal("0")
-
-        # Première moyenne simple
-        atr = sum(true_ranges[:period]) / period
-        # Puis moyenne lissée (Wilder)
-        for tr in true_ranges[period:]:
-            atr = (atr * (period - 1) + tr) / period
-
-        return atr
+        return calculate_atr(candles, period)
 
     def _calculate_atr_based_sl_tp(
         self,
@@ -303,3 +340,34 @@ class BaseStrategy(IStrategy):
             tp = entry - tp_distance
 
         return sl, tp
+
+    def _has_confirmed_rejection(
+        self,
+        candles: list[Candle],
+        top: float,
+        bottom: float,
+        direction: str,
+    ) -> bool:
+        """
+        Vérifie que la dernière bougie clôture dans la zone (ou au-delà) et dans
+        le bon sens.
+
+        Un vrai retest SMC doit être confirmé par une clôture de bougie dans la
+        zone, pas seulement une mèche qui touche la zone.
+
+        Args:
+            candles: Liste des bougies OHLCV
+            top: Limite haute de la zone
+            bottom: Limite basse de la zone
+            direction: "bullish" ou "bearish"
+
+        Returns:
+            True si la dernière bougie confirme un rejet valide de la zone
+        """
+        if not candles:
+            return False
+
+        last = candles[-1]
+        if direction == "bullish":
+            return last.is_bullish and last.close >= bottom
+        return not last.is_bullish and last.close <= top

@@ -122,8 +122,18 @@ class IStrategy(ABC):
         self,
         candles: list[Candle],
         smc_data: list[dict],
+        htf_smc_data: list[dict] | None = None,
+        htf_trend: str | None = None,
     ) -> Signal | None:
-        """Analyse le marché et retourne un signal ou None."""
+        """Analyse le marché et retourne un signal ou None.
+
+        Args:
+            candles: Liste des bougies OHLCV
+            smc_data: Détections SMC sur le timeframe courant
+            htf_smc_data: Détections SMC sur le timeframe supérieur (optionnel)
+            htf_trend: Tendance HTF explicite (\"bullish\", \"bearish\",
+                \"neutral\") (optionnel)
+        """
 
 
 class IRiskManager(ABC):

@@ -154,6 +154,58 @@ class StrategyType(str, Enum):
     SWING = "swing_trading"
 
 
+class MarketRegime(str, Enum):
+    """Régime de marché déterminé par le MarketStructureEngine.
+
+    Permet de dépasser le simple BULLISH/BEARISH/NEUTRAL pour refléter la
+    force de la tendance et les états de transition / range.
+
+    - STRONG_BULLISH / STRONG_BEARISH : tendance forte, structure alignée.
+    - BULLISH / BEARISH : tendance directionnelle simple.
+    - WEAK_BULLISH / WEAK_BEARISH : tendance faible, peu de confirmations.
+    - RANGE : absence de tendance claire (oscillation, compression).
+    - TRANSITION : bascule de structure en cours, non confirmée.
+    """
+
+    STRONG_BULLISH = "strong_bullish"
+    BULLISH = "bullish"
+    WEAK_BULLISH = "weak_bullish"
+    RANGE = "range"
+    WEAK_BEARISH = "weak_bearish"
+    BEARISH = "bearish"
+    STRONG_BEARISH = "strong_bearish"
+    TRANSITION = "transition"
+
+
+class NoTradeReason(str, Enum):
+    """Raisons explicites d'une décision NO TRADE.
+
+    Chaque raison est un motif structuré, sérialisable, qui explique pourquoi
+    le bot n'entre pas. C'est une décision de premier ordre, pas un défaut.
+    """
+
+    H1_NEUTRAL = "h1_neutral"
+    H1_RANGE = "h1_range"
+    H1_TRANSITION = "h1_transition"
+    COUNTER_TREND = "counter_trend"
+    NO_STRUCTURE = "no_structure"
+    NO_VALID_ZONE = "no_valid_zone"
+    NO_LIQUIDITY_SWEEP = "no_liquidity_sweep"
+    NO_M5_CONFIRMATION = "no_m5_confirmation"
+    INVALID_OB = "invalid_ob"
+    INVALID_FVG = "invalid_fvg"
+    RR_TOO_LOW = "rr_too_low"
+    SPREAD_TOO_HIGH = "spread_too_high"
+    NEWS_FILTER = "news_filter"
+    VOLATILITY_INVALID = "volatility_invalid"
+    DUPLICATE_SETUP = "duplicate_setup"
+    SETUP_EXPIRED = "setup_expired"
+    UNSUPPORTED_SYMBOL = "unsupported_symbol"
+    NO_DISPLACEMENT = "no_displacement"
+    NO_REJECTION = "no_rejection"
+    RISK_INVALID = "risk_invalid"
+
+
 class LogCategory(str, Enum):
     """Catégories de journalisation."""
 

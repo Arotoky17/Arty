@@ -13,8 +13,14 @@ from decimal import Decimal
 
 from arty_trading.config.settings import DecisionSettings
 from arty_trading.core.entities import Candle, Signal
-from arty_trading.core.enums import Direction, SMCConcept
+from arty_trading.core.enums import (
+    Direction,
+    MarketRegime,
+    NoTradeReason,
+    SMCConcept,
+)
 from arty_trading.modules.smc.sessions import SessionDetector
+from arty_trading.utils.helpers import calculate_atr_sliding
 
 
 @dataclass(frozen=True)
@@ -135,13 +141,63 @@ class DecisionEngine:
             rejected.append("entry_confluence")
 
         score = max(0, min(100, score))
-        sl, tp = self._structural_levels(signal, candles, smc_data, atr)
-        if self._rr(signal.entry_price, sl, tp) < self._settings.minimum_risk_reward:
+        sl_buffer_mult = getattr(market_context, "sl_buffer_atr_mult", None)
+        if sl_buffer_mult is not None:
+            sl_buffer = atr * Decimal(str(sl_buffer_mult))
+        else:
+            sl_buffer = atr * Decimal(str(self._settings.atr_multiplier))
+        sl, tp = self._structural_levels(signal, candles, smc_data, atr, sl_buffer=sl_buffer)
+
+        min_rr = self._settings.minimum_risk_reward
+        if market_context is not None:
+            profile = getattr(market_context, "instrument_profile", None)
+            if profile is not None:
+                min_rr = getattr(profile, "min_risk_reward", min_rr)
+
+        if self._rr(signal.entry_price, sl, tp) < min_rr:
             rejected.append("risk_reward")
 
         master_trend_result = self._check_master_trend(master_trend, direction, signal)
         if master_trend_result is not None:
             rejected.append(master_trend_result)
+
+        # NO TRADE Engine — régime de marché structurel (filtre dur, additif au
+        # Master Direction Gate, jamais contournable par le score).
+        regime = getattr(market_context, "regime", None) if market_context else None
+        if regime == MarketRegime.RANGE.value:
+            rejected.append(NoTradeReason.H1_RANGE.value)
+        elif regime == MarketRegime.TRANSITION.value:
+            rejected.append(NoTradeReason.H1_TRANSITION.value)
+
+        # Contre-tendance : un candidat opposé au régime est bloqué.
+        _bullish_regimes = {
+            MarketRegime.STRONG_BULLISH.value,
+            MarketRegime.BULLISH.value,
+            MarketRegime.WEAK_BULLISH.value,
+        }
+        _bearish_regimes = {
+            MarketRegime.STRONG_BEARISH.value,
+            MarketRegime.BEARISH.value,
+            MarketRegime.WEAK_BEARISH.value,
+        }
+        if not getattr(self._settings, "allow_counter_trend", False):
+            if regime in _bearish_regimes and direction == "bullish":
+                rejected.append(NoTradeReason.COUNTER_TREND.value)
+            elif regime in _bullish_regimes and direction == "bearish":
+                rejected.append(NoTradeReason.COUNTER_TREND.value)
+
+        # Propager les raisons NO TRADE du contexte (hors contre-tendance,
+        # traitée ci-dessus de façon directionnelle).
+        if market_context is not None:
+            ctx_reasons = getattr(market_context, "no_trade_reasons", None) or []
+            for reason in ctx_reasons:
+                if reason in {
+                    NoTradeReason.H1_NEUTRAL.value,
+                    NoTradeReason.H1_RANGE.value,
+                    NoTradeReason.H1_TRANSITION.value,
+                    NoTradeReason.NO_STRUCTURE.value,
+                }:
+                    rejected.append(reason)
 
         tier = (
             "premium"
@@ -207,20 +263,13 @@ class DecisionEngine:
 
     @staticmethod
     def _atr(candles: list[Candle], period: int = 14) -> Decimal:
-        if len(candles) < 2:
-            return Decimal("0")
-        ranges = []
-        for previous, candle in zip(candles[-period - 1 : -1], candles[-period:]):
-            ranges.append(
-                max(
-                    candle.high - candle.low,
-                    abs(candle.high - previous.close),
-                    abs(candle.low - previous.close),
-                )
-            )
-        if not ranges:
-            return Decimal("0")
-        return sum(ranges, Decimal("0")) / Decimal(len(ranges))
+        """ATR par moyenne simple glissante (délégué à utils.helpers).
+
+        Délègue à ``calculate_atr_sliding`` : c'est la même implémentation
+        (moyenne simple de la fenêtre glissante, distincte du ATR Wilder).
+        Le comportement est strictement identique.
+        """
+        return calculate_atr_sliding(candles, period)
 
     def _check_master_trend(
         self, master_trend: str | None, direction: str, signal: Signal
@@ -274,14 +323,14 @@ class DecisionEngine:
         return ema50 > ema200 if direction == "bullish" else ema50 < ema200
 
     def _structural_levels(
-        self, signal: Signal, candles: list[Candle], data: list[dict], atr: Decimal
+        self, signal: Signal, candles: list[Candle], data: list[dict], atr: Decimal, sl_buffer: Decimal | None = None
     ) -> tuple[Decimal, Decimal]:
         """Place le SL derrière la structure et le TP sur la liquidité ou 2R."""
         entry = signal.entry_price
         directional = "bullish" if signal.direction == Direction.BUY else "bearish"
         lows = [c.low for c in candles[-20:]] or [entry]
         highs = [c.high for c in candles[-20:]] or [entry]
-        buffer = atr * Decimal(str(self._settings.atr_multiplier))
+        buffer = sl_buffer if sl_buffer is not None else atr * Decimal(str(self._settings.atr_multiplier))
         if signal.direction == Direction.BUY:
             candidates = [
                 Decimal(str(d["price"]))

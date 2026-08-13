@@ -56,6 +56,18 @@ class MarketContext:
     ltf_smc_data: list[dict] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
 
+    # Régime de marché / score de tendance (MarketStructureEngine).
+    # La valeur "unknown" est un placeholder : un contexte construit sans analyse
+    # de régime ne bloque pas (rétro-compatibilité). Seuls "range"/"transition"
+    # calculés bloquent les deux directions.
+    regime: str = "unknown"
+    trend_score: float = 0.0
+    no_trade_reasons: list[str] = field(default_factory=list)
+    structure_valid: bool = False
+    structure_age: int = 0
+    sl_buffer_atr_mult: float = 0.5
+    instrument_profile: Any | None = None
+
     def is_bullish(self) -> bool:
         return self.master_trend == "bullish"
 
@@ -65,10 +77,17 @@ class MarketContext:
     def is_neutral(self) -> bool:
         return self.master_trend == "neutral"
 
+    def _regime_blocks_trade(self) -> bool:
+        return self.regime in {"range", "transition"}
+
     def allows_buy(self) -> bool:
+        if self._regime_blocks_trade():
+            return False
         return self.is_bullish()
 
     def allows_sell(self) -> bool:
+        if self._regime_blocks_trade():
+            return False
         return self.is_bearish()
 
     def to_dict(self) -> dict[str, Any]:
@@ -79,6 +98,8 @@ class MarketContext:
             "ltf": self.ltf.value,
             "master_trend": self.master_trend,
             "trend_confidence": self.trend_confidence,
+            "regime": self.regime,
+            "trend_score": round(self.trend_score, 1),
             "hh": float(self.hh) if self.hh else None,
             "hl": float(self.hl) if self.hl else None,
             "lh": float(self.lh) if self.lh else None,
@@ -93,6 +114,9 @@ class MarketContext:
             "spread": self.spread,
             "atr": float(self.atr),
             "entry_confirmation": self.entry_confirmation,
+            "structure_valid": self.structure_valid,
+            "structure_age": self.structure_age,
+            "no_trade_reasons": list(self.no_trade_reasons),
             "allows_buy": self.allows_buy(),
             "allows_sell": self.allows_sell(),
         }

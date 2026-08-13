@@ -1,15 +1,45 @@
 """Tests des utilitaires."""
 
-from datetime import datetime
+from datetime import datetime, timezone
+from decimal import Decimal
 
 import pytest
 import pytz
 
-from arty_trading.core.enums import TradingSession
-from arty_trading.utils.helpers import calculate_pips, round_price
+from arty_trading.core.entities import Candle
+from arty_trading.core.enums import TimeFrame, TradingSession
+from arty_trading.utils.helpers import (
+    calculate_atr_sliding,
+    calculate_pips,
+    round_price,
+)
 from arty_trading.utils.sessions import get_active_session, is_kill_zone, is_session_active
 
 UTC = pytz.UTC
+
+
+def _volatile_candles(n: int) -> list[Candle]:
+    """Bougies identiques au jeu utilisé pour figer ``DecisionEngine._atr``."""
+    o = Decimal("1.1000")
+    c = Decimal("1.1000")
+    out: list[Candle] = []
+    for i in range(n):
+        out.append(
+            Candle(
+                symbol="EURUSD",
+                timeframe=TimeFrame.M5,
+                time=datetime(2024, 1, 2, 8, i, tzinfo=timezone.utc),
+                open=o,
+                high=o + Decimal("0.0020") + Decimal(i) * Decimal("0.0005"),
+                low=o - Decimal("0.0010"),
+                close=c + Decimal(i) * Decimal("0.0004"),
+                volume=100,
+                spread=3,
+            )
+        )
+        o = c + Decimal(i) * Decimal("0.0004")
+        c = o
+    return out
 
 
 class TestHelpers:
@@ -23,6 +53,12 @@ class TestHelpers:
     def test_calculate_pips_usdjpy(self):
         pips = calculate_pips("USDJPY", 150.00, 150.50)
         assert pips == pytest.approx(50.0)
+
+    def test_calculate_atr_sliding_matches_decision_atr(self):
+        """Fige la valeur du ATR glissant (identique à DecisionEngine._atr)."""
+        assert calculate_atr_sliding(_volatile_candles(2), 1) == Decimal("0.0035")
+        assert calculate_atr_sliding(_volatile_candles(6), 2) == Decimal("0.00525")
+        assert calculate_atr_sliding(_volatile_candles(8), 14) == Decimal("0.0045")
 
 
 class TestSessions:

@@ -178,7 +178,7 @@ def make_bullish_smc_data():
     return [
         {"concept": "break_of_structure", "direction": "bullish", "price": 1.0820, "index": 5, "details": {}},
         {"concept": "fair_value_gap", "direction": "bullish", "price": 1.0810, "index": 6, "details": {}},
-        {"concept": "order_block", "direction": "bullish", "price": 1.0795, "index": 4, "details": {"mitigated": False}},
+        {"concept": "order_block", "direction": "bullish", "price": 1.0795, "index": 4, "details": {"mitigation_count": 0}},
         {"concept": "optimal_trade_entry", "direction": "bullish", "price": 1.0815, "index": 8, "details": {}},
         {"concept": "liquidity_sweep", "direction": "bullish", "price": 1.0790, "index": 7, "details": {}},
         {"concept": "premium_discount", "direction": "neutral", "price": 1.0810, "index": 8, "details": {"current_zone": "discount"}},
@@ -189,7 +189,7 @@ def make_bearish_smc_data():
     return [
         {"concept": "break_of_structure", "direction": "bearish", "price": 1.0790, "index": 5, "details": {}},
         {"concept": "fair_value_gap", "direction": "bearish", "price": 1.0800, "index": 6, "details": {}},
-        {"concept": "order_block", "direction": "bearish", "price": 1.0815, "index": 4, "details": {"mitigated": False}},
+        {"concept": "order_block", "direction": "bearish", "price": 1.0815, "index": 4, "details": {"mitigation_count": 0}},
         {"concept": "optimal_trade_entry", "direction": "bearish", "price": 1.0795, "index": 8, "details": {}},
         {"concept": "liquidity_sweep", "direction": "bearish", "price": 1.0820, "index": 7, "details": {}},
         {"concept": "premium_discount", "direction": "neutral", "price": 1.0800, "index": 8, "details": {"current_zone": "premium"}},

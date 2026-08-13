@@ -11,6 +11,7 @@ Le mode REAL est DÉSACTIVÉ par défaut pour garantir la sécurité.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from functools import lru_cache
 from typing import Literal
 
@@ -67,6 +68,29 @@ class RiskSettings(BaseSettings):
         if not 0 < v <= 1:
             raise ValueError("Les valeurs de risque doivent être entre 0 et 1")
         return v
+
+
+@dataclass(frozen=True)
+class InstrumentProfile:
+    """Profil de trading par instrument (symbole).
+
+    Toutes les valeurs distance/ATR sont exprimées en multiples d'ATR,
+    jamais en distance fixe. Cela permet d'adapter automatiquement le
+    filtre à la volatilité courante du symbole.
+    """
+
+    symbol: str
+    atr_period: int = 14
+    displacement_atr_mult: float = 1.5
+    retest_atr_mult: float = 1.0
+    sl_buffer_atr_mult: float = 0.5
+    min_risk_reward: float = 2.0
+    max_spread_points: int = 30
+    max_zone_age_bars: int = 20
+    max_mitigations: int = 2
+    # Nombre minimum de confluences SMC à valider (parmi FVG, Order Block,
+    # Liquidity Sweep, Premium/Discount) pour autoriser un signal.
+    min_confluence_count: int = 2
 
 
 class SignalSettings(BaseSettings):
@@ -129,6 +153,18 @@ class ValidatorSettings(BaseSettings):
         alias="VALIDATOR_NEWS_FILTER",
         description="Vérifier le filtre de news (bloque les trades pendant les news)",
     )
+    min_confluence_count: int = Field(
+        default=2,
+        alias="VALIDATOR_MIN_CONFLUENCE",
+        ge=0,
+        le=4,
+        description=(
+            "Nombre minimum de confluences SMC (FVG, OB, Liquidity Sweep, "
+            "Premium/Discount) à valider pour autoriser un signal. Les "
+            "confluences sont comptées (elles ne bloquent pas), contrairement "
+            "aux conditions HARD de sécurité."
+        ),
+    )
 
 
 class DecisionSettings(BaseSettings):
@@ -141,11 +177,11 @@ class DecisionSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="")
 
     enabled: bool = Field(default=False, alias="DECISION_ENGINE_ENABLED")
-    minimum_score: int = Field(default=80, alias="MINIMUM_SCORE", ge=0, le=100)
+    minimum_score: int = Field(default=70, alias="MINIMUM_SCORE", ge=0, le=100)
     minimum_risk_reward: float = Field(default=2.0, alias="RISK_REWARD", ge=1.0)
     enable_mtf: bool = Field(default=True, alias="ENABLE_MTF")
     enable_news_filter: bool = Field(default=True, alias="ENABLE_NEWS_FILTER")
-    enable_kill_zone: bool = Field(default=True, alias="ENABLE_KILL_ZONE")
+    enable_kill_zone: bool = Field(default=False, alias="ENABLE_KILL_ZONE")
     enable_spread_filter: bool = Field(default=True, alias="ENABLE_SPREAD_FILTER")
     enable_premium_discount: bool = Field(default=True, alias="ENABLE_PREMIUM_DISCOUNT")
     enable_atr_filter: bool = Field(default=True, alias="ENABLE_ATR_FILTER")
@@ -292,9 +328,46 @@ class Settings(BaseSettings):
     trading_mode: TradingMode = Field(default=TradingMode.ANALYSIS, alias="TRADING_MODE")
     allow_live_trading: bool = Field(default=False, alias="ALLOW_LIVE_TRADING")
 
+    # Mode calibration : assouplit temporairement les filtres pour identifier
+    # les setups valides. Ne retire PAS les hard rejects (H1 RANGE/TRANSITION,
+    # spread trop élevé, news, contre-trend, setup dupliqué).
+    debug_calibration_mode: bool = Field(default=False, alias="DEBUG_CALIBRATION_MODE")
+
     # Symboles et timeframe
-    default_symbols: str = Field(default="EURUSD,GBPUSD,USDJPY,XAUUSD", alias="DEFAULT_SYMBOLS")
+    default_symbols: str = Field(default="EURUSD,XAUUSD", alias="DEFAULT_SYMBOLS")
+    enable_legacy_symbols: bool = Field(default=False, alias="ENABLE_LEGACY_SYMBOLS")
     default_timeframe: TimeFrame = Field(default=TimeFrame.H1, alias="DEFAULT_TIMEFRAME")
+
+    # Profils par instrument (EURUSD + XAUUSD uniquement en phase 1).
+    instrument_profiles: dict[str, InstrumentProfile] = Field(
+        default_factory=lambda: {
+            "EURUSD": InstrumentProfile(
+                symbol="EURUSD",
+                atr_period=14,
+                displacement_atr_mult=1.5,
+                retest_atr_mult=1.0,
+                sl_buffer_atr_mult=0.5,
+                min_risk_reward=1.5,
+                max_spread_points=30,
+                max_zone_age_bars=20,
+                max_mitigations=2,
+                min_confluence_count=2,
+            ),
+            "XAUUSD": InstrumentProfile(
+                symbol="XAUUSD",
+                atr_period=14,
+                displacement_atr_mult=1.2,
+                retest_atr_mult=1.5,
+                sl_buffer_atr_mult=0.8,
+                min_risk_reward=2.0,
+                max_spread_points=200,
+                max_zone_age_bars=25,
+                max_mitigations=2,
+                min_confluence_count=2,
+            ),
+        },
+        description="Profil de trading par symbole (seuls EURUSD et XAUUSD en phase 1)",
+    )
 
     # Sous-configurations
     mt5: MT5Settings = Field(default_factory=MT5Settings)
@@ -360,6 +433,18 @@ class Settings(BaseSettings):
     def symbols_list(self) -> list[str]:
         """Retourne la liste des symboles configurés."""
         return [s.strip().upper() for s in self.default_symbols.split(",") if s.strip()]
+
+    @property
+    def supported_symbols(self) -> list[str]:
+        """Retourne la liste des symboles supportés par la stratégie ICT/SMC."""
+        base = ["EURUSD", "XAUUSD"]
+        if self.enable_legacy_symbols:
+            base.extend(["GBPUSD", "USDJPY"])
+        return base
+
+    def get_instrument_profile(self, symbol: str) -> InstrumentProfile | None:
+        """Retourne le profil d'un instrument, ou None si non configuré."""
+        return self.instrument_profiles.get(symbol.upper())
 
     @property
     def is_analysis_mode(self) -> bool:

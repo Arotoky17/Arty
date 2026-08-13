@@ -11,6 +11,7 @@ from arty_trading.core.entities import Signal, Trade, TradingAccount
 from arty_trading.core.enums import LogCategory
 from arty_trading.core.interfaces import IMarketDataProvider, IRiskManager
 from arty_trading.logging.logger import get_logger
+from arty_trading.utils.helpers import get_pip_size, pip_value
 
 logger = get_logger(LogCategory.RISK)
 
@@ -129,13 +130,12 @@ class RiskManager(IRiskManager):
             volume = risk_amount / loss_per_lot
             sl_ref = sl_ticks
         else:
-            # Repli heuristique : constantes approximatives (pip 10 USD/lot).
-            pip_value_per_lot = 10.0
-            pip_size = 0.01 if "JPY" in signal.symbol else 0.0001
+            pip_size = float(get_pip_size(signal.symbol))
             sl_pips = sl_distance / pip_size
             if sl_pips == 0:
                 return 0.01
-            volume = risk_amount / (sl_pips * pip_value_per_lot)
+            pip_val = pip_value(signal.symbol, lot_size=1.0)
+            volume = risk_amount / (sl_pips * pip_val)
             sl_ref = sl_pips
 
         volume = round(volume, 2)

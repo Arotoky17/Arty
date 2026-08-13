@@ -82,8 +82,8 @@ def make_full_bullish_smc_data():
     """Données SMC avec toutes les conditions bullish valides."""
     return [
         {"concept": "break_of_structure", "direction": "bullish", "price": 1.0820, "index": 5, "details": {}},
-        {"concept": "fair_value_gap", "direction": "bullish", "price": 1.0810, "index": 6, "details": {"gap_size": 0.0005}},
-        {"concept": "order_block", "direction": "bullish", "price": 1.0795, "index": 4, "details": {"mitigated": False}},
+        {"concept": "fair_value_gap", "direction": "bullish", "price": 1.0810, "index": 6, "details": {"gap_size": 0.0005, "gap_top": 1.0815, "gap_bottom": 1.0805}},
+        {"concept": "order_block", "direction": "bullish", "price": 1.0795, "index": 4, "details": {"mitigation_count": 0, "ob_top": 1.0800, "ob_bottom": 1.0790}},
         {"concept": "liquidity_sweep", "direction": "bullish", "price": 1.0790, "index": 7, "details": {"type": "buy_side_liquidity_grab"}},
         {"concept": "premium_discount", "direction": "neutral", "price": 1.0810, "index": 8, "details": {"current_zone": "discount"}},
     ]
@@ -93,8 +93,8 @@ def make_full_bearish_smc_data():
     """Données SMC avec toutes les conditions bearish valides."""
     return [
         {"concept": "break_of_structure", "direction": "bearish", "price": 1.0790, "index": 5, "details": {}},
-        {"concept": "fair_value_gap", "direction": "bearish", "price": 1.0800, "index": 6, "details": {"gap_size": 0.0005}},
-        {"concept": "order_block", "direction": "bearish", "price": 1.0815, "index": 4, "details": {"mitigated": False}},
+        {"concept": "fair_value_gap", "direction": "bearish", "price": 1.0800, "index": 6, "details": {"gap_size": 0.0005, "gap_top": 1.0805, "gap_bottom": 1.0795}},
+        {"concept": "order_block", "direction": "bearish", "price": 1.0815, "index": 4, "details": {"mitigation_count": 0, "ob_top": 1.0820, "ob_bottom": 1.0810}},
         {"concept": "liquidity_sweep", "direction": "bearish", "price": 1.0820, "index": 7, "details": {"type": "sell_side_liquidity_grab"}},
         {"concept": "premium_discount", "direction": "neutral", "price": 1.0800, "index": 8, "details": {"current_zone": "premium"}},
     ]
@@ -284,8 +284,8 @@ class TestFullValidation:
         assert COND_BOS in result.failed_conditions
         assert result.score < 1.0
 
-    def test_invalid_missing_fvg(self):
-        """Signal rejeté si pas de FVG."""
+    def test_missing_fvg_is_optional(self):
+        """FVG manquant = confluence manquante, le signal reste valide (≥2 confluences présentes)."""
         validator = SignalValidator(min_risk_reward=1.5, max_spread=20)
         signal = make_buy_signal(rr=2.0)
         candles = make_candles(20, spread=3)
@@ -294,11 +294,13 @@ class TestFullValidation:
 
         result = validator.validate(signal, candles, smc_data)
 
-        assert result.is_valid is False
-        assert COND_FVG in result.failed_conditions
+        assert result.is_valid is True
+        assert COND_FVG not in result.failed_conditions
+        assert result.confluence_passed == 3
+        assert result.confluence_total == 4
 
-    def test_invalid_missing_order_block(self):
-        """Signal rejeté si pas d'Order Block."""
+    def test_missing_order_block_is_optional(self):
+        """Order Block manquant = confluence manquante, le signal reste valide."""
         validator = SignalValidator(min_risk_reward=1.5, max_spread=20)
         signal = make_buy_signal(rr=2.0)
         candles = make_candles(20, spread=3)
@@ -307,11 +309,12 @@ class TestFullValidation:
 
         result = validator.validate(signal, candles, smc_data)
 
-        assert result.is_valid is False
-        assert COND_ORDER_BLOCK in result.failed_conditions
+        assert result.is_valid is True
+        assert COND_ORDER_BLOCK not in result.failed_conditions
+        assert result.confluence_passed == 3
 
-    def test_invalid_missing_liquidity_sweep(self):
-        """Signal rejeté si pas de Liquidity Sweep."""
+    def test_missing_liquidity_sweep_is_optional(self):
+        """Liquidity Sweep manquant = confluence manquante, le signal reste valide."""
         validator = SignalValidator(min_risk_reward=1.5, max_spread=20)
         signal = make_buy_signal(rr=2.0)
         candles = make_candles(20, spread=3)
@@ -320,24 +323,26 @@ class TestFullValidation:
 
         result = validator.validate(signal, candles, smc_data)
 
-        assert result.is_valid is False
-        assert COND_LIQUIDITY_SWEEP in result.failed_conditions
+        assert result.is_valid is True
+        assert COND_LIQUIDITY_SWEEP not in result.failed_conditions
+        assert result.confluence_passed == 3
 
-    def test_invalid_wrong_premium_discount(self):
-        """Signal BUY rejeté si prix en zone premium au lieu de discount."""
+    def test_wrong_premium_discount_is_optional(self):
+        """Premium/Discount incorrect = confluence manquante, le signal reste valide."""
         validator = SignalValidator(min_risk_reward=1.5, max_spread=20)
         signal = make_buy_signal(rr=2.0)
         candles = make_candles(20, spread=3)
         smc_data = make_full_bullish_smc_data()
-        # Changer la zone en premium
+        # Changer la zone en premium (incorrect pour un BUY)
         for d in smc_data:
             if d["concept"] == "premium_discount":
                 d["details"]["current_zone"] = "premium"
 
         result = validator.validate(signal, candles, smc_data)
 
-        assert result.is_valid is False
-        assert COND_PREMIUM_DISCOUNT in result.failed_conditions
+        assert result.is_valid is True
+        assert COND_PREMIUM_DISCOUNT not in result.failed_conditions
+        assert result.confluence_passed == 3
 
     def test_invalid_high_spread(self):
         """Signal rejeté si spread trop élevé."""
@@ -506,19 +511,23 @@ class TestFullValidation:
         assert result.checked_conditions[COND_CHOCH] is True
 
     def test_score_partial(self):
-        """Le score est correct pour des conditions partielles."""
+        """Le score est correct et le signal reste valide si ≥ min_confluences."""
         validator = SignalValidator(min_risk_reward=1.5, max_spread=20)
         signal = make_buy_signal(rr=2.0)
         candles = make_candles(20, spread=3)
         smc_data = make_full_bullish_smc_data()
-        # Retirer FVG et OB → 2 conditions échouent sur 11
+        # Retirer FVG et OB → 2 confluences sur 4 restent (== min_confluence_count)
         smc_data = [d for d in smc_data if d["concept"] not in ("fair_value_gap", "order_block")]
 
         result = validator.validate(signal, candles, smc_data)
 
-        assert result.is_valid is False
-        assert len(result.failed_conditions) == 2
-        # score = 9/11 ≈ 0.8182
+        # Aucune condition HARD ne bloque ; confluences = 2/4 (défaut min=2) → valide
+        assert result.is_valid is True
+        assert result.failed_conditions == []
+        assert result.confluence_passed == 2
+        assert result.confluence_total == 4
+        assert result.confluence_score == 0.5
+        # score = 9/11 ≈ 0.8182 (7 conditions HARD + 2 confluences passent)
         assert 0.8 < result.score < 0.82
 
     def test_checked_conditions_complete(self):
@@ -543,12 +552,12 @@ class TestFullValidation:
         result = validator.validate(signal, candles, [])
 
         assert result.is_valid is False
+        # Les conditions HARD bloquantes échouent
         assert COND_BOS in result.failed_conditions
-        assert COND_FVG in result.failed_conditions
-        assert COND_ORDER_BLOCK in result.failed_conditions
-        assert COND_LIQUIDITY_SWEEP in result.failed_conditions
-        assert COND_PREMIUM_DISCOUNT in result.failed_conditions
         assert COND_HTF_TREND in result.failed_conditions
+        # Les confluences ne bloquent pas mais sont comptées à zéro
+        assert result.confluence_passed == 0
+        assert result.confluence_score == 0.0
 
     def test_empty_candles(self):
         """Bougies vides → session échoue."""
@@ -581,8 +590,8 @@ class TestFullValidation:
         candles = make_candles(20, spread=3)
         smc_data = [
             {"concept": "break_of_structure", "direction": "bullish", "price": 1.0820, "index": 5, "details": {}},
-            {"concept": "fair_value_gap", "direction": "bullish", "price": 1.0810, "index": 6, "details": {"gap_size": 0.0005}},
-            {"concept": "order_block", "direction": "bullish", "price": 1.0795, "index": 4, "details": {"mitigated": False}},
+            {"concept": "fair_value_gap", "direction": "bullish", "price": 1.0810, "index": 6, "details": {"gap_size": 0.0005, "gap_top": 1.0815, "gap_bottom": 1.0805}},
+            {"concept": "order_block", "direction": "bullish", "price": 1.0795, "index": 4, "details": {"mitigation_count": 0, "ob_top": 1.0800, "ob_bottom": 1.0790}},
             {"concept": "liquidity_sweep", "direction": "bullish", "price": 1.0790, "index": 7, "details": {"type": "buy_side_liquidity_grab"}},
             {"concept": "discount", "direction": "bullish", "price": 1.0810, "index": 8, "details": {"in_discount": True}},
         ]
@@ -684,9 +693,10 @@ class TestSignalGeneratorIntegration:
     @pytest.mark.asyncio
     async def test_generate_with_valid_validator(self):
         """Le signal est retourné si le validateur l'accepte."""
+        candles = make_candles(20, spread=3)
+        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) + 0.0020)
         validator = SignalValidator(min_risk_reward=1.0, max_spread=20)
         gen = SignalGenerator(min_confidence=0.1, validator=validator)
-        candles = make_candles(20, spread=3)
         smc_data = make_full_bullish_smc_data()
 
         signal = await gen.generate(candles, smc_data)
@@ -698,9 +708,10 @@ class TestSignalGeneratorIntegration:
     @pytest.mark.asyncio
     async def test_generate_with_invalid_validator(self):
         """Le signal est rejeté si le validateur le refuse (R/R trop élevé)."""
+        candles = make_candles(20, spread=3)
+        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) + 0.0020)
         validator = SignalValidator(min_risk_reward=10.0, max_spread=20)
         gen = SignalGenerator(min_confidence=0.1, validator=validator)
-        candles = make_candles(20, spread=3)
         smc_data = make_full_bullish_smc_data()
 
         signal = await gen.generate(candles, smc_data)
@@ -713,9 +724,10 @@ class TestSignalGeneratorIntegration:
     @pytest.mark.asyncio
     async def test_generate_with_news_filter(self):
         """Le signal est rejeté s'il y a des news à impact élevé."""
+        candles = make_candles(20, spread=3)
+        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) + 0.0020)
         validator = SignalValidator(min_risk_reward=1.0, max_spread=20)
         gen = SignalGenerator(min_confidence=0.1, validator=validator)
-        candles = make_candles(20, spread=3)
         smc_data = make_full_bullish_smc_data()
 
         signal = await gen.generate(candles, smc_data, has_high_impact_news=True)
@@ -739,8 +751,9 @@ class TestSignalGeneratorIntegration:
     @pytest.mark.asyncio
     async def test_generate_without_validator_backward_compatible(self):
         """Sans validateur, le générateur fonctionne comme avant (backward compatible)."""
-        gen = SignalGenerator(min_confidence=0.1)
         candles = make_candles(20, spread=3)
+        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) + 0.0020)
+        gen = SignalGenerator(min_confidence=0.1)
         smc_data = make_full_bullish_smc_data()
 
         signal = await gen.generate(candles, smc_data)
@@ -773,9 +786,10 @@ class TestSignalGeneratorIntegration:
     @pytest.mark.asyncio
     async def test_generate_all_with_validator(self):
         """generate_all filtre les signaux via le validateur."""
+        candles = make_candles(20, spread=3)
+        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) + 0.0020)
         validator = SignalValidator(min_risk_reward=1.0, max_spread=20)
         gen = SignalGenerator(min_confidence=0.1, validator=validator)
-        candles = make_candles(20, spread=3)
         smc_data = make_full_bullish_smc_data()
 
         signals = await gen.generate_all(candles, smc_data)

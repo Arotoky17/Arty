@@ -34,6 +34,27 @@ from arty_trading.modules.smc.base import (
     find_swing_points,
 )
 from arty_trading.modules.smc.structure import StructureDetector
+from arty_trading.utils.helpers import calculate_atr_sliding
+
+
+def _smc_from_dict(d: dict) -> SMCDetection:
+    """Convertit un dict de détection SMC en objet SMCDetection.
+
+    Utilisé par ``build_market_context`` pour alimenter le MarketStructureEngine
+    avec les détections HTF déjà calculées.
+    """
+    concept = d.get("concept") or SMCConcept.POI.value
+    try:
+        concept_enum = SMCConcept(concept)
+    except ValueError:
+        concept_enum = SMCConcept.POI
+    return SMCDetection(
+        concept=concept_enum,
+        direction=str(d.get("direction", "neutral")),
+        price=Decimal(str(d.get("price", "0"))),
+        index=int(d.get("index", 0)),
+        details=dict(d.get("details", {}) or {}),
+    )
 
 
 @dataclass
@@ -363,12 +384,28 @@ class MasterTrendAnalyzer:
         elif latest_htf:
             spread = getattr(latest_htf, "spread", 0)
 
-        from arty_trading.modules.decision.engine import DecisionEngine
-
         atr = Decimal("0")
         if ltf_candles:
-            temp_engine = DecisionEngine.__new__(DecisionEngine)
-            atr = temp_engine._atr(ltf_candles, 14)
+            atr = calculate_atr_sliding(ltf_candles, 14)
+
+        # Régime de marché / score de tendance structurel (MarketStructureEngine).
+        from arty_trading.modules.decision.market_structure_engine import (
+            MarketStructureEngine,
+        )
+
+        regime_analysis = MarketStructureEngine().analyze(
+            htf_candles,
+            [_smc_from_dict(d) for d in htf_smc_data],
+        )
+
+        from arty_trading.config.settings import get_settings
+
+        profile = None
+        try:
+            settings = get_settings()
+            profile = settings.get_instrument_profile(symbol)
+        except Exception:
+            pass
 
         return MarketContext(
             symbol=symbol,
@@ -404,6 +441,13 @@ class MasterTrendAnalyzer:
                 "trend_details": trend_analysis.details,
                 "structure_age": trend_analysis.structure_age,
             },
+            regime=regime_analysis.regime.value,
+            trend_score=regime_analysis.trend_score,
+            no_trade_reasons=regime_analysis.no_trade_reasons,
+            structure_valid=regime_analysis.structure_valid,
+            structure_age=regime_analysis.structure_age,
+            sl_buffer_atr_mult=0.5,
+            instrument_profile=profile,
         )
 
     def _extract_liquidity_zones(self, smc_data: list[dict]) -> list[dict]:

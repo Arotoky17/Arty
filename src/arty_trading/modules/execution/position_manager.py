@@ -51,15 +51,20 @@ class PositionManager:
             return []
         if self._stop_hit(trade, price):
             return [PositionAction("close", reason="stop_loss")]
-        if self._target_hit(trade, price):
-            return [PositionAction("close", reason="take_profit")]
 
         r_multiple = self._r_multiple(trade, price, state.initial_risk)
         actions: list[PositionAction] = []
+
         if self._settings.enable_break_even and not state.break_even_done:
             if r_multiple >= Decimal(str(self._settings.break_even_at_r)):
                 state.break_even_done = True
-                actions.append(PositionAction("modify", trade.entry_price, reason="break_even"))
+                if trade.direction == Direction.BUY:
+                    improves = trade.entry_price > trade.stop_loss
+                else:
+                    improves = trade.entry_price < trade.stop_loss
+                if improves:
+                    actions.append(PositionAction("modify", trade.entry_price, reason="break_even"))
+
         if self._settings.enable_partial_tp and not state.partial_done:
             if r_multiple >= Decimal(str(self._settings.partial_tp_at_r)):
                 state.partial_done = True
@@ -70,6 +75,7 @@ class PositionManager:
                         reason="partial_take_profit",
                     )
                 )
+
         trailing_threshold = Decimal(str(self._settings.trailing_at_r))
         if self._settings.enable_trailing_stop and r_multiple >= trailing_threshold:
             distance = state.initial_risk * Decimal(
@@ -85,6 +91,19 @@ class PositionManager:
             )
             if improves:
                 actions.append(PositionAction("modify", trailing_sl, reason="trailing_stop"))
+
+        if self._target_hit(trade, price):
+            if self._settings.enable_partial_tp and not state.partial_done:
+                state.partial_done = True
+                actions.append(
+                    PositionAction(
+                        "partial_close",
+                        close_fraction=Decimal(str(self._settings.partial_close_percent)),
+                        reason="partial_take_profit",
+                    )
+                )
+            actions.append(PositionAction("close", reason="take_profit"))
+
         return actions
 
     @staticmethod

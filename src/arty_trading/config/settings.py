@@ -214,9 +214,9 @@ class PositionSettings(BaseSettings):
     enable_partial_tp: bool = Field(default=True, alias="ENABLE_PARTIAL_TP")
     enable_trailing_stop: bool = Field(default=True, alias="ENABLE_TRAILING_STOP")
     break_even_at_r: float = Field(default=1.0, alias="BREAK_EVEN_AT_R", ge=0.1)
-    partial_tp_at_r: float = Field(default=2.0, alias="PARTIAL_TP_AT_R", ge=0.1)
-    partial_close_percent: float = Field(default=0.5, alias="PARTIAL_CLOSE_PERCENT", gt=0, le=1)
-    trailing_at_r: float = Field(default=3.0, alias="TRAILING_AT_R", ge=0.1)
+    partial_tp_at_r: float = Field(default=1.5, alias="PARTIAL_TP_AT_R", ge=0.1)
+    partial_close_percent: float = Field(default=0.4, alias="PARTIAL_CLOSE_PERCENT", gt=0, le=1)
+    trailing_at_r: float = Field(default=1.5, alias="TRAILING_AT_R", ge=0.1)
     trailing_distance_r: float = Field(default=1.0, alias="TRAILING_DISTANCE_R", ge=0.1)
 
 

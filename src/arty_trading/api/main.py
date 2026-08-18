@@ -151,6 +151,10 @@ def create_app() -> FastAPI:
         require_htf_alignment=settings.validator.require_htf_alignment,
         require_news_filter=settings.validator.require_news_filter,
         min_confluence_count=settings.validator.min_confluence_count,
+        symbol_spread_overrides={
+            symbol: profile.max_spread_points
+            for symbol, profile in settings.instrument_profiles.items()
+        },
     )
     app.state.signal_generator = SignalGenerator(
         min_confidence=settings.signals.min_confidence,

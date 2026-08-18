@@ -78,7 +78,6 @@ ALL_CONDITIONS: tuple[str, ...] = (
 #   ICT manquant, tout en restant filtré sur la solidité de la confluence.
 HARD_CONDITIONS: tuple[str, ...] = (
     COND_HTF_TREND,
-    COND_BOS,
     COND_CHOCH,
     COND_SESSION,
     COND_SPREAD,
@@ -87,6 +86,7 @@ HARD_CONDITIONS: tuple[str, ...] = (
 )
 
 CONFLUENCE_CONDITIONS: tuple[str, ...] = (
+    COND_BOS,
     COND_ORDER_BLOCK,
     COND_FVG,
     COND_LIQUIDITY_SWEEP,
@@ -191,6 +191,7 @@ class SignalValidator:
         require_news_filter: bool = True,
         session_detector: SessionDetector | None = None,
         min_confluence_count: int = DEFAULT_MIN_CONFLUENCE_COUNT,
+        symbol_spread_overrides: dict[str, int] | None = None,
     ) -> None:
         """
         Initialise le validateur de signaux.
@@ -204,7 +205,10 @@ class SignalValidator:
             require_news_filter: Vérifier le filtre de news
             session_detector: Détecteur de sessions (créé par défaut si None)
             min_confluence_count: Nombre minimum de confluences à valider parmi
-                les 4 confluences optionnelles (défaut 2 sur 4).
+                les 5 confluences optionnelles (défaut 2 sur 5).
+            symbol_spread_overrides: Dictionnaire optionnel {symbole: max_spread}
+                pour utiliser un seuil de spread spécifique par symbole.
+                Si le symbole n'est pas présent, le max_spread global est utilisé.
         """
         if not 0 <= min_confluence_count <= len(CONFLUENCE_CONDITIONS):
             raise ValueError(
@@ -222,11 +226,12 @@ class SignalValidator:
         self._require_news_filter = require_news_filter
         self._session_detector = session_detector or SessionDetector()
         self._min_confluence_count = min_confluence_count
+        self._symbol_spread_overrides = symbol_spread_overrides or {}
 
         logger.info(
             "SignalValidator initialisé | min_rr=%.2f | max_spread=%d | "
             "sessions=%s | htf_alignment=%s | news_filter=%s | "
-            "min_confluence=%d/%d",
+            "min_confluence=%d/%d | symbol_spread_overrides=%s",
             self._min_rr,
             self._max_spread,
             [s.value for s in self._authorized_sessions],
@@ -234,6 +239,7 @@ class SignalValidator:
             self._require_news_filter,
             self._min_confluence_count,
             len(CONFLUENCE_CONDITIONS),
+            self._symbol_spread_overrides,
         )
 
     # -------------------------------------------------------------------------
@@ -397,7 +403,7 @@ class SignalValidator:
             failed.append(COND_SESSION)
 
         # --- 9. Spread acceptable ---
-        ok, detail = self._check_spread(current_spread)
+        ok, detail = self._check_spread(signal.symbol, current_spread)
         checked[COND_SPREAD] = ok
         details[COND_SPREAD] = detail
         self._log_condition(COND_SPREAD, ok, detail)
@@ -428,6 +434,7 @@ class SignalValidator:
         # Partition : seules les conditions HARD bloquent le trade. Les
         # confluences optionnelles sont comptabilisées avec un seuil minimum.
         hard_failed = [c for c in failed if c in HARD_CONDITIONS]
+        soft_failed = [c for c in failed if c not in HARD_CONDITIONS]
         confluence_total = sum(1 for c in CONFLUENCE_CONDITIONS if c in checked)
         confluence_passed = confluence_total - sum(
             1 for c in CONFLUENCE_CONDITIONS if c in failed
@@ -441,6 +448,15 @@ class SignalValidator:
             confluence_score = confluence_passed / confluence_total
         else:
             confluence_score = 1.0
+
+        # Diagnostics détaillés
+        self._log_diagnostics(
+            signal, score, rr=signal.risk_reward_ratio,
+            confluence_str=confluence_str,
+            hard_failures=hard_failed,
+            soft_failures=soft_failed,
+            is_valid=is_valid,
+        )
 
         # Explication textuelle
         if is_valid:
@@ -726,11 +742,23 @@ class SignalValidator:
             return True, f"Session autorisée ({session.name})"
         return False, f"Session non autorisée ({session.name})"
 
-    def _check_spread(self, spread: int) -> tuple[bool, str]:
-        """Vérifie que le spread est acceptable."""
-        if spread <= self._max_spread:
-            return True, f"Spread acceptable ({spread} <= {self._max_spread})"
-        return False, f"Spread trop élevé ({spread} > {self._max_spread})"
+    def _check_spread(self, symbol: str, spread: int) -> tuple[bool, str]:
+        """Vérifie que le spread est acceptable pour le symbole donné."""
+        max_spread = self._symbol_spread_overrides.get(
+            symbol.upper(), self._max_spread
+        )
+        passed = spread <= max_spread
+        status = "PASS" if passed else "FAIL"
+        logger.info(
+            "SPREAD CHECK | %s | current=%d | max=%d | %s",
+            symbol.upper(),
+            spread,
+            max_spread,
+            status,
+        )
+        if passed:
+            return True, f"Spread acceptable ({spread} <= {max_spread})"
+        return False, f"Spread trop élevé ({spread} > {max_spread})"
 
     def _check_news(self, has_high_impact_news: bool) -> tuple[bool, str]:
         """Vérifie le filtre de news (pas de news à impact élevé)."""
@@ -749,6 +777,36 @@ class SignalValidator:
     # -------------------------------------------------------------------------
     # Helpers
     # -------------------------------------------------------------------------
+
+    def _log_diagnostics(
+        self,
+        signal: Signal,
+        score: float,
+        rr: float,
+        confluence_str: str,
+        hard_failures: list[str],
+        soft_failures: list[str],
+        is_valid: bool,
+    ) -> None:
+        """Log un diagnostic détaillé de la validation."""
+        decision = "ACCEPT" if is_valid else "REJECT"
+        logger.info(
+            "VALIDATOR | %s | %s\n"
+            "confidence=%.2f\n"
+            "RR=%.2f\n"
+            "confluences=%s\n"
+            "hard_failures=%s\n"
+            "soft_failures=%s\n"
+            "decision=%s",
+            signal.symbol,
+            signal.direction.value,
+            signal.confidence,
+            rr,
+            confluence_str,
+            hard_failures,
+            soft_failures,
+            decision,
+        )
 
     def _log_condition(
         self, condition: str, passed: bool, detail: str

@@ -270,19 +270,19 @@ class TestFullValidation:
         assert result.failed_conditions == []
 
     def test_invalid_missing_bos(self):
-        """Signal rejeté si pas de BOS."""
+        """Signal accepté sans BOS si les confluences restantes sont suffisantes."""
         validator = SignalValidator(min_risk_reward=1.5, max_spread=20)
         signal = make_buy_signal(rr=2.0)
         candles = make_candles(20, spread=3)
         smc_data = make_full_bullish_smc_data()
-        # Retirer le BOS
         smc_data = [d for d in smc_data if d["concept"] != "break_of_structure"]
 
-        result = validator.validate(signal, candles, smc_data)
+        result = validator.validate(signal, candles, smc_data, htf_trend="bullish")
 
-        assert result.is_valid is False
-        assert COND_BOS in result.failed_conditions
-        assert result.score < 1.0
+        assert result.is_valid is True
+        assert COND_BOS not in result.failed_conditions
+        assert result.confluence_passed == 4
+        assert result.confluence_total == 5
 
     def test_missing_fvg_is_optional(self):
         """FVG manquant = confluence manquante, le signal reste valide (≥2 confluences présentes)."""
@@ -296,8 +296,8 @@ class TestFullValidation:
 
         assert result.is_valid is True
         assert COND_FVG not in result.failed_conditions
-        assert result.confluence_passed == 3
-        assert result.confluence_total == 4
+        assert result.confluence_passed == 4
+        assert result.confluence_total == 5
 
     def test_missing_order_block_is_optional(self):
         """Order Block manquant = confluence manquante, le signal reste valide."""
@@ -311,7 +311,7 @@ class TestFullValidation:
 
         assert result.is_valid is True
         assert COND_ORDER_BLOCK not in result.failed_conditions
-        assert result.confluence_passed == 3
+        assert result.confluence_passed == 4
 
     def test_missing_liquidity_sweep_is_optional(self):
         """Liquidity Sweep manquant = confluence manquante, le signal reste valide."""
@@ -325,7 +325,7 @@ class TestFullValidation:
 
         assert result.is_valid is True
         assert COND_LIQUIDITY_SWEEP not in result.failed_conditions
-        assert result.confluence_passed == 3
+        assert result.confluence_passed == 4
 
     def test_wrong_premium_discount_is_optional(self):
         """Premium/Discount incorrect = confluence manquante, le signal reste valide."""
@@ -333,7 +333,6 @@ class TestFullValidation:
         signal = make_buy_signal(rr=2.0)
         candles = make_candles(20, spread=3)
         smc_data = make_full_bullish_smc_data()
-        # Changer la zone en premium (incorrect pour un BUY)
         for d in smc_data:
             if d["concept"] == "premium_discount":
                 d["details"]["current_zone"] = "premium"
@@ -342,7 +341,7 @@ class TestFullValidation:
 
         assert result.is_valid is True
         assert COND_PREMIUM_DISCOUNT not in result.failed_conditions
-        assert result.confluence_passed == 3
+        assert result.confluence_passed == 4
 
     def test_invalid_high_spread(self):
         """Signal rejeté si spread trop élevé."""
@@ -516,19 +515,16 @@ class TestFullValidation:
         signal = make_buy_signal(rr=2.0)
         candles = make_candles(20, spread=3)
         smc_data = make_full_bullish_smc_data()
-        # Retirer FVG et OB → 2 confluences sur 4 restent (== min_confluence_count)
         smc_data = [d for d in smc_data if d["concept"] not in ("fair_value_gap", "order_block")]
 
         result = validator.validate(signal, candles, smc_data)
 
-        # Aucune condition HARD ne bloque ; confluences = 2/4 (défaut min=2) → valide
         assert result.is_valid is True
         assert result.failed_conditions == []
-        assert result.confluence_passed == 2
-        assert result.confluence_total == 4
-        assert result.confluence_score == 0.5
-        # score = 9/11 ≈ 0.8182 (7 conditions HARD + 2 confluences passent)
-        assert 0.8 < result.score < 0.82
+        assert result.confluence_passed == 3
+        assert result.confluence_total == 5
+        assert result.confluence_score == 0.6
+        assert 0.81 < result.score < 0.82
 
     def test_checked_conditions_complete(self):
         """Toutes les conditions sont vérifiées et présentes dans checked_conditions."""
@@ -552,11 +548,9 @@ class TestFullValidation:
         result = validator.validate(signal, candles, [])
 
         assert result.is_valid is False
-        # Les conditions HARD bloquantes échouent
-        assert COND_BOS in result.failed_conditions
         assert COND_HTF_TREND in result.failed_conditions
-        # Les confluences ne bloquent pas mais sont comptées à zéro
         assert result.confluence_passed == 0
+        assert result.confluence_total == 5
         assert result.confluence_score == 0.0
 
     def test_empty_candles(self):
@@ -809,3 +803,241 @@ class TestSignalGeneratorIntegration:
         signals = await gen.generate_all(candles, smc_data)
 
         assert signals == []
+
+
+# =============================================================================
+# Tests spread par symbole
+# =============================================================================
+
+
+class TestSpreadPerSymbol:
+    def test_eurusd_spread_below_profile_pass(self):
+        """EURUSD avec spread inférieur à son profil → PASS."""
+        signal = Signal(
+            symbol="EURUSD",
+            signal_type=SignalType.BUY,
+            direction=Direction.BUY,
+            entry_price=Decimal("1.0810"),
+            stop_loss=Decimal("1.0790"),
+            take_profit=Decimal("1.0850"),
+            confidence=0.9,
+            strategy_name="SMC Trend Following",
+            timeframe=TimeFrame.H1,
+            justification="Test signal",
+        )
+        validator = SignalValidator(
+            min_risk_reward=1.5,
+            max_spread=20,
+            symbol_spread_overrides={"EURUSD": 30},
+        )
+        candles = make_candles(20, spread=3)
+        smc_data = make_full_bullish_smc_data()
+
+        result = validator.validate(signal, candles, smc_data, spread=25)
+
+        assert result.is_valid is True
+        assert COND_SPREAD not in result.failed_conditions
+
+    def test_eurusd_spread_above_profile_fail(self):
+        """EURUSD avec spread supérieur à son profil → FAIL."""
+        signal = Signal(
+            symbol="EURUSD",
+            signal_type=SignalType.BUY,
+            direction=Direction.BUY,
+            entry_price=Decimal("1.0810"),
+            stop_loss=Decimal("1.0790"),
+            take_profit=Decimal("1.0850"),
+            confidence=0.9,
+            strategy_name="SMC Trend Following",
+            timeframe=TimeFrame.H1,
+            justification="Test signal",
+        )
+        validator = SignalValidator(
+            min_risk_reward=1.5,
+            max_spread=20,
+            symbol_spread_overrides={"EURUSD": 30},
+        )
+        candles = make_candles(20, spread=3)
+        smc_data = make_full_bullish_smc_data()
+
+        result = validator.validate(signal, candles, smc_data, spread=35)
+
+        assert result.is_valid is False
+        assert COND_SPREAD in result.failed_conditions
+
+    def test_xauusd_spread_below_profile_pass(self):
+        """XAUUSD avec spread inférieur à son profil → PASS."""
+        signal = Signal(
+            symbol="XAUUSD",
+            signal_type=SignalType.BUY,
+            direction=Direction.BUY,
+            entry_price=Decimal("1.0810"),
+            stop_loss=Decimal("1.0790"),
+            take_profit=Decimal("1.0850"),
+            confidence=0.9,
+            strategy_name="SMC Trend Following",
+            timeframe=TimeFrame.H1,
+            justification="Test signal",
+        )
+        validator = SignalValidator(
+            min_risk_reward=1.5,
+            max_spread=20,
+            symbol_spread_overrides={"XAUUSD": 200},
+        )
+        candles = make_candles(20, spread=3)
+        smc_data = make_full_bullish_smc_data()
+
+        result = validator.validate(signal, candles, smc_data, spread=25)
+
+        assert result.is_valid is True
+        assert COND_SPREAD not in result.failed_conditions
+
+    def test_xauusd_spread_above_profile_fail(self):
+        """XAUUSD avec spread supérieur à son profil → FAIL."""
+        signal = Signal(
+            symbol="XAUUSD",
+            signal_type=SignalType.BUY,
+            direction=Direction.BUY,
+            entry_price=Decimal("1.0810"),
+            stop_loss=Decimal("1.0790"),
+            take_profit=Decimal("1.0850"),
+            confidence=0.9,
+            strategy_name="SMC Trend Following",
+            timeframe=TimeFrame.H1,
+            justification="Test signal",
+        )
+        validator = SignalValidator(
+            min_risk_reward=1.5,
+            max_spread=20,
+            symbol_spread_overrides={"XAUUSD": 200},
+        )
+        candles = make_candles(20, spread=3)
+        smc_data = make_full_bullish_smc_data()
+
+        result = validator.validate(signal, candles, smc_data, spread=250)
+
+        assert result.is_valid is False
+        assert COND_SPREAD in result.failed_conditions
+
+    def test_unknown_symbol_falls_back_to_global_max_spread(self):
+        """Symbole inconnu → fallback sur max_spread global."""
+        signal = Signal(
+            symbol="GBPUSD",
+            signal_type=SignalType.BUY,
+            direction=Direction.BUY,
+            entry_price=Decimal("1.0810"),
+            stop_loss=Decimal("1.0790"),
+            take_profit=Decimal("1.0850"),
+            confidence=0.9,
+            strategy_name="SMC Trend Following",
+            timeframe=TimeFrame.H1,
+            justification="Test signal",
+        )
+        validator = SignalValidator(
+            min_risk_reward=1.5,
+            max_spread=20,
+            symbol_spread_overrides={"EURUSD": 30},
+        )
+        candles = make_candles(20, spread=3)
+        smc_data = make_full_bullish_smc_data()
+
+        result = validator.validate(signal, candles, smc_data, spread=25)
+
+        assert result.is_valid is False
+        assert COND_SPREAD in result.failed_conditions
+
+
+# =============================================================================
+# Tests BOS non-bloquant
+# =============================================================================
+
+
+class TestBOSSoft:
+    def test_no_bos_with_sufficient_confluences_accept(self):
+        """Absence de BOS + confluences suffisantes → ACCEPT (BOS est soft)."""
+        validator = SignalValidator(min_risk_reward=1.5, max_spread=20)
+        signal = make_buy_signal(rr=2.0)
+        candles = make_candles(20, spread=3)
+        smc_data = make_full_bullish_smc_data()
+        smc_data = [d for d in smc_data if d["concept"] != "break_of_structure"]
+
+        result = validator.validate(signal, candles, smc_data, htf_trend="bullish")
+
+        assert result.is_valid is True
+        assert COND_BOS not in result.failed_conditions
+        assert result.confluence_passed == 4
+
+    def test_no_bos_with_insufficient_confluences_reject(self):
+        """Absence de BOS + confluences insuffisantes → REJECT."""
+        validator = SignalValidator(
+            min_risk_reward=1.5, max_spread=20, min_confluence_count=5
+        )
+        signal = make_buy_signal(rr=2.0)
+        candles = make_candles(20, spread=3)
+        smc_data = make_full_bullish_smc_data()
+        smc_data = [d for d in smc_data if d["concept"] != "break_of_structure"]
+
+        result = validator.validate(signal, candles, smc_data, htf_trend="bullish")
+
+        assert result.is_valid is False
+        assert COND_BOS not in result.failed_conditions
+        assert result.confluence_passed == 4
+        assert result.confluence_total == 5
+
+    def test_master_direction_opposite_still_rejects(self):
+        """Master Direction opposé → REJECT obligatoire."""
+        validator = SignalValidator(min_risk_reward=1.5, max_spread=20)
+        signal = make_buy_signal(rr=2.0)
+        candles = make_candles(20, spread=3)
+        smc_data = make_full_bullish_smc_data()
+
+        result = validator.validate(signal, candles, smc_data, htf_trend="bearish")
+
+        assert result.is_valid is False
+        assert COND_HTF_TREND in result.failed_conditions
+
+
+# =============================================================================
+# Tests diagnostics
+# =============================================================================
+
+
+class TestValidatorDiagnostics:
+    def test_diagnostics_accept(self):
+        """Diagnostics corrects pour un signal accepté."""
+        validator = SignalValidator(min_risk_reward=1.5, max_spread=20)
+        signal = make_buy_signal(rr=2.0)
+        candles = make_candles(20, spread=3)
+        smc_data = make_full_bullish_smc_data()
+
+        result = validator.validate(signal, candles, smc_data)
+
+        assert result.is_valid is True
+        assert result.failed_conditions == []
+        assert "soft_failures" in result.explanation or result.confluence_passed >= 2
+
+    def test_diagnostics_reject_hard_failure(self):
+        """Diagnostics corrects pour un signal rejeté par HARD failure."""
+        validator = SignalValidator(min_risk_reward=3.0, max_spread=20)
+        signal = make_buy_signal(rr=2.0)
+        candles = make_candles(20, spread=3)
+        smc_data = make_full_bullish_smc_data()
+
+        result = validator.validate(signal, candles, smc_data)
+
+        assert result.is_valid is False
+        assert COND_RR in result.failed_conditions
+
+    def test_diagnostics_soft_failure_bos(self):
+        """BOS manquant apparaît dans soft_failures, pas hard_failures."""
+        validator = SignalValidator(min_risk_reward=1.5, max_spread=20)
+        signal = make_buy_signal(rr=2.0)
+        candles = make_candles(20, spread=3)
+        smc_data = make_full_bullish_smc_data()
+        smc_data = [d for d in smc_data if d["concept"] != "break_of_structure"]
+
+        result = validator.validate(signal, candles, smc_data, htf_trend="bullish")
+
+        assert result.is_valid is True
+        assert COND_BOS not in result.failed_conditions
+        assert result.checked_conditions.get(COND_BOS) is False

@@ -24,7 +24,7 @@ from typing import Any
 from arty_trading.core.entities import Signal
 from arty_trading.core.enums import Direction, LogCategory
 from arty_trading.logging.logger import get_logger
-from arty_trading.utils.helpers import retest_still_valid
+from arty_trading.utils.helpers import retest_still_valid_detailed
 
 
 async def revalidate_before_execution(
@@ -83,6 +83,7 @@ async def revalidate_before_execution(
         symbol,
     )
     return True
+
 async def final_gate_before_execution(
     symbol: str, signal: Signal, market_context: Any, settings: Any
 ) -> bool:
@@ -156,22 +157,70 @@ async def final_gate_before_execution(
     current_spread = getattr(market_context, "spread", 0)
     max_spread = profile.max_spread_points if profile else 30
     if current_spread > max_spread:
-        gate_logger.warning("FINAL GATE REJECT | %s | spread=%d > max=%d", symbol, current_spread, max_spread)
+        gate_logger.warning(
+            "FINAL GATE REJECT | %s | spread=%d > max=%d",
+            symbol,
+            current_spread,
+            max_spread,
+        )
         return False
 
     # 7. Retest toujours frais + rejet encore confirmé (anti trade contre-tendance).
     profile = settings.get_instrument_profile(symbol)
-    retest_ok = retest_still_valid(
+    retest_diag = retest_still_valid_detailed(
         getattr(market_context, "ltf_candles", []),
         getattr(market_context, "ltf_smc_data", []),
         direction_str,
         max_age_bars=profile.max_zone_age_bars if profile else 20,
         max_distance_atr_mult=profile.retest_atr_mult if profile else 1.0,
+        symbol=symbol,
     )
-    if not retest_ok:
+    if not retest_diag.valid:
         gate_logger.warning(
-            "FINAL GATE REJECT | %s | retest périmé/invalidé (direction=%s)",
-            symbol, direction_str,
+            "FINAL GATE REJECT | %s | retest périmé/invalidé "
+            "(direction=%s, reason=%s, zones_in_direction=%d, "
+            "latest_age=%s bars, latest_distance=%s, max_distance=%s, "
+            "atr=%s, max_age_bars=%s, retest_atr_mult=%s)",
+            symbol,
+            direction_str,
+            retest_diag.reason,
+            retest_diag.zones_in_direction,
+            retest_diag.zone_age_bars,
+            retest_diag.distance_to_zone,
+            retest_diag.max_distance,
+            retest_diag.atr,
+            retest_diag.max_zone_age_bars,
+            retest_diag.retest_atr_mult,
+        )
+        # Log diagnostic détaillé (Phase 2.1 — instrumentation)
+        gate_logger.warning(
+            "RETEST DETAILS | symbol=%s direction=%s zone_type=%s zone_id=%s "
+            "zone_age_bars=%s max_zone_age_bars=%s age_condition=%s "
+            "zone_distance=%s max_distance=%s distance_condition=%s "
+            "retest_detected=%s retest_confirmed=%s confirmation_condition=%s "
+            "zones_in_direction=%s zone_direction=%s zone_consumed=%s",
+            symbol,
+            direction_str,
+            retest_diag.zone_type,
+            retest_diag.zone_id,
+            retest_diag.zone_age_bars,
+            retest_diag.max_zone_age_bars,
+            (
+                retest_diag.zone_age_bars is not None
+                and retest_diag.zone_age_bars <= retest_diag.max_zone_age_bars
+            ),
+            retest_diag.distance_to_zone,
+            retest_diag.max_distance,
+            (
+                retest_diag.distance_to_zone is not None
+                and retest_diag.distance_to_zone <= retest_diag.max_distance
+            ),
+            retest_diag.retest_detected,
+            retest_diag.retest_confirmed,
+            retest_diag.retest_confirmed,
+            retest_diag.zones_in_direction,
+            retest_diag.zone_direction,
+            retest_diag.zone_consumed,
         )
         return False
 

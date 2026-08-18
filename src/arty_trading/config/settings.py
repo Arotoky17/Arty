@@ -333,6 +333,16 @@ class Settings(BaseSettings):
     # spread trop élevé, news, contre-trend, setup dupliqué).
     debug_calibration_mode: bool = Field(default=False, alias="DEBUG_CALIBRATION_MODE")
 
+    # Diagnostic de décision de trading — observabilité du pipeline.
+    decision_diagnostics_enabled: bool = Field(
+        default=False, alias="DECISION_DIAGNOSTICS_ENABLED",
+        description="Active le diagnostic détaillé des décisions de trading",
+    )
+    decision_diagnostics_interval: int = Field(
+        default=100, alias="DECISION_DIAGNOSTICS_INTERVAL", ge=1,
+        description="Nombre d'opportunités entre chaque résumé périodique",
+    )
+
     # Symboles et timeframe
     default_symbols: str = Field(default="EURUSD,XAUUSD", alias="DEFAULT_SYMBOLS")
     enable_legacy_symbols: bool = Field(default=False, alias="ENABLE_LEGACY_SYMBOLS")

@@ -4,7 +4,10 @@ Utilitaires de calcul pour le trading Forex.
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
+from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
+from typing import Any
 
 from arty_trading.core.entities import Candle
 
@@ -134,7 +137,7 @@ def calculate_atr_sliding(candles: list[Candle], period: int = 14) -> Decimal:
 
 def is_fresh_retest(
     candles: list[Candle],
-    smc_data: list[dict],
+    smc_data: list[dict[str, Any]],
     max_age_bars: int = 20,
     max_distance_atr_mult: float = 1.0,
 ) -> bool:
@@ -201,7 +204,7 @@ def is_fresh_retest(
 
 def retest_still_valid(
     candles: list[Candle],
-    smc_data: list[dict],
+    smc_data: list[dict[str, Any]],
     direction: str,
     max_age_bars: int = 20,
     max_distance_atr_mult: float = 1.0,
@@ -271,9 +274,21 @@ def retest_still_valid(
         if age > max_age_bars:
             continue
 
-        # 2. Proximité du prix courant
-        zone_mid = (float(top) + float(bottom)) / 2.0
-        if abs(float(last.close) - zone_mid) > float(max_distance):
+        # 2. Proximité du prix courant — distance à la FRONTIÈRE de la zone
+        # (pas au milieu). Si le prix est à l'intérieur de la zone, la distance
+        # est 0 : la zone est "touchée" et donc proche. On mesure la distance au
+        # point de la zone le plus proche pour éviter de rejeter les zones larges
+        # (gap FVG important) dont le milieu est loin du prix de confirmation.
+        close = float(last.close)
+        f_top = float(top)
+        f_bottom = float(bottom)
+        if close >= f_bottom and close <= f_top:
+            distance = 0.0
+        elif close > f_top:
+            distance = close - f_top
+        else:
+            distance = f_bottom - close
+        if distance > float(max_distance):
             continue
 
         # 3. Rejection confirmée par la dernière bougie (sens du signal)
@@ -289,11 +304,241 @@ def retest_still_valid(
     return zones_in_direction == 0
 
 
+# =============================================================================
+# Diagnostic détaillé du retest (Phase 3A — audit instrumentation)
+# =============================================================================
+# Codes de raison exactement dérivés de la logique existante dans
+# ``retest_still_valid``. Aucun code n'est inventé.
+
+
+@dataclass
+class RetestDiagnostic:
+    """Résultat détaillé du retest pour le diagnostic d'exécution.
+
+    Capture les mêmes informations que ``retest_still_valid`` mais expose la
+    cause exacte du rejet (si un rejet existe).
+    """
+
+    valid: bool
+    reason: str
+    symbol: str = ""
+    direction: str = ""
+    last_candle_time: datetime | None = None
+    atr: float = 0.0
+    max_distance: float = 0.0
+    max_zone_age_bars: int = 20
+    retest_atr_mult: float = 1.0
+    zone_type: str | None = None
+    zone_id: str | None = None
+    zone_created_index: int | None = None
+    zone_age_bars: int | None = None
+    distance_to_zone: float | None = None
+    zone_consumed: bool | None = None
+    zone_direction: str | None = None
+    retest_detected: bool = False
+    retest_confirmed: bool = False
+    zones_in_direction: int = 0
+    zone_details: list[dict[str, Any]] = field(default_factory=list)
+
+
+def retest_still_valid_detailed(
+    candles: list[Candle],
+    smc_data: list[dict[str, Any]],
+    direction: str,
+    max_age_bars: int = 20,
+    max_distance_atr_mult: float = 1.0,
+    symbol: str = "",
+) -> RetestDiagnostic:
+    """
+    Variante diagnostique de ``retest_still_valid``.
+
+    Produit exactement le même résultat ``valid`` que la fonction originale,
+    mais expose **la cause exacte** du rejet et toutes les données capturables.
+
+    Raisons possibles (dérivées strictement de la logique du code) :
+
+    - ``PASS`` — retest valide (zone fraîche, proche, rejet confirmé).
+    - ``NO_ZONES_IN_DIRECTION`` — aucune zone FVG/OB du bon sens n'existe
+      (la fonction originale ne bloque pas dans ce cas → valid=True).
+    - ``ATR_ZERO`` — ATR calculé à 0, impossible d'évaluer la distance.
+    - ``ZONE_TOO_OLD`` — zone(s) du bon sens existent mais toutes sont plus
+      anciennes que ``max_age_bars``.
+    - ``ZONE_TOO_FAR`` — zone(s) du bon sens existent, certaines sont fraîches
+      mais aucune n'est assez proche du prix (distance > max_distance).
+    - ``NO_RETEST_CONFIRMATION`` — zone(s) du bon sens fraîche(s) et proche(s)
+      mais la dernière bougie ne confirme pas le rejet dans le bon sens.
+
+    Args:
+        candles: Bougies du timeframe d'entrée (M5).
+        smc_data: Détections SMC sur le timeframe d'entrée.
+        direction: "bullish" ou "bearish" (sens du signal).
+        max_age_bars: Âge maximum d'une zone pour être considérée fraîche.
+        max_distance_atr_mult: Distance maximum prix−zone en multiple d'ATR.
+        symbol: Symbole (pour le diagnostic).
+
+    Returns:
+        RetestDiagnostic avec le résultat booléen, la raison et tous les
+        détails capturables.
+    """
+    empty = RetestDiagnostic(
+        valid=True,
+        reason="NO_DATA",
+        symbol=symbol,
+        direction=direction,
+        max_zone_age_bars=max_age_bars,
+        retest_atr_mult=max_distance_atr_mult,
+    )
+
+    if not candles or not smc_data:
+        empty.reason = "NO_ZONES_IN_DIRECTION"
+        return empty
+
+    last = candles[-1]
+    empty.last_candle_time = last.time
+
+    atr = calculate_atr(candles)
+    if atr == 0:
+        empty.valid = False
+        empty.reason = "ATR_ZERO"
+        empty.atr = 0.0
+        return empty
+
+    empty.atr = float(atr)
+    max_distance = atr * Decimal(str(max_distance_atr_mult))
+    empty.max_distance = float(max_distance)
+
+    zones_in_direction = 0
+    zone_details: list[dict[str, Any]] = []
+
+    all_zones_old = True
+    all_zones_far = True
+    any_zone_fresh_close = False
+
+    for detection in smc_data:
+        if detection.get("direction") != direction:
+            continue
+
+        concept = detection.get("concept")
+        details = detection.get("details", {})
+        if concept == "fair_value_gap":
+            top = details.get("gap_top")
+            bottom = details.get("gap_bottom")
+        elif concept == "order_block":
+            top = details.get("ob_top")
+            bottom = details.get("ob_bottom")
+        else:
+            continue
+
+        if top is None or bottom is None:
+            continue
+
+        zones_in_direction += 1
+
+        zone_index = detection.get("index", 0)
+        age = len(candles) - 1 - zone_index
+        f_top = float(top)
+        f_bottom = float(bottom)
+        close = float(last.close)
+        if close >= f_bottom and close <= f_top:
+            distance = 0.0
+        elif close > f_top:
+            distance = close - f_top
+        else:
+            distance = f_bottom - close
+        zone_mid = (f_top + f_bottom) / 2.0
+        zone_direction = detection.get("direction", direction)
+
+        zone_detail = {
+            "concept": concept,
+            "index": zone_index,
+            "age_bars": age,
+            "zone_top": float(top),
+            "zone_bottom": float(bottom),
+            "zone_mid": zone_mid,
+            "distance_to_zone": distance,
+            "max_distance": float(max_distance),
+            "fresh": age <= max_age_bars,
+            "close_enough": distance <= float(max_distance),
+            "zone_direction": zone_direction,
+            "mitigation_count": details.get("mitigation_count", 0),
+            "filled": details.get("filled", False),
+        }
+        zone_details.append(zone_detail)
+
+        # --- Check 1: Fraîcheur de la zone ---
+        if age > max_age_bars:
+            continue
+        all_zones_old = False
+
+        # --- Check 2: Proximité du prix courant ---
+        if distance > float(max_distance):
+            continue
+        all_zones_far = False
+        any_zone_fresh_close = True
+
+        # --- Check 3: Rejection confirmée par la dernière bougie ---
+        if direction == "bullish":
+            retest_confirmed = bool(last.is_bullish and float(last.close) >= float(bottom))
+        else:
+            retest_confirmed = bool(not last.is_bullish and float(last.close) <= float(top))
+
+        if retest_confirmed:
+            empty.retest_detected = True
+            empty.retest_confirmed = True
+            empty.valid = True
+            empty.reason = "PASS"
+            empty.zones_in_direction = zones_in_direction
+            empty.zone_details = zone_details
+            # Populate zone diagnostics even on PASS (Phase 2.1 — instrumentation fix)
+            empty.zone_type = concept
+            empty.zone_id = f"{concept}_{zone_index}"
+            empty.zone_created_index = zone_index
+            empty.zone_age_bars = age
+            empty.distance_to_zone = distance
+            empty.zone_direction = detection.get("direction", direction)
+            empty.zone_consumed = details.get("mitigation_count", 0) > 2
+            return empty
+
+    # === Aucune zone n'a passé les 3 checks ===
+    empty.zones_in_direction = zones_in_direction
+    empty.zone_details = zone_details
+
+    # If zones exist but none passed all checks, determine the primary reason
+    if zones_in_direction > 0:
+        empty.valid = False
+
+        if all_zones_old:
+            empty.reason = "ZONE_TOO_OLD"
+        elif all_zones_far or not any_zone_fresh_close:
+            empty.reason = "ZONE_TOO_FAR"
+        else:
+            # At least one zone was fresh AND close, but rejection not confirmed
+            empty.reason = "NO_RETEST_CONFIRMATION"
+
+        # Capture the latest zone details for diagnostic
+        if zone_details:
+            latest_zone = max(zone_details, key=lambda z: z["index"])
+            empty.zone_type = latest_zone["concept"]
+            empty.zone_id = f"{latest_zone['concept']}_{latest_zone['index']}"
+            empty.zone_created_index = latest_zone["index"]
+            empty.zone_age_bars = latest_zone["age_bars"]
+            empty.distance_to_zone = latest_zone["distance_to_zone"]
+            empty.zone_direction = latest_zone.get("zone_direction", direction)
+            empty.retest_detected = any_zone_fresh_close
+            empty.retest_confirmed = False
+    else:
+        # zones_in_direction == 0 but we have data
+        empty.valid = True
+        empty.reason = "NO_ZONES_IN_DIRECTION"
+
+    return empty
+
+
 def is_fresh_structure(
-    smc_data: list[dict],
+    smc_data: list[dict[str, Any]],
     total_candles: int,
     max_age_bars: int = 40,
-) -> dict | None:
+) -> dict[str, Any] | None:
     """
     Retourne l'événement structurel (BOS/CHoCH/MSS) le plus récent et valide.
 

@@ -47,9 +47,15 @@ from arty_trading.application.execution_guards import (
 )
 from arty_trading.application.market_context_builder import MarketContextBuilder
 from arty_trading.application.position_monitor import PositionMonitor
-from arty_trading.application.trade_orchestrator import TradeOrchestrator
 from arty_trading.application.statistics import TradingStatistics
+from arty_trading.application.trade_decision_debugger import TradeDecisionDebugger
+from arty_trading.application.trade_decision_diagnostic import (
+    PipelineStep,
+    RejectionReason,
+    TradeDecisionDiagnostic,
+)
 from arty_trading.application.trade_journal import TradeJournal
+from arty_trading.application.trade_orchestrator import TradeOrchestrator
 from arty_trading.config.settings import Settings
 from arty_trading.core.entities import Candle, Signal, Trade
 from arty_trading.core.enums import Direction, LogCategory, TimeFrame, TradingMode
@@ -71,7 +77,8 @@ from arty_trading.modules.risk import RiskManager
 from arty_trading.modules.signals import SignalGenerator
 from arty_trading.modules.signals.news import EconomicCalendar
 from arty_trading.modules.smc import SetupState, SetupTracker
-
+from arty_trading.modules.smc.premium_discount import premium_discount_diagnostic
+from arty_trading.utils.helpers import retest_still_valid_detailed
 
 logger = get_logger(LogCategory.SYSTEM)
 
@@ -129,6 +136,7 @@ class TradingEngine:
         poll_interval: float = 5.0,
         candle_count: int = 100,
         notifier: Any | None = None,
+        decision_debugger: TradeDecisionDebugger | None = None,
     ) -> None:
         """
         Initialise le moteur de trading.
@@ -146,6 +154,8 @@ class TradingEngine:
             notifier: Gestionnaire de notifications (NotificationManager) pour
                 les alertes critiques (trade ouvert/fermé, erreurs, rapport
                 journalier). Optionnel — désactivé si None.
+            decision_debugger: Debugger de décision de trading pour l'observabilité.
+                Optionnel — désactivé si None.
         """
         self._settings = settings
         self._market_data = market_data
@@ -157,6 +167,7 @@ class TradingEngine:
         self._poll_interval = poll_interval
         self._candle_count = candle_count
         self._notifier = notifier
+        self._decision_debugger = decision_debugger or TradeDecisionDebugger(enabled=False)
 
         self._symbols: list[str] = list(settings.symbols_list)
         self._timeframe: TimeFrame = settings.default_timeframe
@@ -210,6 +221,9 @@ class TradingEngine:
             notify_trade_closed=self._notify_trade_closed,
         )
         self._setup_tracker = SetupTracker()
+        # Observabilité : le debugger est notifié à chaque création de setup
+        # (exposition de l'événement, sans modifier les règles du tracker).
+        self._setup_tracker.set_on_setup_created(self._on_setup_created)
         self._trade_orchestrator = TradeOrchestrator(
             mt5_connector=self._mt5_connector,
             risk_manager=self._risk_manager,
@@ -263,6 +277,200 @@ class TradingEngine:
         """Tracker de statistiques (exposé pour les tests / monitoring)."""
         return self._statistics
 
+    @property
+    def decision_debugger(self) -> TradeDecisionDebugger:
+        """Debugger de décision de trading."""
+        return self._decision_debugger
+
+    # -------------------------------------------------------------------------
+    # Diagnostic helpers
+    # -------------------------------------------------------------------------
+
+    def _create_diagnostic(
+        self, symbol: str, direction: str = "neutral"
+    ) -> TradeDecisionDiagnostic:
+        """Crée (et compte une seule fois) le diagnostic d'une opportunité."""
+        return self._decision_debugger.start_opportunity(
+            symbol=symbol,
+            timeframe=self._timeframe,
+            direction=direction,
+        )
+
+    def _record_step(self, diagnostic: TradeDecisionDiagnostic, step: PipelineStep) -> None:
+        """Enregistre une étape complétée (délégué au debugger)."""
+        self._decision_debugger.record_step(diagnostic, step)
+
+    def _fail_step(
+        self,
+        diagnostic: TradeDecisionDiagnostic,
+        step: PipelineStep,
+        reason: RejectionReason | str,
+        message: str = "",
+    ) -> None:
+        """Enregistre une étape échouée avec une raison de rejet (délégué au debugger)."""
+        self._decision_debugger.fail_step(diagnostic, step, reason, message)
+
+    def _add_rejection_reason(
+        self, diagnostic: TradeDecisionDiagnostic, reason: RejectionReason
+    ) -> None:
+        """Ajoute une raison de rejet secondaire (détail) sans marquer d'étape."""
+        self._decision_debugger.add_rejection_reason(diagnostic, reason)
+
+    # Mappage conditions du SignalValidator -> RejectionReason détaillées.
+    # Ne fabrique aucune raison : seules les conditions réellement fournies
+    # par le validateur (failed_conditions / checked_conditions) sont mappées.
+    _VALIDATOR_CONDITION_REASONS: dict[str, RejectionReason] = {
+        "htf_trend": RejectionReason.MASTER_TREND_CONFLICT,
+        "bos_valid": RejectionReason.BOS_MISSING,
+        "choch_valid": RejectionReason.CHOCH_MISSING,
+        "order_block_valid": RejectionReason.ORDER_BLOCK_MISSING,
+        "fvg_valid": RejectionReason.FVG_MISSING,
+        "liquidity_sweep_confirmed": RejectionReason.LIQUIDITY_MISSING,
+        "premium_discount_correct": RejectionReason.PREMIUM_DISCOUNT_INVALID,
+        "min_rr": RejectionReason.RR_TOO_LOW,
+        "spread_acceptable": RejectionReason.SPREAD_TOO_HIGH,
+        "news_filter": RejectionReason.NEWS_BLOCKED,
+    }
+
+    def _populate_validator_diagnostic(self, diagnostic: TradeDecisionDiagnostic) -> None:
+        """Peuple le diagnostic avec les détails réellement fournis par le validateur."""
+        validation = self._signal_generator.last_validation
+        if validation is None:
+            return
+
+        checked = getattr(validation, "checked_conditions", None)
+        failed = getattr(validation, "failed_conditions", None)
+        if not isinstance(checked, dict):
+            checked = {}
+        if not isinstance(failed, list):
+            failed = []
+
+        smc_diag = diagnostic.smc_validator
+        smc_diag.htf_trend = bool(checked.get("htf_trend", False))
+        smc_diag.bos = bool(checked.get("bos_valid", False))
+        smc_diag.choch = bool(checked.get("choch_valid", False))
+        smc_diag.order_block = bool(checked.get("order_block_valid", False))
+        smc_diag.fvg = bool(checked.get("fvg_valid", False))
+        smc_diag.liquidity_sweep = bool(checked.get("liquidity_sweep_confirmed", False))
+        smc_diag.premium_discount = bool(checked.get("premium_discount_correct", False))
+
+        # Raisons détaillées (BOS/CHoCH/OB/FVG/etc.) — uniquement si le
+        # validateur a réellement rejeté le signal.
+        if not bool(getattr(validation, "is_valid", True)):
+            detail_reasons: set[RejectionReason] = set()
+            for cond in failed:
+                reason = self._VALIDATOR_CONDITION_REASONS.get(cond)
+                if reason is not None:
+                    detail_reasons.add(reason)
+            for cond, passed in checked.items():
+                if not passed:
+                    reason = self._VALIDATOR_CONDITION_REASONS.get(cond)
+                    if reason is not None:
+                        detail_reasons.add(reason)
+            for reason in sorted(detail_reasons, key=lambda r: r.value):
+                self._add_rejection_reason(diagnostic, reason)
+
+    def _populate_confidence_policy_diagnostic(
+        self,
+        diagnostic: TradeDecisionDiagnostic,
+        decision: str,
+    ) -> None:
+        """Ajoute la politique confiance/RR au diagnostic (observabilité)."""
+        policy = getattr(self._signal_generator, "last_confidence_policy", None)
+        if policy is None:
+            return
+        required_rr: float | None = None
+        if isinstance(policy.required_rr, (int, float)):
+            required_rr = float(policy.required_rr)
+        actual_rr: float | None = None
+        if isinstance(policy.actual_rr, (int, float)):
+            actual_rr = float(policy.actual_rr)
+        diagnostic.metadata["confidence_policy"] = policy.to_dict()
+        diagnostic.metadata["confidence_policy"]["decision"] = decision
+        logger.info(
+            "CONFIDENCE POLICY | %s | confidence=%s | confidence_threshold=%s | "
+            "confidence_bucket=%s | required_rr=%s | actual_rr=%s | "
+            "rr_security_level=%s | decision=%s%s",
+            diagnostic.symbol,
+            policy.confidence,
+            policy.confidence_threshold,
+            policy.confidence_bucket,
+            f"{required_rr:.1f}" if required_rr is not None else "none",
+            f"{actual_rr:.2f}" if actual_rr is not None else "none",
+            policy.security_level,
+            decision,
+            f" | primary_reason={policy.reason}" if policy.reason else "",
+        )
+
+    def _populate_signal_diagnostics(
+        self,
+        diagnostic: TradeDecisionDiagnostic,
+        signal: Signal,
+        market_context: Any | None = None,
+    ) -> None:
+        """Peuple le diagnostic avec les informations du signal accepté."""
+        diagnostic.score = int(signal.confidence * 100)
+        diagnostic.confidence = signal.confidence
+        diagnostic.setup_type = signal.signal_type.value
+
+        # Direction réelle du candidat (BUY / SELL), sans deviner.
+        self._decision_debugger.set_direction(diagnostic, signal.direction.value)
+        if signal.setup_id:
+            diagnostic.metadata["setup_id"] = signal.setup_id
+
+        # RR diagnostic
+        rr_diag = diagnostic.rr_diagnostic
+        rr_diag.entry = signal.entry_price
+        rr_diag.stop_loss = signal.stop_loss
+        rr_diag.take_profit = signal.take_profit
+        rr_diag.risk_distance = abs(signal.entry_price - signal.stop_loss)
+        rr_diag.reward_distance = abs(signal.take_profit - signal.entry_price)
+        rr_diag.risk_reward = signal.risk_reward_ratio
+        profile = self._settings.get_instrument_profile(diagnostic.symbol)
+        rr_diag.minimum_required_rr = float(
+            profile.min_risk_reward if profile is not None else 2.0
+        )
+
+        # Score diagnostic from metadata
+        decision_meta = signal.metadata.get("decision", {})
+        if decision_meta:
+            diagnostic.score_diagnostic.total = decision_meta.get("score", 0)
+            diagnostic.score_diagnostic.tier = decision_meta.get("tier", "unknown")
+            diagnostic.score = decision_meta.get("score", 0)
+
+        # Spread diagnostic
+        spread_diag = diagnostic.spread_diagnostic
+        spread_diag.current_spread = getattr(signal, "spread", 0)
+        spread_diag.maximum_allowed_spread = int(
+            profile.max_spread_points if profile is not None else 30
+        )
+
+        # Master trend diagnostic
+        mt_diag = diagnostic.master_trend_diagnostic
+        mt_diag.h1_trend = diagnostic.h1_trend
+        mt_diag.candidate_direction = diagnostic.direction_candidate
+        mt_diag.passed = True
+        mt_diag.reason = "aligned"
+
+        # Premium/Discount diagnostic (Phase 3A — instrumentation)
+        if market_context is not None:
+            dir_str = "bullish" if signal.direction == Direction.BUY else "bearish"
+            pd_diag = premium_discount_diagnostic(
+                candles=market_context.ltf_candles,
+                smc_data=market_context.ltf_smc_data,
+                direction=dir_str,
+                symbol=diagnostic.symbol,
+                timeframe=TimeFrame.M5.value,
+            )
+            diagnostic.premium_discount_diagnostic = pd_diag.to_dict()
+            if not pd_diag.valid:
+                self._add_rejection_reason(
+                    diagnostic,
+                    RejectionReason.PREMIUM_DISCOUNT_INVALID,
+                )
+        self._populate_validator_diagnostic(diagnostic)
+        self._populate_confidence_policy_diagnostic(diagnostic, "accepted")
+
     # -------------------------------------------------------------------------
     # Pipeline d'analyse (point d'entrée principal)
     # -------------------------------------------------------------------------
@@ -298,21 +506,30 @@ class TradingEngine:
             )
             return
 
+        diagnostic = self._create_diagnostic(symbol)
+
         # ------------------------------------------------------------------
         # Étape 1 : Téléchargement des données H1 + M5
         # ------------------------------------------------------------------
         htf_candles = await self._download_data(symbol, self._settings.default_timeframe)
         if htf_candles is None:
+            self._fail_step(diagnostic, PipelineStep.DATA_AVAILABLE, RejectionReason.NO_MARKET_DATA)
+            self._decision_debugger.finalize_opportunity(diagnostic)
             return
 
         ltf_candles = await self._download_data(symbol, TimeFrame.M5)
         if ltf_candles is None:
+            self._fail_step(diagnostic, PipelineStep.DATA_AVAILABLE, RejectionReason.NO_MARKET_DATA)
+            self._decision_debugger.finalize_opportunity(diagnostic)
             return
+
+        self._record_step(diagnostic, PipelineStep.DATA_AVAILABLE)
 
         # ------------------------------------------------------------------
         # Étape 2 : Vérification nouvelle bougie (sur le LTF)
         # ------------------------------------------------------------------
         latest_candle = max(ltf_candles, key=lambda c: c.time)
+        diagnostic.candle_time = latest_candle.time
 
         if not self._synchronizer.is_new_candle(symbol, latest_candle.time):
             logger.debug(
@@ -321,10 +538,15 @@ class TradingEngine:
                 self._timeframe.value,
                 self._synchronizer.get_last_processed(symbol),
             )
+            diagnostic.metadata["skipped_reason"] = "candle_already_processed"
+            self._decision_debugger.finalize_opportunity(diagnostic)
             return
 
         self._synchronizer.mark_processed(symbol, latest_candle.time)
         self._statistics.record_analysis(symbol)
+        self._decision_debugger.record_candle_analyzed(
+            symbol_upper, TimeFrame.M5, latest_candle.time
+        )
 
         logger.info("=" * 56)
         logger.info(
@@ -337,28 +559,55 @@ class TradingEngine:
         # ------------------------------------------------------------------
         # Étape 3 : Analyse MTF (H1 direction + M5 confirmation)
         # ------------------------------------------------------------------
-        market_context = await self._analyze_multitimeframe(symbol, htf_candles, ltf_candles)
+        market_context = await self._analyze_multitimeframe(
+            symbol, htf_candles, ltf_candles
+        )
         if market_context is None:
+            self._fail_step(
+                diagnostic,
+                PipelineStep.MARKET_CONTEXT,
+                RejectionReason.INSUFFICIENT_DATA,
+            )
             logger.info("Pipeline arrete (Etape 3) | %s | analyse MTF echouee", symbol)
+            self._decision_debugger.finalize_opportunity(diagnostic)
             return
+
+        self._record_step(diagnostic, PipelineStep.MARKET_CONTEXT)
+
+        diagnostic.h1_trend = market_context.master_trend
+        diagnostic.market_regime = market_context.regime
+        diagnostic.m15_context = getattr(market_context, "entry_confirmation", "none")
 
         self._log_market_context(market_context)
 
         if market_context.is_neutral():
+            self._fail_step(
+                diagnostic,
+                PipelineStep.MARKET_REGIME,
+                RejectionReason.MASTER_TREND_UNKNOWN,
+            )
             logger.info(
                 "NO_TRADE | %s | H1=NEUTRAL | aucune direction claire",
                 symbol,
             )
+            self._decision_debugger.finalize_opportunity(diagnostic)
             return
 
         if market_context._regime_blocks_trade():
+            regime_reason = RejectionReason.REGIME_BLOCKED
+            if market_context.regime in ("range", "transition"):
+                regime_reason = RejectionReason.REGIME_BLOCKED
+            self._fail_step(diagnostic, PipelineStep.MARKET_REGIME, regime_reason)
             logger.info(
                 "NO_TRADE | %s | régime=%s | %s",
                 symbol,
                 market_context.regime,
                 market_context.no_trade_reasons,
             )
+            self._decision_debugger.finalize_opportunity(diagnostic)
             return
+
+        self._record_step(diagnostic, PipelineStep.MARKET_REGIME)
 
         # ------------------------------------------------------------------
         # Suivi des setups (Phase 6 — state machine)
@@ -384,19 +633,88 @@ class TradingEngine:
             market_context=market_context,
         )
         if signal is None:
+            rejection_stage = self._signal_generator.last_rejection_stage
+            if rejection_stage == "master_gate":
+                self._fail_step(
+                    diagnostic,
+                    PipelineStep.MASTER_DIRECTION_GATE,
+                    RejectionReason.MASTER_TREND_CONFLICT,
+                )
+            elif rejection_stage == "htf_conflict":
+                self._fail_step(
+                    diagnostic,
+                    PipelineStep.MASTER_DIRECTION_GATE,
+                    RejectionReason.MASTER_TREND_CONFLICT,
+                )
+            elif rejection_stage == "confidence":
+                policy = getattr(self._signal_generator, "last_confidence_policy", None)
+                self._populate_confidence_policy_diagnostic(diagnostic, "rejected")
+                if policy is not None and policy.reason == "rr_too_low":
+                    self._fail_step(
+                        diagnostic,
+                        PipelineStep.RISK_REWARD,
+                        RejectionReason.RR_TOO_LOW,
+                    )
+                else:
+                    self._fail_step(
+                        diagnostic,
+                        PipelineStep.STRATEGY_EVALUATION,
+                        RejectionReason.LOW_CONFIDENCE,
+                    )
+            elif rejection_stage == "validator":
+                self._fail_step(
+                    diagnostic,
+                    PipelineStep.SIGNAL_VALIDATOR,
+                    RejectionReason.VALIDATOR_REJECTED,
+                )
+                self._populate_validator_diagnostic(diagnostic)
+            elif rejection_stage == "decision_engine":
+                self._fail_step(
+                    diagnostic,
+                    PipelineStep.DECISION_SCORE,
+                    RejectionReason.LOW_SCORE,
+                )
+            else:
+                self._fail_step(
+                    diagnostic,
+                    PipelineStep.SIGNAL_GENERATED,
+                    RejectionReason.NO_SIGNAL,
+                )
             logger.info("Pipeline arrete (Etape 4) | %s | aucun signal genere", symbol)
+            self._decision_debugger.finalize_opportunity(diagnostic)
             return
+
+        diagnostic.strategy_name = signal.strategy_name
+        diagnostic.confidence = signal.confidence
+        self._record_step(diagnostic, PipelineStep.STRATEGY_EVALUATION)
+        self._record_step(diagnostic, PipelineStep.SIGNAL_GENERATED)
+        self._record_step(diagnostic, PipelineStep.MASTER_DIRECTION_GATE)
+        self._record_step(diagnostic, PipelineStep.SIGNAL_VALIDATOR)
+        self._record_step(diagnostic, PipelineStep.DECISION_SCORE)
+        self._record_step(diagnostic, PipelineStep.RISK_REWARD)
+
+        # Peupler le diagnostic avec les détails du signal
+        self._populate_signal_diagnostics(diagnostic, signal, market_context)
 
         # Revalidation juste avant exécution (étape 5)
         revalidation_passed = await self._revalidate_before_execution(
             symbol, signal, market_context
         )
+        diagnostic.execution_guard_diagnostic.revalidate_passed = revalidation_passed
         if not revalidation_passed:
+            self._fail_step(
+                diagnostic,
+                PipelineStep.EXECUTION_REVALIDATION,
+                RejectionReason.REVALIDATION_FAILED,
+            )
             logger.info(
                 "Pipeline arrete (Revalidation) | %s | signal devenu invalide",
                 symbol,
             )
+            self._decision_debugger.finalize_opportunity(diagnostic)
             return
+
+        self._record_step(diagnostic, PipelineStep.EXECUTION_REVALIDATION)
 
         if self._trading_mode == TradingMode.ANALYSIS:
             logger.info(
@@ -404,36 +722,133 @@ class TradingEngine:
                 symbol,
                 signal.direction.value,
             )
+            # Le signal a passé toutes les validations ; seule l'exécution est
+            # volontairement omise en mode ANALYSIS (aucun ordre soumis/exécuté).
+            diagnostic.decision = "accepted"
+            diagnostic.metadata["execution_not_reached"] = True
+            diagnostic.metadata["trading_mode"] = self._trading_mode.value
+            self._decision_debugger.finalize_opportunity(diagnostic)
             return
 
         # ------------------------------------------------------------------
         # Étape 5bis : Gate final avant exécution (Phase 7)
         # ------------------------------------------------------------------
+        # Capturer le diagnostic de retest AVANT le gate (Phase 3A — instrumentation)
+        direction_str = "bullish" if signal.direction == Direction.BUY else "bearish"
+        profile = self._settings.get_instrument_profile(symbol)
+        retest_diag = retest_still_valid_detailed(
+            candles=market_context.ltf_candles,
+            smc_data=market_context.ltf_smc_data,
+            direction=direction_str,
+            max_age_bars=profile.max_zone_age_bars if profile else 20,
+            max_distance_atr_mult=profile.retest_atr_mult if profile else 1.0,
+            symbol=symbol,
+        )
+        diagnostic.retest_diagnostic = {
+            "valid": retest_diag.valid,
+            "reason": retest_diag.reason,
+            "symbol": retest_diag.symbol,
+            "direction": retest_diag.direction,
+            "last_candle_time": retest_diag.last_candle_time.isoformat()
+            if retest_diag.last_candle_time
+            else None,
+            "atr": retest_diag.atr,
+            "max_distance": retest_diag.max_distance,
+            "max_zone_age_bars": retest_diag.max_zone_age_bars,
+            "retest_atr_mult": retest_diag.retest_atr_mult,
+            "zone_type": retest_diag.zone_type,
+            "zone_id": retest_diag.zone_id,
+            "zone_created_index": retest_diag.zone_created_index,
+            "zone_age_bars": retest_diag.zone_age_bars,
+            "distance_to_zone": retest_diag.distance_to_zone,
+            "zone_consumed": retest_diag.zone_consumed,
+            "zone_direction": retest_diag.zone_direction,
+            "retest_detected": retest_diag.retest_detected,
+            "retest_confirmed": retest_diag.retest_confirmed,
+            "zones_in_direction": retest_diag.zones_in_direction,
+        }
+
         final_gate_passed = await self._final_gate_before_execution(
             symbol, signal, market_context
         )
+        diagnostic.execution_guard_diagnostic.final_gate_passed = final_gate_passed
         if not final_gate_passed:
+            diagnostic.execution_guard_diagnostic.final_gate_reason = (
+                f"retest_reason={retest_diag.reason}"
+                if not retest_diag.valid
+                else "other_gate_condition"
+            )
+            self._fail_step(
+                diagnostic,
+                PipelineStep.EXECUTION_FINAL_GATE,
+                RejectionReason.FINAL_GATE_REJECTED,
+            )
+            # Log détaillé du rejet Final Gate (Phase 2.1 — instrumentation)
+            logger.warning(
+                "FINAL GATE REJECT DIAG | symbol=%s direction=%s score=%d confidence=%.2f RR=%.2f "
+                "zone_type=%s zone_age_bars=%s max_zone_age=%d ATR=%.6f "
+                "zone_distance=%s max_distance=%.6f retest_atr_mult=%.1f "
+                "age_condition=%s distance_condition=%s confirmation_condition=%s "
+                "retest_still_valid=%s reason=%s zones_in_direction=%d",
+                symbol,
+                direction_str,
+                diagnostic.score,
+                signal.confidence,
+                signal.risk_reward_ratio,
+                retest_diag.zone_type,
+                retest_diag.zone_age_bars,
+                retest_diag.max_zone_age_bars,
+                retest_diag.atr,
+                retest_diag.distance_to_zone,
+                retest_diag.max_distance,
+                retest_diag.retest_atr_mult,
+                (
+                    retest_diag.zone_age_bars is not None
+                    and retest_diag.zone_age_bars <= retest_diag.max_zone_age_bars
+                ),
+                (
+                    retest_diag.distance_to_zone is not None
+                    and retest_diag.distance_to_zone <= retest_diag.max_distance
+                ),
+                retest_diag.retest_confirmed,
+                retest_diag.valid,
+                retest_diag.reason,
+                retest_diag.zones_in_direction,
+            )
             logger.info(
                 "Pipeline arrete (Gate final) | %s | conditions critiques non remplies",
                 symbol,
             )
+            self._decision_debugger.finalize_opportunity(diagnostic)
             return
+
+        self._record_step(diagnostic, PipelineStep.EXECUTION_FINAL_GATE)
 
         # ------------------------------------------------------------------
         # Étape 5 : Calcul du risque
         # ------------------------------------------------------------------
         volume = await self._calculate_risk(symbol, signal)
         if volume is None:
+            self._fail_step(diagnostic, PipelineStep.RISK_MANAGER, RejectionReason.RISK_REJECTED)
             logger.info("Pipeline arrete (Etape 5) | %s | calcul du risque refuse", symbol)
+            self._decision_debugger.finalize_opportunity(diagnostic)
             return
+
+        self._record_step(diagnostic, PipelineStep.RISK_MANAGER)
 
         # ------------------------------------------------------------------
         # Étape 6 : Trade (exécution)
         # ------------------------------------------------------------------
         trade = await self._execute_trade(symbol, signal, volume)
         if trade is None:
+            self._fail_step(diagnostic, PipelineStep.ORDER_SUBMITTED, RejectionReason.MT5_ERROR)
             logger.info("Pipeline arrete (Etape 6) | %s | execution ordre echouee", symbol)
+            self._decision_debugger.finalize_opportunity(diagnostic)
             return
+
+        # L'exécuteur confirme l'exécution : l'ordre a été soumis puis exécuté.
+        self._record_step(diagnostic, PipelineStep.ORDER_SUBMITTED)
+        self._record_step(diagnostic, PipelineStep.ORDER_EXECUTED)
 
         self._statistics.record_trade_opened(trade)
         if self._journal is not None:
@@ -443,6 +858,9 @@ class TradingEngine:
         # Étape 7 : Monitoring
         # ------------------------------------------------------------------
         await self._monitor_trade(symbol, trade)
+
+        diagnostic.decision = "accepted"
+        self._decision_debugger.finalize_opportunity(diagnostic)
 
         logger.info(
             "CYCLE COMPLETE | %s | TRADE | direction=%s | volume=%s | R/R=%.2f",
@@ -456,7 +874,9 @@ class TradingEngine:
     # Étapes du pipeline
     # -------------------------------------------------------------------------
 
-    async def _download_data(self, symbol: str, timeframe: TimeFrame | None = None) -> list[Candle] | None:
+    async def _download_data(
+        self, symbol: str, timeframe: TimeFrame | None = None
+    ) -> list[Candle] | None:
         """
         Étape 1 — Téléchargement des données de marché.
 
@@ -525,11 +945,29 @@ class TradingEngine:
         """Log structuré du contexte marché."""
         data = ctx.to_dict()
         logger.info("[MARKET] symbol=%s HTF=%s LTF=%s", data["symbol"], data["htf"], data["ltf"])
-        logger.info("[TREND] H1=%s structure=%s", data["master_trend"], data.get("trend_details", {}).get("pattern", "N/A"))
+        logger.info(
+            "[TREND] H1=%s structure=%s",
+            data["master_trend"],
+            data.get("trend_details", {}).get("pattern", "N/A"),
+        )
         logger.info("[LEVEL] premium=%s discount=%s", data["premium"], data["discount"])
         logger.info("[5M] LTF detections=%d", len(ctx.ltf_smc_data))
         logger.info("[DIRECTION GATE] master=%s allows_buy=%s allows_sell=%s",
                      data["master_trend"], data["allows_buy"], data["allows_sell"])
+
+    def _on_setup_created(self, setup: Any) -> None:
+        """Callback d'observabilité : notifie le debugger d'un nouveau setup.
+
+        Ne modifie aucune règle de trading — comptabilise uniquement l'événement
+        de création (dédupliqué par ``setup_id`` dans le debugger).
+        """
+        if setup is None:
+            return
+        self._decision_debugger.record_setup_detected(
+            symbol=getattr(setup, "symbol", ""),
+            setup_id=getattr(setup, "setup_id", ""),
+            direction=getattr(getattr(setup, "direction", None), "value", None),
+        )
 
     def _update_setups(self, symbol: str, market_context: Any) -> None:
         """
@@ -541,6 +979,64 @@ class TradingEngine:
         """
         tracker = self._setup_tracker
         tracker.expire_old_setups(symbol)
+
+        # --- Créer des setups à partir des zones SMC détectées ---
+        smc_data: list[dict[str, Any]] = getattr(market_context, "ltf_smc_data", []) or []
+        htf_trend: str = getattr(market_context, "master_trend", "neutral")
+
+        for detection in smc_data:
+            concept = detection.get("concept", "")
+            direction_str = detection.get("direction", "")
+
+            # Ne créer un setup que pour les concepts de zone (FVG, Order Block)
+            # et uniquement dans la direction de la tendance maître H1.
+            if concept not in ("fair_value_gap", "order_block"):
+                continue
+            if direction_str not in ("bullish", "bearish"):
+                continue
+            if htf_trend not in ("bullish", "bearish"):
+                continue
+            if direction_str != htf_trend:
+                continue
+
+            zone_index = detection.get("index", 0)
+            details = detection.get("details", {})
+
+            if concept == "fair_value_gap":
+                zone_top = details.get("gap_top")
+                zone_bottom = details.get("gap_bottom")
+            elif concept == "order_block":
+                zone_top = details.get("ob_top")
+                zone_bottom = details.get("ob_bottom")
+            else:
+                continue
+
+            if zone_top is None or zone_bottom is None:
+                continue
+
+            from arty_trading.core.enums import Direction as DirEnum
+            direction_enum = DirEnum.BUY if direction_str == "bullish" else DirEnum.SELL
+            zone_price = (float(zone_top) + float(zone_bottom)) / 2.0
+
+            # Éviter les doublons
+            if tracker.is_duplicate(symbol, direction_enum, concept, zone_index):
+                continue
+
+            # Créer le setup
+            setup = tracker.create_setup(
+                symbol=symbol,
+                direction=direction_enum,
+                zone_concept=concept,
+                zone_index=zone_index,
+                zone_price=zone_price,
+                zone_high=float(zone_top),
+                zone_low=float(zone_bottom),
+            )
+            if setup is not None:
+                logger.info(
+                    "SETUP CREATED | %s | dir=%s concept=%s idx=%d id=%s",
+                    symbol, direction_str, concept, zone_index, setup.setup_id,
+                )
 
         active = tracker.get_active_setups(symbol)
         logger.info(

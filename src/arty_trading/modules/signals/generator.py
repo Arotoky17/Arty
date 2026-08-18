@@ -23,10 +23,16 @@ afin de pouvoir retracer pourquoi un signal a été émis ou ignoré.
 
 from __future__ import annotations
 
+from typing import Any
+
 from arty_trading.core.entities import Candle, Signal
 from arty_trading.core.enums import Direction, LogCategory
 from arty_trading.logging.logger import get_logger
 from arty_trading.modules.decision import DecisionEngine
+from arty_trading.modules.signals.confidence_policy import (
+    ConfidencePolicyDecision,
+    evaluate_confidence_policy,
+)
 from arty_trading.modules.signals.validator import SignalValidator, ValidationResult
 from arty_trading.modules.strategies.base import BaseStrategy
 from arty_trading.modules.strategies.strategies import (
@@ -92,6 +98,9 @@ class SignalGenerator:
         self._validator = validator
         self._decision_engine = decision_engine
         self._last_validation: ValidationResult | None = None
+        self._last_rejection_stage: str | None = None
+        self._last_rejection_reason: str | None = None
+        self._last_confidence_policy: ConfidencePolicyDecision | None = None
 
         if strategies is None:
             strategies = [
@@ -145,6 +154,11 @@ class SignalGenerator:
         return self._active_strategy
 
     @property
+    def last_confidence_policy(self) -> ConfidencePolicyDecision | None:
+        """Dernière décision de la politique confiance/RR (diagnostic)."""
+        return self._last_confidence_policy
+
+    @property
     def validator(self) -> SignalValidator | None:
         """Le validateur de signaux (None si non configuré)."""
         return self._validator
@@ -153,6 +167,16 @@ class SignalGenerator:
     def last_validation(self) -> ValidationResult | None:
         """Résultat de la dernière validation (None si aucune)."""
         return self._last_validation
+
+    @property
+    def last_rejection_stage(self) -> str | None:
+        """Dernière étape ayant rejeté un signal."""
+        return self._last_rejection_stage
+
+    @property
+    def last_rejection_reason(self) -> str | None:
+        """Dernière raison de rejet."""
+        return self._last_rejection_reason
 
     # -------------------------------------------------------------------------
     # Gestion des stratégies
@@ -264,11 +288,17 @@ class SignalGenerator:
         """
         if not candles:
             logger.debug("Aucune bougie fournie → NO_SIGNAL")
+            self._last_rejection_stage = "no_data"
+            self._last_rejection_reason = "no_candles"
             return None
+
+        self._last_rejection_stage = None
+        self._last_rejection_reason = None
 
         enabled = self.get_enabled_strategies()
         logger.debug(
-            "Génération de signal | stratégies activées=%s | active=%s | min_confidence=%.2f | master_trend=%s",
+            "Génération de signal | stratégies activées=%s | active=%s | "
+            "min_confidence=%.2f | master_trend=%s",
             enabled,
             self._active_strategy,
             self._min_confidence,
@@ -315,13 +345,16 @@ class SignalGenerator:
             )
             if gate_rejection is not None:
                 logger.info(
-                    "Signal REJETÉ (Master Direction Gate) | %s | %s | master=%s | reason=%s | justification=%s",
+                    "Signal REJETÉ (Master Direction Gate) | %s | %s | "
+                    "master=%s | reason=%s | justification=%s",
                     signal.symbol,
                     direction_str,
                     master_trend,
                     gate_rejection,
                     signal.justification,
                 )
+                self._last_rejection_stage = "master_gate"
+                self._last_rejection_reason = gate_rejection
                 continue
 
             htf_trend_for_gate = master_trend or htf_trend or (
@@ -335,18 +368,37 @@ class SignalGenerator:
                     htf_trend_for_gate,
                     signal.justification,
                 )
+                self._last_rejection_stage = "htf_conflict"
+                self._last_rejection_reason = "htf_conflict"
                 continue
 
-            if signal.confidence < self._min_confidence:
+            # Politique adaptative confiance/RR (Phase Adaptive Confidence).
+            # Plan de contrôle : <0.60 rejet, 0.60-0.84 exige RR >= 2.0,
+            # >=0.85 comportement historique. Tous les autres gates restent
+            # appliqués en aval (validator, decision engine, risk manager,
+            # final gate).
+            policy = evaluate_confidence_policy(
+                signal.confidence,
+                signal.risk_reward_ratio,
+                base_threshold=self._min_confidence,
+            )
+            self._last_confidence_policy = policy
+            if not policy.allowed:
                 logger.info(
-                    "Signal REJETÉ (confiance insuffisante) | stratégie=%s | "
-                    "confiance=%.2f | seuil=%.2f | direction=%s | justification=%s",
+                    "Signal REJETÉ (politique confiance/RR) | stratégie=%s | "
+                    "confiance=%.2f | bucket=%s | R/R=%.2f | RR_requis=%s | "
+                    "raison=%s | direction=%s | justification=%s",
                     name,
                     signal.confidence,
-                    self._min_confidence,
+                    policy.confidence_bucket,
+                    signal.risk_reward_ratio,
+                    policy.required_rr,
+                    policy.reason,
                     signal.direction.value,
                     signal.justification,
                 )
+                self._last_rejection_stage = "confidence"
+                self._last_rejection_reason = policy.reason
                 continue
 
             logger.info(
@@ -402,6 +454,8 @@ class SignalGenerator:
                     result.failed_conditions,
                     result.explanation,
                 )
+                self._last_rejection_stage = "validator"
+                self._last_rejection_reason = "validator_rejected"
                 return None
             logger.info(
                 "Signal VALIDÉ par le validateur | stratégie=%s | score=%.2f",
@@ -428,6 +482,8 @@ class SignalGenerator:
                     decision.score,
                     decision.rejected_by,
                 )
+                self._last_rejection_stage = "decision_engine"
+                self._last_rejection_reason = "low_score"
                 return None
             best = enriched
             logger.info("Signal ICT validé | score=%d | tier=%s", decision.score, decision.tier)
@@ -530,13 +586,22 @@ class SignalGenerator:
             if signal is None:
                 continue
 
-            if signal.confidence < self._min_confidence:
+            policy = evaluate_confidence_policy(
+                signal.confidence,
+                signal.risk_reward_ratio,
+                base_threshold=self._min_confidence,
+            )
+            self._last_confidence_policy = policy
+            if not policy.allowed:
                 logger.info(
-                    "Signal REJETÉ (confiance insuffisante) | stratégie=%s | "
-                    "confiance=%.2f | seuil=%.2f",
+                    "Signal REJETÉ (politique confiance/RR, generate_all) | stratégie=%s | "
+                    "confiance=%.2f | bucket=%s | R/R=%.2f | RR_requis=%s | raison=%s",
                     name,
                     signal.confidence,
-                    self._min_confidence,
+                    policy.confidence_bucket,
+                    signal.risk_reward_ratio,
+                    policy.required_rr,
+                    policy.reason,
                 )
                 continue
 

@@ -23,6 +23,7 @@ from arty_trading.api.routes import (
     smc_router,
 )
 from arty_trading.application import TradingEngine
+from arty_trading.application.trade_decision_debugger import TradeDecisionDebugger
 from arty_trading.config import get_settings
 from arty_trading.core.enums import LogCategory, TimeFrame
 from arty_trading.infrastructure.mt5 import MT5Connector, MT5MarketDataProvider
@@ -78,6 +79,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     # Initialisation du moteur de trading (orchestration live)
     notifier = getattr(app.state, "notification_manager", None)
+    decision_debugger = TradeDecisionDebugger(
+        enabled=settings.decision_diagnostics_enabled,
+        summary_interval=settings.decision_diagnostics_interval,
+    )
     trading_engine = TradingEngine(
         settings=settings,
         market_data=market_data,
@@ -87,8 +92,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         executor=app.state.executor,
         mt5_connector=mt5_connector,
         notifier=notifier,
+        decision_debugger=decision_debugger,
     )
     app.state.trading_engine = trading_engine
+    app.state.decision_debugger = decision_debugger
 
     # Démarrer le moteur pour tous les modes (ANALYSIS, PAPER, LIVE).
     # En mode ANALYSIS, le moteur exécute le pipeline d'analyse et génère des

@@ -17,14 +17,15 @@ informations de marché.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from decimal import Decimal
+from typing import Any
 
 from arty_trading.core.entities import Candle
 from arty_trading.core.enums import SMCConcept
 from arty_trading.modules.smc.base import (
     BaseDetector,
     SMCDetection,
-    SwingPoint,
     find_swing_highs,
     find_swing_lows,
 )
@@ -209,3 +210,232 @@ class PremiumDiscountDetector(BaseDetector):
         )
 
         return detections
+
+
+# =============================================================================
+# Diagnostic Premium/Discount (Phase 3A — audit instrumentation)
+# =============================================================================
+
+
+@dataclass
+class PremiumDiscountDiagnostic:
+    """Résultat détaillé du calcul Premium/Discount pour diagnostic.
+
+    Expose toutes les valeurs utilisées par le calcul existant, sans
+    modifier la logique de validation.
+    """
+
+    valid: bool
+    reason: str
+    symbol: str = ""
+    direction: str = ""
+    timeframe: str = ""
+    swing_high: float = 0.0
+    swing_low: float = 0.0
+    range_high: float = 0.0
+    range_low: float = 0.0
+    range_size: float = 0.0
+    midpoint_50: float = 0.0
+    current_price: float = 0.0
+    location: str = "unknown"  # "premium", "discount", "equilibrium"
+    expected_location: str = ""
+    in_correct_zone: bool = False
+    distance_to_midpoint: float = 0.0
+    pct_from_midpoint: float = 0.0
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "valid": self.valid,
+            "reason": self.reason,
+            "symbol": self.symbol,
+            "direction": self.direction,
+            "timeframe": self.timeframe,
+            "swing_high": self.swing_high,
+            "swing_low": self.swing_low,
+            "range_high": self.range_high,
+            "range_low": self.range_low,
+            "range_size": self.range_size,
+            "midpoint_50": self.midpoint_50,
+            "current_price": self.current_price,
+            "location": self.location,
+            "expected_location": self.expected_location,
+            "in_correct_zone": self.in_correct_zone,
+            "distance_to_midpoint": self.distance_to_midpoint,
+            "pct_from_midpoint": self.pct_from_midpoint,
+        }
+
+
+def premium_discount_diagnostic(
+    candles: list[Candle],
+    smc_data: list[dict[str, Any]],
+    direction: str,
+    symbol: str = "",
+    timeframe: str = "M5",
+    swing_window: int = 2,
+) -> PremiumDiscountDiagnostic:
+    """Calcule le diagnostic Premium/Discount en utilisant la même logique
+    que ``PremiumDiscountDetector.detect`` sans modifier le comportement.
+
+    Args:
+        candles: Bougies du timeframe analysé (M5 par défaut).
+        smc_data: Détections SMC (contient éventuellement une detection
+            ``premium_discount`` déjà calculée).
+        direction: "bullish" ou "bearish" (sens du signal).
+        symbol: Symbole pour le diagnostic.
+        timeframe: Timeframe des bougies (pour le rapport).
+        swing_window: Fenêtre pour les swing points (identique au détecteur).
+
+    Returns:
+        PremiumDiscountDiagnostic avec toutes les valeurs du calcul.
+    """
+    if not candles or len(candles) < 5:
+        return PremiumDiscountDiagnostic(
+            valid=False,
+            reason="INSUFFICIENT_DATA",
+            symbol=symbol,
+            direction=direction,
+            timeframe=timeframe,
+        )
+
+    # Prefer existing detection in smc_data if available (matches production path)
+    pd_detections = [
+        d for d in smc_data
+        if d.get("concept") == SMCConcept.PREMIUM_DISCOUNT.value
+    ]
+
+    if pd_detections:
+        latest = max(pd_detections, key=lambda d: d.get("index", 0))
+        d = latest.get("details", {})
+        equilibrium = float(d.get("equilibrium", 0.0))
+        current_price = float(d.get("current_price", candles[-1].close))
+        range_size = float(d.get("range_size", 0.0))
+        location = d.get("current_zone", "unknown")
+        expected = "discount" if direction == "bullish" else "premium"
+        in_correct = location == expected
+        distance = abs(current_price - equilibrium)
+        pct = (distance / range_size * 100.0) if range_size > 0 else 0.0
+        return PremiumDiscountDiagnostic(
+            valid=in_correct,
+            reason="OK" if in_correct else (
+                f"Prix en zone {location} (achat nécessite discount / "
+                f"vente nécessite premium)"
+            ),
+            symbol=symbol,
+            direction=direction,
+            timeframe=timeframe,
+            swing_high=float(d.get("swing_high", 0.0)),
+            swing_low=float(d.get("swing_low", 0.0)),
+            range_high=float(d.get("swing_high", 0.0)),
+            range_low=float(d.get("swing_low", 0.0)),
+            range_size=range_size,
+            midpoint_50=equilibrium,
+            current_price=current_price,
+            location=location,
+            expected_location=expected,
+            in_correct_zone=in_correct,
+            distance_to_midpoint=distance,
+            pct_from_midpoint=round(pct, 2),
+        )
+
+    # Fallback: recompute from raw candles (same algorithm as detect())
+    detector = PremiumDiscountDetector(swing_window=swing_window)
+    detections = detector.detect(candles)
+
+    pd_dets: list[SMCDetection] = [
+        d for d in detections
+        if d.concept == SMCConcept.PREMIUM_DISCOUNT
+    ]
+
+    if not pd_dets:
+        swing_highs = find_swing_highs(candles, swing_window)
+        swing_lows = find_swing_lows(candles, swing_window)
+
+        if not swing_highs or not swing_lows:
+            return PremiumDiscountDiagnostic(
+                valid=False,
+                reason="NO_SWING_POINTS",
+                symbol=symbol,
+                direction=direction,
+                timeframe=timeframe,
+            )
+
+        latest_high = swing_highs[-1]
+        latest_low = swing_lows[-1]
+
+        if latest_high.price <= latest_low.price:
+            return PremiumDiscountDiagnostic(
+                valid=False,
+                reason="INVALID_RANGE",
+                symbol=symbol,
+                direction=direction,
+                timeframe=timeframe,
+            )
+
+        range_size = float(latest_high.price - latest_low.price)
+        equilibrium = float(latest_low.price) + (range_size / 2.0)
+        current_price = float(candles[-1].close)
+        location = "premium" if current_price > float(equilibrium) else "discount"
+        expected = "discount" if direction == "bullish" else "premium"
+        in_correct = location == expected
+        distance = abs(current_price - float(equilibrium))
+        pct = (distance / float(range_size) * 100.0) if float(range_size) > 0 else 0.0
+
+        return PremiumDiscountDiagnostic(
+            valid=in_correct,
+            reason="OK" if in_correct else (
+                f"Prix en zone {location} (achat nécessite discount / "
+                f"vente nécessite premium)"
+            ),
+            symbol=symbol,
+            direction=direction,
+            timeframe=timeframe,
+            swing_high=float(latest_high.price),
+            swing_low=float(latest_low.price),
+            range_high=float(latest_high.price),
+            range_low=float(latest_low.price),
+            range_size=float(range_size),
+            midpoint_50=float(equilibrium),
+            current_price=current_price,
+            location=location,
+            expected_location=expected,
+            in_correct_zone=in_correct,
+            distance_to_midpoint=distance,
+            pct_from_midpoint=round(pct, 2),
+        )
+
+    latest_det = pd_dets[0]
+    for det in pd_dets[1:]:
+        if det.index > latest_det.index:
+            latest_det = det
+    d = latest_det.details
+    equilibrium = float(d.get("equilibrium", 0.0))
+    current_price = float(d.get("current_price", candles[-1].close))
+    range_size = float(d.get("range_size", 0.0))
+    location = d.get("current_zone", "unknown")
+    expected = "discount" if direction == "bullish" else "premium"
+    in_correct = location == expected
+    distance = abs(current_price - equilibrium)
+    pct = (distance / range_size * 100.0) if range_size > 0 else 0.0
+
+    return PremiumDiscountDiagnostic(
+        valid=in_correct,
+        reason="OK" if in_correct else (
+            f"Prix en zone {location} (achat nécessite discount / "
+            f"vente nécessite premium)"
+        ),
+        symbol=symbol,
+        direction=direction,
+        timeframe=timeframe,
+        swing_high=float(d.get("swing_high", 0.0)),
+        swing_low=float(d.get("swing_low", 0.0)),
+        range_high=float(d.get("premium_end", float(d.get("swing_high", 0.0)))),
+        range_low=float(d.get("discount_start", float(d.get("swing_low", 0.0)))),
+        range_size=range_size,
+        midpoint_50=equilibrium,
+        current_price=current_price,
+        location=location,
+        expected_location=expected,
+        in_correct_zone=in_correct,
+        distance_to_midpoint=distance,
+        pct_from_midpoint=round(pct, 2),
+    )

@@ -22,7 +22,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Callable
 
 from arty_trading.core.enums import Direction, NoTradeReason
 
@@ -183,6 +183,17 @@ class SetupTracker:
         self._setups: dict[str, list[Setup]] = {}
         self._machine = SetupStateMachine()
         self._counter: int = 0
+        # Observateur d'événements (utilisé par le debugger de décision pour
+        # être notifié de la création d'un nouveau setup, sans modifier les
+        # règles de la state machine).
+        self._on_setup_created: Callable[[Setup], None] | None = None
+
+    def set_on_setup_created(self, callback: Callable[[Setup], None] | None) -> None:
+        """Enregistre un callback appelé à chaque création de setup (observabilité).
+
+        Ne modifie aucune règle de trading : le callback est purement informatif.
+        """
+        self._on_setup_created = callback
 
     def _symbol_key(self, symbol: str) -> str:
         return symbol.upper()
@@ -227,6 +238,8 @@ class SetupTracker:
         )
         key = self._symbol_key(symbol)
         self._setups.setdefault(key, []).append(setup)
+        if self._on_setup_created is not None:
+            self._on_setup_created(setup)
         return setup
 
     def get_active_setups(self, symbol: str) -> list[Setup]:

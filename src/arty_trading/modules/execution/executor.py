@@ -9,7 +9,7 @@ Le mode LIVE est désactivé par défaut pour la sécurité.
 from __future__ import annotations
 
 import asyncio
-from decimal import Decimal
+from decimal import Decimal, ROUND_DOWN
 from typing import Any
 
 from arty_trading.config.settings import get_settings
@@ -51,6 +51,16 @@ class MT5OrderError(Exception):
     mode mock, aucune simulation silencieuse ne doit masquer l'échec d'un
     ordre réel : l'erreur doit remonter jusqu'au moteur pour être
     journalisée et notifiée.
+    """
+
+
+class MT5PositionNotFoundError(MT5OrderError):
+    """
+    La position n'existe plus côté broker (fermée par TP, SL ou manuellement).
+
+    Erreur **non transitoire** : réessayer au cycle suivant n'a aucun sens.
+    Le Position Monitor doit la traiter comme un signal de fermeture externe
+    et réconcilier son état interne (voir PositionMonitor).
     """
 
 
@@ -176,10 +186,27 @@ class OrderExecutor(IOrderExecutor):
         return await self._mt5_modify_order_with_retry(trade, stop_loss, take_profit)
 
     async def close_partial_order(self, trade: Trade, fraction: float) -> Trade | None:
-        """Clôture une fraction d'une position MT5 et conserve le reliquat ouvert."""
+        """Clôture une fraction d'une position MT5 et conserve le reliquat ouvert.
+
+        Le volume est normalisé selon ``volume_min`` / ``volume_step`` du
+        broker : si le volume partiel est inférieur au minimum, l'ordre
+        n'est PAS envoyé (aucun ``INVALID_VOLUME`` inutile) et ``None`` est
+        retourné — le niveau de partial reste alors non consommé côté
+        ``PositionManager``.
+        """
         if not 0 < fraction < 1:
             raise ValueError("La fraction de clôture doit être entre 0 et 1")
-        closed_volume = trade.volume * Decimal(str(fraction))
+        requested_volume = trade.volume * Decimal(str(fraction))
+        closed_volume, skip_reason = self._normalize_partial_volume(trade, requested_volume)
+        if skip_reason is not None:
+            volume_min, volume_step = self._partial_volume_constraints(trade.symbol)
+            logger.warning(
+                "[PARTIAL PROFIT SKIPPED] %s | ticket=%s | position_volume=%s | "
+                "requested_volume=%s | volume_min=%s | volume_step=%s | reason=%s",
+                trade.symbol, trade.ticket, trade.volume, requested_volume,
+                volume_min, volume_step, skip_reason,
+            )
+            return None
         if closed_volume <= 0 or closed_volume >= trade.volume:
             return await self.close_order(trade)
         partial = trade.model_copy(update={"volume": closed_volume})
@@ -187,6 +214,45 @@ class OrderExecutor(IOrderExecutor):
         trade.volume -= closed_volume
         logger.info("TP partiel | ticket=%s | volume=%s", trade.ticket, closed_volume)
         return closed
+
+    def _partial_volume_constraints(self, symbol: str) -> tuple[Decimal | None, Decimal | None]:
+        """Retourne ``(volume_min, volume_step)`` du symbole, ou ``(None, None)``."""
+        if MT5_AVAILABLE and not self._mock_mode:
+            try:
+                info = mt5.symbol_info(symbol)
+                if info is not None:
+                    return Decimal(str(info.volume_min)), Decimal(str(info.volume_step))
+            except Exception:  # noqa: BLE001 - contraintes optionnelles
+                pass
+        return None, None
+
+    def _normalize_partial_volume(
+        self, trade: Trade, requested: Decimal
+    ) -> tuple[Decimal, str | None]:
+        """Normalise le volume partiel selon les contraintes du broker.
+
+        Retourne ``(volume, None)`` si exécutable, ou ``(requested, raison)``
+        si le volume est invalide. Ne ferme jamais plus que le volume de la
+        position ; si le reliquat devient inférieur au volume minimum, toute
+        la position est fermée (seule alternative acceptée par le broker).
+        """
+        volume_min, volume_step = self._partial_volume_constraints(trade.symbol)
+        if volume_min is None:
+            return requested, None  # contraintes inconnues (mock/paper) : inchangé
+        step = volume_step if volume_step and volume_step > 0 else Decimal("0.01")
+        # Arrondi vers le bas au step : jamais fermer plus que demandé.
+        normalized = (requested / step).to_integral_value(rounding=ROUND_DOWN) * step
+        if normalized < volume_min:
+            return requested, "INVALID_PARTIAL_VOLUME"
+        remaining = trade.volume - normalized
+        if remaining > 0 and remaining < volume_min:
+            # Reliququat non conforme : fermeture totale de la position.
+            logger.info(
+                "Partial → fermeture totale | ticket=%s | remaining=%s < volume_min=%s",
+                trade.ticket, remaining, volume_min,
+            )
+            return trade.volume, None
+        return normalized, None
 
     async def get_open_positions(self) -> list[Trade]:
         """Retourne la liste des positions actuellement ouvertes sur le compte.
@@ -217,6 +283,28 @@ class OrderExecutor(IOrderExecutor):
             except Exception as exc:  # noqa: BLE001 - une position invalide ne doit pas bloquer
                 logger.warning("Position ignorée | ticket=%s | %s", pos.ticket, exc)
         return trades
+
+    def position_exists(self, ticket: int) -> bool | None:
+        """Vérifie l'existence réelle d'une position côté broker.
+
+        Utilisé par le Position Monitor pour réconcilier un ticket suivi en
+        interne après une erreur "position introuvable" (fermeture externe).
+
+        Returns:
+            ``True`` si la position existe, ``False`` si elle n'existe plus,
+            ou ``None`` si l'état ne peut pas être déterminé (MT5 indisponible,
+            mode mock) — dans ce cas aucune réconciliation ne doit avoir lieu.
+        """
+        if self._mock_mode or not MT5_AVAILABLE:
+            return None
+        try:
+            if not mt5.initialize():
+                return None
+            positions = mt5.positions_get(ticket=ticket)
+            return bool(positions)
+        except Exception as exc:  # noqa: BLE001 - état indéterminable
+            logger.debug("position_exists indisponible | ticket=%s | %s", ticket, exc)
+            return None
 
     def _position_to_trade(self, pos: Any) -> Trade:
         """Convertit une position MT5 brute en entité ``Trade``."""
@@ -577,7 +665,7 @@ class OrderExecutor(IOrderExecutor):
         positions = mt5.positions_get(ticket=trade.ticket)
         if not positions:
             logger.warning("Position %d introuvable", trade.ticket)
-            raise MT5OrderError(f"Position {trade.ticket} introuvable")
+            raise MT5PositionNotFoundError(f"Position {trade.ticket} introuvable")
 
         pos = positions[0]
         if trade.direction == Direction.BUY:
@@ -622,27 +710,173 @@ class OrderExecutor(IOrderExecutor):
         )
         return trade
 
+    @staticmethod
+    def _align_price_to_tick(
+        price: Decimal | float,
+        tick_size: Decimal,
+        digits: int,
+    ) -> Decimal:
+        """
+        Aligne un prix sur la grille de tick réelle du symbole.
+
+        1. Quantification au tick size (``trade_tick_size``, repli sur ``point``).
+        2. Arrondi final aux ``digits`` du symbole.
+
+        Un prix non aligné sur le tick size rend la requête SL/TP entière
+        invalide (retcode 10013 = TRADE_RETCODE_INVALID).
+        """
+        if tick_size <= 0:
+            tick_size = Decimal("0.00001") if digits >= 5 else Decimal("0.001")
+        d = Decimal(str(price))
+        # ROUND_HALF_UP : ne dégrade pas la protection du SL plus que nécessaire
+        aligned = (d / tick_size).quantize(Decimal("1"), rounding="ROUND_HALF_UP") * tick_size
+        return Decimal(aligned).quantize(Decimal(1).scaleb(-digits))
+
+    @staticmethod
+    def _sltp_distance_rejection(
+        is_buy: bool,
+        sl: Decimal,
+        tp: Decimal,
+        bid: Decimal | None,
+        ask: Decimal | None,
+        min_dist: Decimal,
+    ) -> str | None:
+        """
+        Vérifie la distance SL/TP par rapport au marché.
+
+        BUY  : SL < BID (et TP > BID si TP défini).
+        SELL : SL > ASK (et TP < ASK si TP défini).
+
+        Retourne un motif de rejet si la distance est inférieure à
+        ``min_dist`` (= max(stops_level, freeze_level) * point), sinon None.
+        Distingue explicitement ce cas d'une requête invalide (10013).
+        """
+        if bid is None or ask is None or min_dist <= 0:
+            return None
+        if is_buy:
+            if not (sl < bid) or (bid - sl) < min_dist:
+                return "SL_TOO_CLOSE_TO_MARKET"
+            if tp > 0 and ((tp - bid) < min_dist or not (tp > bid)):
+                return "TP_TOO_CLOSE_TO_MARKET"
+        else:
+            if not (sl > ask) or (sl - ask) < min_dist:
+                return "SL_TOO_CLOSE_TO_MARKET"
+            if tp > 0 and ((ask - tp) < min_dist or not (tp < ask)):
+                return "TP_TOO_CLOSE_TO_MARKET"
+        return None
+
     async def _mt5_modify_order(
         self,
         trade: Trade,
         stop_loss: float | None = None,
         take_profit: float | None = None,
     ) -> Trade:
-        """Modifie un ordre via MT5."""
+        """Modifie un ordre via MT5 (TRADE_ACTION_SLTP)."""
         if not mt5.initialize():
             logger.error("MT5 initialize() a échoué")
             raise MT5OrderError("MT5 non initialisé")
 
-        new_sl = float(stop_loss) if stop_loss is not None else float(trade.stop_loss)
-        new_tp = float(take_profit) if take_profit is not None else float(trade.take_profit)
+        # 1. Position réelle : confirmer que le ticket est bien une POSITION
+        #    MT5 ouverte (et non un order ticket).
+        positions = mt5.positions_get(ticket=trade.ticket)
+        if not positions:
+            logger.error(
+                "MT5 modify_order : position introuvable | ticket=%s | symbol=%s",
+                trade.ticket, trade.symbol,
+            )
+            raise MT5PositionNotFoundError(f"Position {trade.ticket} introuvable")
+        pos = positions[0]
+        pos_type_buy = int(pos.type) == int(getattr(mt5, "POSITION_TYPE_BUY", 0))
+
+        # 2. Infos symbole + tick courant (normalisation / distances).
+        info = mt5.symbol_info(trade.symbol)
+        tick = mt5.symbol_info_tick(trade.symbol)
+        if info is not None:
+            digits = int(info.digits)
+            point = Decimal(str(info.point))
+            tick_size = Decimal(str(getattr(info, "trade_tick_size", 0) or 0)) or point
+            stops_level = Decimal(int(getattr(info, "trade_stops_level", 0) or 0))
+            freeze_level = Decimal(int(getattr(info, "trade_freeze_level", 0) or 0))
+        else:
+            digits, point, tick_size = 5, Decimal("0.00001"), Decimal("0.00001")
+            stops_level = freeze_level = Decimal(0)
+        bid = Decimal(str(tick.bid)) if tick is not None else None
+        ask = Decimal(str(tick.ask)) if tick is not None else None
+
+        # 3. Nouveaux SL/TP : normalisation au digits + tick size réel.
+        #    TP non demandé -> conserver le TP réellement présent chez le
+        #    broker (ne pas pousser une valeur ARTY périmée).
+        if stop_loss is not None:
+            new_sl = self._align_price_to_tick(Decimal(str(stop_loss)), tick_size, digits)
+        else:
+            new_sl = self._align_price_to_tick(trade.stop_loss, tick_size, digits)
+        if take_profit is not None:
+            new_tp = self._align_price_to_tick(Decimal(str(take_profit)), tick_size, digits)
+        else:
+            new_tp = self._align_price_to_tick(Decimal(str(pos.tp)), tick_size, digits)
+
+        cur_sl = self._align_price_to_tick(Decimal(str(pos.sl)), tick_size, digits)
+        cur_tp = self._align_price_to_tick(Decimal(str(pos.tp)), tick_size, digits)
+
+        # 4. NO CHANGE : ne pas envoyer une modification identique. Le broker
+        #    est déjà au niveau demandé -> considéré comme appliqué (le
+        #    niveau peut être consommé sans erreur).
+        if new_sl == cur_sl and new_tp == cur_tp:
+            logger.info(
+                "[SL MODIFY SKIPPED] %s | ticket=%s | reason=NO_CHANGE | sl=%s",
+                trade.symbol, trade.ticket, new_sl,
+            )
+            if stop_loss is not None:
+                trade.stop_loss = new_sl
+            return trade
+
+        # 5. Distance au marché (stops/freeze level) : distinguée du 10013,
+        #    rejetée proprement AVANT order_send().
+        min_dist = max(stops_level, freeze_level) * point
+        rejection = self._sltp_distance_rejection(
+            pos_type_buy, new_sl, new_tp, bid, ask, min_dist
+        )
+        if rejection is not None:
+            logger.error(
+                "[SL MODIFY REJECTED] %s | ticket=%s | reason=%s | candidate_sl=%s | "
+                "bid=%s | ask=%s | stops_level=%s | freeze_level=%s",
+                trade.symbol, trade.ticket, rejection,
+                new_sl, bid, ask, stops_level, freeze_level,
+            )
+            raise MT5OrderError(
+                f"Modification refusée (distance marché) position {trade.ticket} | "
+                f"reason={rejection}"
+            )
 
         request = {
             "action": mt5.TRADE_ACTION_SLTP,
             "symbol": trade.symbol,
             "position": trade.ticket,
-            "sl": new_sl,
-            "tp": new_tp,
+            "sl": float(new_sl),
+            "tp": float(new_tp),
         }
+
+        # 6. Diagnostic temporaire : requête complète + order_check().
+        logger.info(
+            "[MT5 SLTP REQUEST] ticket=%s | symbol=%s | position_type=%s | "
+            "current_sl=%s | candidate_sl=%s | current_tp=%s | bid=%s | ask=%s | "
+            "digits=%s | point=%s | tick_size=%s | stops_level=%s | freeze_level=%s | "
+            "request=%s",
+            trade.ticket, trade.symbol, "BUY" if pos_type_buy else "SELL",
+            pos.sl, new_sl, pos.tp, bid, ask,
+            digits, point, tick_size, stops_level, freeze_level, request,
+        )
+        try:
+            check = mt5.order_check(request)
+            if check is not None:
+                logger.info(
+                    "[MT5 SLTP CHECK] retcode=%s | comment=%s | request=%s",
+                    getattr(check, "retcode", None),
+                    getattr(check, "comment", None),
+                    getattr(check, "request", None),
+                )
+        except Exception as exc:  # noqa: BLE001 - diagnostic non bloquant
+            logger.warning("order_check indisponible : %s", exc)
 
         result = mt5.order_send(request)
 

@@ -205,11 +205,59 @@ class DecisionSettings(BaseSettings):
 
 
 class PositionSettings(BaseSettings):
-    """Règles de suivi actif des positions, exprimées en multiples de R."""
+    """Règles de suivi actif des positions, exprimées en multiples de R.
+
+    Nouveau système (activé par défaut) :
+    - **Profit Lock** : sécurisation progressive par paliers ``trigger_r:lock_r`` ;
+    - **Partial Profit** : prises partielles multi-niveaux ``trigger_r:fraction`` ;
+    - **Runner** : la position peut courir au-delà du seuil de sécurisation ;
+    - **Structure Trailing** : SL sous le HL / au-dessus du LH confirmé (buffer ATR).
+
+    Le Break-Even historique est remplacé par le Profit Lock (le palier
+    ``1.0:0.0`` reproduit exactement l'ancien comportement). Les anciens
+    paramètres restent fonctionnels en mode legacy (``PROFIT_LOCK_ENABLED=false``).
+    """
 
     model_config = SettingsConfigDict(env_prefix="", populate_by_name=True)
 
     enabled: bool = Field(default=True, alias="POSITION_MANAGER_ENABLED")
+
+    # --- Système actif : Profit Lock / Partial / Runner / Structure -----------
+    enable_profit_lock: bool = Field(default=True, alias="PROFIT_LOCK_ENABLED")
+    profit_lock_levels: str = Field(
+        default="0.5:0.1,1.0:0.4,1.5:0.8,2.0:1.2,3.0:2.0",
+        alias="PROFIT_LOCK_LEVELS",
+        description="Paliers trigger_r:lock_r séparés par des virgules",
+    )
+    enable_partial_profit: bool = Field(default=True, alias="PARTIAL_PROFIT_ENABLED")
+    partial_profit_levels: str = Field(
+        default="1.0:0.25",
+        alias="PARTIAL_PROFIT_LEVELS",
+        description="Niveaux trigger_r:fraction séparés par des virgules",
+    )
+    enable_runner: bool = Field(default=True, alias="RUNNER_ENABLED")
+    runner_tp_enabled: bool = Field(
+        default=False, alias="RUNNER_TP_ENABLED",
+        description="TP optionnel du runner (sinon sortie SL/structurelle uniquement)",
+    )
+    runner_tp_r: float = Field(default=3.0, alias="RUNNER_TP_R", ge=0.1)
+    runner_exit_on_structure_break: bool = Field(
+        default=True, alias="RUNNER_EXIT_ON_STRUCTURE_BREAK"
+    )
+    enable_structure_trailing: bool = Field(default=True, alias="STRUCTURE_TRAILING_ENABLED")
+    structure_trailing_buffer_atr: float = Field(
+        default=0.2, alias="STRUCTURE_TRAILING_BUFFER_ATR", ge=0.0
+    )
+    min_sl_update_r: float = Field(
+        default=0.05, alias="MIN_SL_UPDATE_DISTANCE_R", ge=0.0,
+        description="Amélioration minimale du SL (en fraction de R) pour justifier un modify",
+    )
+    never_lower_sl: bool = Field(default=True, alias="NEVER_LOWER_SL")
+    state_directory: str = Field(
+        default="data/position_states", alias="POSITION_STATE_DIRECTORY"
+    )
+
+    # --- Legacy (rétro-compatibilité, actif si PROFIT_LOCK_ENABLED=false) -----
     enable_break_even: bool = Field(default=True, alias="ENABLE_BREAK_EVEN")
     enable_partial_tp: bool = Field(default=True, alias="ENABLE_PARTIAL_TP")
     enable_trailing_stop: bool = Field(default=True, alias="ENABLE_TRAILING_STOP")
@@ -218,6 +266,28 @@ class PositionSettings(BaseSettings):
     partial_close_percent: float = Field(default=0.4, alias="PARTIAL_CLOSE_PERCENT", gt=0, le=1)
     trailing_at_r: float = Field(default=1.5, alias="TRAILING_AT_R", ge=0.1)
     trailing_distance_r: float = Field(default=1.0, alias="TRAILING_DISTANCE_R", ge=0.1)
+
+    @staticmethod
+    def _parse_levels(raw: str) -> list[tuple[float, float]]:
+        """Parse une chaîne ``"a:b,c:d"`` en liste de couples (a, b)."""
+        levels: list[tuple[float, float]] = []
+        for chunk in raw.split(","):
+            chunk = chunk.strip()
+            if not chunk:
+                continue
+            left, _, right = chunk.partition(":")
+            levels.append((float(left), float(right)))
+        return levels
+
+    @property
+    def profit_lock_level_list(self) -> list[tuple[float, float]]:
+        """Paliers de profit lock parsés et triés par déclencheur croissant."""
+        return sorted(self._parse_levels(self.profit_lock_levels))
+
+    @property
+    def partial_profit_level_list(self) -> list[tuple[float, float]]:
+        """Niveaux de partial profit parsés et triés par déclencheur croissant."""
+        return sorted(self._parse_levels(self.partial_profit_levels))
 
 
 class NewsSettings(BaseSettings):

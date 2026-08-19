@@ -47,6 +47,7 @@ from arty_trading.application.execution_guards import (
 )
 from arty_trading.application.market_context_builder import MarketContextBuilder
 from arty_trading.application.position_monitor import PositionMonitor
+from arty_trading.application.position_state_store import PositionStateStore
 from arty_trading.application.statistics import TradingStatistics
 from arty_trading.application.trade_decision_debugger import TradeDecisionDebugger
 from arty_trading.application.trade_decision_diagnostic import (
@@ -73,10 +74,13 @@ from arty_trading.modules.execution import (
     PaperOrderExecutor,
     PositionManager,
 )
+from arty_trading.modules.execution.sl_guard import StructureContext
 from arty_trading.modules.risk import RiskManager
 from arty_trading.modules.signals import SignalGenerator
 from arty_trading.modules.signals.news import EconomicCalendar
 from arty_trading.modules.smc import SetupState, SetupTracker
+from arty_trading.modules.smc.base import find_swing_points
+from arty_trading.utils.helpers import calculate_atr
 from arty_trading.modules.smc.premium_discount import premium_discount_diagnostic
 from arty_trading.utils.helpers import retest_still_valid_detailed
 
@@ -200,6 +204,15 @@ class TradingEngine:
             else None
         )
         self._managed_trades: dict[str, Trade] = {}
+        # Persistance durable de l'état de gestion (reprise après redémarrage) :
+        # le SL MT5 courant n'est jamais considéré comme le SL initial.
+        self._position_state_store = (
+            PositionStateStore(position_settings.state_directory)
+            if self._position_manager is not None
+            else None
+        )
+        # Cache des snapshots de structure (mis à jour par bougie uniquement).
+        self._structure_cache: dict[str, tuple[Any, StructureContext]] = {}
         news_settings = getattr(settings, "news", None)
         self._economic_calendar = (
             EconomicCalendar(news_settings)
@@ -221,6 +234,8 @@ class TradingEngine:
             journal=self._journal,
             notify_critical=self._notify_critical,
             notify_trade_closed=self._notify_trade_closed,
+            structure_provider=self._build_structure_context,
+            state_store=self._position_state_store,
         )
         from arty_trading.modules.smc import SetupTracker
 
@@ -1275,7 +1290,12 @@ class TradingEngine:
         if self._position_manager is not None:
             self._position_manager.register(trade)
             self._managed_trades[str(trade.id)] = trade
-
+            if self._position_state_store is not None:
+                snapshot = self._position_manager.snapshot(trade)
+                if snapshot is not None:
+                    self._position_state_store.save(
+                        trade.ticket if trade.ticket else str(trade.id), snapshot
+                    )
         logger.info(
             "Trade enregistré pour monitoring | %s | ticket=%s | volume=%s | direction=%s",
             symbol,
@@ -1283,6 +1303,51 @@ class TradingEngine:
             trade.volume,
             trade.direction.value,
         )
+
+    async def _build_structure_context(self, symbol: str) -> StructureContext | None:
+        """Snapshot de structure confirmée pour le suivi (cache par bougie).
+
+        La structure (HL/LH, breaks) est calculée sur les bougies **fermées**
+        uniquement et mise à jour **par bougie**, jamais sur tick — aucun
+        look-ahead bias possible. Les swings fractals sont confirmés par
+        construction (fenêtre de chaque côté du pivot).
+        """
+        cached = self._structure_cache.get(symbol)
+        candles = None
+        try:
+            candles = await self._market_data.get_latest_candles(symbol, self._timeframe, 60)
+        except Exception as exc:  # noqa: BLE001 - provider indisponible
+            logger.debug("Structure trailing indisponible | %s | %s", symbol, exc)
+            return cached[1] if cached is not None else None
+        if not candles:
+            return cached[1] if cached is not None else None
+
+        latest_time = max(c.time for c in candles)
+        if cached is not None and cached[0] == latest_time:
+            return cached[1]  # pas de nouvelle bougie : snapshot inchangé
+
+        last_close = candles[-1].close
+        swings = find_swing_points(candles, window=2)
+        swing_lows = [s for s in swings if s.type == "low"]
+        swing_highs = [s for s in swings if s.type == "high"]
+        last_low = swing_lows[-1].price if swing_lows else None
+        last_high = swing_highs[-1].price if swing_highs else None
+        try:
+            atr = calculate_atr(candles, period=14)
+        except Exception:  # noqa: BLE001
+            atr = None
+
+        context = StructureContext(
+            swing_low=last_low,
+            swing_high=last_high,
+            hl=last_low,
+            lh=last_high,
+            atr=atr,
+            bearish_break=bool(last_low is not None and last_close < last_low),
+            bullish_break=bool(last_high is not None and last_close > last_high),
+        )
+        self._structure_cache[symbol] = (latest_time, context)
+        return context
 
     async def _monitor_open_positions(self) -> None:
         """Applique les règles de position aux ticks disponibles du provider.
@@ -1376,7 +1441,31 @@ class TradingEngine:
             if isinstance(self._risk_manager, RiskManager):
                 self._risk_manager.register_trade(trade)
             if self._position_manager is not None:
-                self._position_manager.register(trade)
+                restored = None
+                if self._position_state_store is not None and trade.ticket is not None:
+                    restored = self._position_state_store.load(trade.ticket)
+                if restored is not None:
+                    # État persisté : R initial et paliers restaurés sans
+                    # recalcul — aucun faux R après redémarrage.
+                    self._position_manager.register(trade, restored=restored)
+                    logger.info(
+                        "[POSITION STATE] %s | ticket=%s | initial_risk=%s | "
+                        "profit_lock_level=%s | partials=%s | runner=%s | source=PERSISTED",
+                        trade.symbol, trade.ticket, restored.get("initial_risk"),
+                        restored.get("profit_lock_level"),
+                        restored.get("partial_levels_done"),
+                        restored.get("runner_active"),
+                    )
+                else:
+                    # Fallback dégradé : le SL courant sert de SL initial
+                    # (risque potentiellement sous-estimé si le SL a déjà bougé).
+                    logger.warning(
+                        "[POSITION STATE] %s | ticket=%s | état persisté ABSENT | "
+                        "fallback DÉGRADÉ : SL courant (%s) utilisé comme SL initial | "
+                        "le R initial peut être erroné si le SL avait déjà été déplacé",
+                        trade.symbol, trade.ticket, trade.stop_loss,
+                    )
+                    self._position_manager.register(trade)
                 self._managed_trades[str(trade.id)] = trade
             logger.info(
                 "Position réconciliée | %s | ticket=%s | volume=%s | entrée=%s",

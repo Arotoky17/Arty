@@ -14,7 +14,9 @@ from arty_trading.core.entities import Candle, Signal, Trade
 from arty_trading.core.enums import Direction, LogCategory, TimeFrame
 from arty_trading.logging.logger import get_logger
 from arty_trading.modules.backtesting.stats import BacktestStats, calculate_stats
-from arty_trading.utils.helpers import get_pip_size, pip_value
+from arty_trading.modules.execution.sl_guard import StructureContext
+from arty_trading.modules.smc.base import find_swing_points
+from arty_trading.utils.helpers import calculate_atr, get_pip_size, pip_value
 
 logger = get_logger(LogCategory.BACKTEST)
 
@@ -26,6 +28,11 @@ class BacktestEngine:
     Simule l'exécution d'une stratégie sur des données historiques.
     Parcourt les bougies une par une, génère des signaux, ouvre/ferme
     des trades virtuels, et calcule les statistiques de performance.
+
+    Un ``PositionManager`` optionnel peut être injecté pour simuler le
+    position management réel (Profit Lock, Partial, Runner, Structure
+    Trailing) — évalué sur la clôture de la bougie **précédente** et la
+    structure confirmée des bougies **passées**, sans look-ahead bias.
     """
 
     def __init__(
@@ -33,6 +40,7 @@ class BacktestEngine:
         initial_balance: Decimal = Decimal("10000"),
         risk_per_trade: float = 0.01,
         symbol: str = "EURUSD",
+        position_manager: object | None = None,
     ) -> None:
         self._initial_balance = initial_balance
         self._risk_per_trade = risk_per_trade
@@ -43,6 +51,7 @@ class BacktestEngine:
         self._open_trades: list[Trade] = []
         self._equity_curve: list[Decimal] = [initial_balance]
         self._ticket_counter = 1
+        self._position_manager = position_manager
 
     @property
     def balance(self) -> Decimal:
@@ -74,6 +83,7 @@ class BacktestEngine:
             return calculate_stats([], self._equity_curve, self._initial_balance)
 
         for i, candle in enumerate(candles):
+            self._apply_position_management(i, candles)
             self._check_open_trades(candle)
 
             if signal_generator and smc_detector and i >= 20:
@@ -103,6 +113,8 @@ class BacktestEngine:
             last_candle = candles[-1]
             for trade in list(self._open_trades):
                 self._close_trade(trade, last_candle.close)
+                if self._position_manager is not None:
+                    self._position_manager.forget(trade)
 
         return calculate_stats(self._trades, self._equity_curve, self._initial_balance)
 
@@ -150,6 +162,83 @@ class BacktestEngine:
         self._ticket_counter += 1
         self._open_trades.append(trade)
         self._trades.append(trade)
+        if self._position_manager is not None:
+            self._position_manager.register(trade)
+
+    # ------------------------------------------------------------------
+    # Position management (Profit Lock / Partial / Runner / Structure)
+    # ------------------------------------------------------------------
+
+    def _apply_position_management(self, i: int, candles: list[Candle]) -> None:
+        """Applique les règles de gestion sur la clôture de la bougie précédente.
+
+        Anti look-ahead : la décision utilise ``candles[i-1].close`` et une
+        structure construite sur ``candles[:i]`` uniquement (swings fractaux
+        confirmés par construction). Aucune donnée de la bougie courante.
+        """
+        if self._position_manager is None or i < 1 or not self._open_trades:
+            return
+        price = candles[i - 1].close
+        structure = self._build_structure(candles[:i])
+        for trade in list(self._open_trades):
+            actions = self._position_manager.evaluate(trade, price, structure)
+            for action in actions:
+                if action.kind == "modify" and action.stop_loss is not None:
+                    trade.stop_loss = action.stop_loss
+                    self._position_manager.confirm(trade, action)  # exécution OK
+                elif action.kind == "close":
+                    self._close_trade(trade, price)
+                    if self._position_manager is not None:
+                        self._position_manager.forget(trade)
+                    break
+                elif action.kind == "partial_close" and action.close_fraction is not None:
+                    self._close_partial(trade, action.close_fraction, price)
+                    self._position_manager.confirm(trade, action)  # exécution OK
+
+    @staticmethod
+    def _build_structure(past_candles: list[Candle]) -> StructureContext:
+        """Snapshot de structure confirmée sur bougies passées uniquement."""
+        if not past_candles:
+            return StructureContext()
+        last_close = past_candles[-1].close
+        swings = find_swing_points(past_candles, window=2)
+        lows = [s.price for s in swings if s.type == "low"]
+        highs = [s.price for s in swings if s.type == "high"]
+        last_low = lows[-1] if lows else None
+        last_high = highs[-1] if highs else None
+        try:
+            atr = calculate_atr(past_candles, period=14)
+        except Exception:  # noqa: BLE001
+            atr = None
+        return StructureContext(
+            swing_low=last_low,
+            swing_high=last_high,
+            hl=last_low,
+            lh=last_high,
+            atr=atr,
+            bearish_break=bool(last_low is not None and last_close < last_low),
+            bullish_break=bool(last_high is not None and last_close > last_high),
+        )
+
+    def _close_partial(self, trade: Trade, fraction: Decimal, price: Decimal) -> None:
+        """Clôture partielle en backtest : enregistre la portion réalisée."""
+        closed_volume = (trade.volume * fraction).quantize(Decimal("0.01"))
+        if closed_volume <= 0 or closed_volume >= trade.volume:
+            self._close_trade(trade, price)
+            return
+        partial = trade.model_copy(update={"volume": closed_volume})
+        pip_size = float(get_pip_size(self._symbol))
+        if trade.direction == Direction.BUY:
+            pips = (float(price) - float(trade.entry_price)) / pip_size
+        else:
+            pips = (float(trade.entry_price) - float(price)) / pip_size
+        pip_val = pip_value(self._symbol, lot_size=1.0)
+        partial.close_price = price
+        partial.profit = Decimal(str(pips * pip_val * float(closed_volume)))
+        partial.is_open = False
+        self._balance += partial.profit
+        trade.volume -= closed_volume
+        self._trades.append(partial)
 
     def _check_open_trades(self, candle: Candle) -> None:
         for trade in list(self._open_trades):

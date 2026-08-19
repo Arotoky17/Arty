@@ -137,6 +137,7 @@ class TradingEngine:
         candle_count: int = 100,
         notifier: Any | None = None,
         decision_debugger: TradeDecisionDebugger | None = None,
+        setup_tracker: Any | None = None,
     ) -> None:
         """
         Initialise le moteur de trading.
@@ -156,6 +157,7 @@ class TradingEngine:
                 journalier). Optionnel — désactivé si None.
             decision_debugger: Debugger de décision de trading pour l'observabilité.
                 Optionnel — désactivé si None.
+            setup_tracker: Tracker de setups SMC. Si None, un nouveau est créé.
         """
         self._settings = settings
         self._market_data = market_data
@@ -220,7 +222,9 @@ class TradingEngine:
             notify_critical=self._notify_critical,
             notify_trade_closed=self._notify_trade_closed,
         )
-        self._setup_tracker = SetupTracker()
+        from arty_trading.modules.smc import SetupTracker
+
+        self._setup_tracker = setup_tracker if setup_tracker is not None else SetupTracker()
         # Observabilité : le debugger est notifié à chaque création de setup
         # (exposition de l'événement, sans modifier les règles du tracker).
         self._setup_tracker.set_on_setup_created(self._on_setup_created)
@@ -975,15 +979,23 @@ class TradingEngine:
 
         - Expire les setups anciens
         - Crée de nouveaux setups sur zones valides
+        - Évalue les setups actifs (distance, tendance, structure)
         - Détecte les setups dupliqués
         """
         tracker = self._setup_tracker
         tracker.expire_old_setups(symbol)
 
-        # --- Créer des setups à partir des zones SMC détectées ---
+        # --- Récupérer les paramètres de marché ---
         smc_data: list[dict[str, Any]] = getattr(market_context, "ltf_smc_data", []) or []
         htf_trend: str = getattr(market_context, "master_trend", "neutral")
+        ltf_candles: list[Candle] = getattr(market_context, "ltf_candles", []) or []
+        atr = float(getattr(market_context, "atr", 0))
+        profile = self._settings.get_instrument_profile(symbol)
+        max_distance_atr_mult = profile.retest_atr_mult if profile else 1.0
+        max_zone_age_bars = profile.max_zone_age_bars if profile else 20
+        current_price = float(ltf_candles[-1].close) if ltf_candles else None
 
+        # --- Créer des setups à partir des zones SMC détectées ---
         for detection in smc_data:
             concept = detection.get("concept", "")
             direction_str = detection.get("direction", "")
@@ -1022,7 +1034,7 @@ class TradingEngine:
             if tracker.is_duplicate(symbol, direction_enum, concept, zone_index):
                 continue
 
-            # Créer le setup
+            # Créer le setup avec les données de marché
             setup = tracker.create_setup(
                 symbol=symbol,
                 direction=direction_enum,
@@ -1031,11 +1043,33 @@ class TradingEngine:
                 zone_price=zone_price,
                 zone_high=float(zone_top),
                 zone_low=float(zone_bottom),
+                atr=atr,
+                htf_trend=htf_trend,
+                ttl_bars=max_zone_age_bars,
             )
             if setup is not None:
                 logger.info(
-                    "SETUP CREATED | %s | dir=%s concept=%s idx=%d id=%s",
-                    symbol, direction_str, concept, zone_index, setup.setup_id,
+                    "[SETUP DETECTED] %s | %s | zone=%.5f-%.5f | concept=%s idx=%d id=%s | trend=%s atr=%.6f",
+                    symbol, direction_str, float(zone_bottom), float(zone_top),
+                    concept, zone_index, setup.setup_id, htf_trend, atr,
+                )
+
+        # --- Évaluer les setups actifs (transitions de state machine) ---
+        if ltf_candles:
+            transitions = tracker.evaluate(
+                symbol=symbol,
+                candles=ltf_candles,
+                smc_data=smc_data,
+                htf_trend=htf_trend,
+                atr=atr,
+                max_distance_atr_mult=max_distance_atr_mult,
+                max_zone_age_bars=max_zone_age_bars,
+                current_price=current_price,
+            )
+            for t in transitions:
+                logger.info(
+                    "[SETUP TRANSITION] %s | %s | %s → %s | reason=%s",
+                    symbol, t.setup_id, t.state.value, t.state.value, "",
                 )
 
         active = tracker.get_active_setups(symbol)
@@ -1044,7 +1078,7 @@ class TradingEngine:
             symbol,
             len(active),
             sum(1 for s in tracker._setups.get(symbol.upper(), [])
-                if s.state in (SetupState.CONSUMED, SetupState.SETUP_EXPIRED, SetupState.INVALID)),
+                if s.state in (SetupState.CONSUMED, SetupState.SETUP_EXPIRED, SetupState.INVALIDATED)),
         )
 
     async def _revalidate_before_execution(

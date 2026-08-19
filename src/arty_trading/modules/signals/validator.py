@@ -96,6 +96,20 @@ CONFLUENCE_CONDITIONS: tuple[str, ...] = (
 # Nombre de confluences dont la validation est nécessaire par défaut.
 DEFAULT_MIN_CONFLUENCE_COUNT = 2
 
+# Politique de sessions par défaut : TOUTES les sessions détectées sont
+# autorisées (Asia, London, New York + overlap). Le bot peut donc trader
+# pendant n'importe quelle session Forex.
+# - Une session DÉTECTÉE est AUTORISÉE par défaut.
+# - Une session INCONNUE (non détectée) est NEUTRE (pas de rejet).
+# - Une session explicitement désactivée via ``authorized_sessions`` (liste
+#   restreinte passée au constructeur) provoque toujours un HARD REJECT.
+DEFAULT_AUTHORIZED_SESSIONS: tuple[TradingSession, ...] = (
+    TradingSession.ASIA,
+    TradingSession.LONDON,
+    TradingSession.NEW_YORK,
+    TradingSession.OVERLAP_LONDON_NY,
+)
+
 
 # =============================================================================
 # Résultat de validation
@@ -199,8 +213,9 @@ class SignalValidator:
         Args:
             min_risk_reward: Ratio risque/rendement minimum (défaut 1.5)
             max_spread: Spread maximum autorisé en points (défaut 20)
-            authorized_sessions: Sessions autorisées (défaut: London + New York
-                + overlap). Si None, utilise les sessions par défaut.
+            authorized_sessions: Sessions autorisées (défaut: TOUTES les
+                sessions Forex — Asia, London, New York + overlap). Passer une
+                liste restreinte pour désactiver explicitement des sessions.
             require_htf_alignment: Vérifier l'alignement de la tendance HTF
             require_news_filter: Vérifier le filtre de news
             session_detector: Détecteur de sessions (créé par défaut si None)
@@ -217,11 +232,9 @@ class SignalValidator:
             )
         self._min_rr = min_risk_reward
         self._max_spread = max_spread
-        self._authorized_sessions = authorized_sessions or [
-            TradingSession.LONDON,
-            TradingSession.NEW_YORK,
-            TradingSession.OVERLAP_LONDON_NY,
-        ]
+        self._authorized_sessions = authorized_sessions or list(
+            DEFAULT_AUTHORIZED_SESSIONS
+        )
         self._require_htf_alignment = require_htf_alignment
         self._require_news_filter = require_news_filter
         self._session_detector = session_detector or SessionDetector()
@@ -726,16 +739,27 @@ class SignalValidator:
         return False, f"Prix en zone {current_zone} (vente nécessite premium)"
 
     def _check_session(self, candles: list[Candle]) -> tuple[bool, str]:
-        """Vérifie que l'heure actuelle tombe dans une session autorisée."""
+        """Vérifie que l'heure actuelle tombe dans une session autorisée.
+
+        Si aucune session n'est détectée (heure dans un trou horaire ou
+        détecteur incapable de déterminer la session), la condition est
+        considérée comme NEUTRE et n'empêche pas le trade.
+        Seule une session explicitement détectée et non autorisée rejette
+        le signal (HARD).
+        """
         if not candles:
-            return False, "Aucune bougie pour vérifier la session"
+            return True, (
+                "Aucune bougie pour vérifier la session | "
+                "session_filter=NEUTRAL | continuing validation"
+            )
 
         last_candle = candles[-1]
         session = self._session_detector.get_session_for_time(last_candle.time)
 
         if session is None:
-            return False, (
-                f"Aucune session active (heure={last_candle.time.isoformat()})"
+            return True, (
+                f"SESSION NOT DETECTED | heure={last_candle.time.isoformat()} | "
+                "session_filter=NEUTRAL | continuing validation"
             )
 
         if session.session in self._authorized_sessions:

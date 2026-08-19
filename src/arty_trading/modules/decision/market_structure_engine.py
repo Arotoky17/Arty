@@ -93,6 +93,7 @@ class MarketStructureAnalysis:
 
     structure_age: int = 0
     structure_valid: bool = False
+    structure_bias: str = "neutral"
 
     no_trade_reasons: list[str] = field(default_factory=list)
 
@@ -133,6 +134,7 @@ class MarketStructureAnalysis:
             "trend": self.trend,
             "trend_score": round(self.trend_score, 1),
             "confidence": round(self.confidence, 3),
+            "structure_bias": self.structure_bias,
             "hh": float(self.hh) if self.hh else None,
             "hl": float(self.hl) if self.hl else None,
             "lh": float(self.lh) if self.lh else None,
@@ -210,6 +212,7 @@ class MarketStructureEngine:
             trend=direction,
             trend_score=score,
             confidence=confidence,
+            structure_bias=structure["structure_bias"],
             hh=structure["hh"],
             hl=structure["hl"],
             lh=structure["lh"],
@@ -302,6 +305,14 @@ class MarketStructureEngine:
             or (hl is not None or ll is not None)
         )
 
+        # Biais structurel : bullish si HH+HL, bearish si LH+LL, sinon neutral.
+        if hh is not None and hl is not None:
+            structure_bias = "bullish"
+        elif lh is not None and ll is not None:
+            structure_bias = "bearish"
+        else:
+            structure_bias = "neutral"
+
         return {
             "hh": hh,
             "hl": hl,
@@ -315,6 +326,7 @@ class MarketStructureEngine:
             "structure_age": structure_age,
             "valid": valid,
             "directional": directional,
+            "structure_bias": structure_bias,
             "evidence": self._evidence(candles, detections, hh, hl, lh, ll),
         }
     def _evidence(
@@ -397,13 +409,23 @@ class MarketStructureEngine:
         counter = [
             d for d in recent if d.concept in (SMCConcept.CHOCH, SMCConcept.MSS)
         ]
-        if counter:
-            return (
-                MarketRegime.TRANSITION,
-                score,
-                0.4,
-                f"Bascule de structure (CHoCH/MSS {counter[-1].direction}) non confirmée → TRANSITION / NO TRADE",
+
+        structure_bias = structure.get("structure_bias", "neutral")
+        if counter and structure_bias != "neutral":
+            opposite_direction = (
+                "bearish" if structure_bias == "bullish" else "bullish"
             )
+            has_opposite = any(d.direction == opposite_direction for d in counter)
+            if has_opposite:
+                return (
+                    MarketRegime.TRANSITION,
+                    score,
+                    0.4,
+                    f"Bascule de structure (CHoCH/MSS {opposite_direction}) opposée au "
+                    f"biais {structure_bias} → TRANSITION / NO TRADE",
+                )
+            # CHoCH/MSS dans le même sens que le biais structurel = confirmation
+            # On continue vers la classification par score.
 
         if score >= self._settings.strong_bullish:
             return (
@@ -486,6 +508,7 @@ class MarketStructureEngine:
         return MarketStructureAnalysis(
             regime=MarketRegime.RANGE,
             trend="neutral",
+            structure_bias="neutral",
             no_trade_reasons=[NoTradeReason.NO_STRUCTURE.value],
             justification=f"Données insuffisantes ({reason}) → RANGE / NO TRADE",
             structure_valid=False,

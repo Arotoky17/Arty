@@ -34,7 +34,7 @@ from arty_trading.modules.decision import DecisionEngine
 from arty_trading.modules.execution import OrderExecutor, PaperOrderExecutor
 from arty_trading.modules.risk import RiskManager
 from arty_trading.modules.signals import SignalGenerator, SignalValidator
-from arty_trading.modules.smc import SMCDetector
+from arty_trading.modules.smc import SMCDetector, SetupTracker
 
 logger = get_logger(LogCategory.SYSTEM)
 
@@ -93,6 +93,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         mt5_connector=mt5_connector,
         notifier=notifier,
         decision_debugger=decision_debugger,
+        setup_tracker=app.state.signal_generator._setup_tracker,
     )
     app.state.trading_engine = trading_engine
     app.state.decision_debugger = decision_debugger
@@ -161,6 +162,7 @@ def create_app() -> FastAPI:
         active_strategy=settings.signals.active_strategy,
         decision_engine=DecisionEngine(settings.decision) if settings.decision.enabled else None,
         validator=_signal_validator,
+        setup_tracker=SetupTracker(),
     )
     app.state.signal_validator = _signal_validator
     logger.info(

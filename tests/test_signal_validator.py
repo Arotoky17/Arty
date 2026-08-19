@@ -554,15 +554,15 @@ class TestFullValidation:
         assert result.confluence_score == 0.0
 
     def test_empty_candles(self):
-        """Bougies vides → session échoue."""
+        """Bougies vides → session neutre, le signal peut être accepté si les autres conditions sont valides."""
         validator = SignalValidator(min_risk_reward=1.5, max_spread=20)
         signal = make_buy_signal(rr=2.0)
         smc_data = make_full_bullish_smc_data()
 
         result = validator.validate(signal, [], smc_data)
 
-        assert result.is_valid is False
-        assert COND_SESSION in result.failed_conditions
+        assert COND_SESSION not in result.failed_conditions
+        assert result.checked_conditions[COND_SESSION] is True
 
     def test_spread_from_param(self):
         """Le spread peut être passé en paramètre."""
@@ -612,8 +612,13 @@ class TestSessionCheck:
 
         assert COND_SESSION not in result.failed_conditions
 
-    def test_asia_session_not_authorized(self):
-        """Bougies à 02:xx UTC = session asiatique → non autorisée par défaut."""
+    def test_asia_session_authorized_by_default(self):
+        """Bougies à 02:xx UTC = session asiatique → AUTORISÉE par défaut.
+
+        Politique par défaut : toutes les sessions Forex (Asia, London,
+        New York + overlap) sont autorisées. La session Asia ne doit plus
+        provoquer de rejet HARD.
+        """
         validator = SignalValidator(min_risk_reward=1.5, max_spread=20)
         signal = make_buy_signal(rr=2.0)
         # Créer des bougies à 02:xx UTC (session asiatique)
@@ -634,8 +639,11 @@ class TestSessionCheck:
 
         result = validator.validate(signal, candles, smc_data)
 
-        assert result.is_valid is False
-        assert COND_SESSION in result.failed_conditions
+        # La session ne doit plus bloquer le trade
+        assert COND_SESSION not in result.failed_conditions
+        assert result.checked_conditions[COND_SESSION] is True
+        # Le trade n'est pas rejeté pour raison de session
+        assert "Session non autorisée" not in str(result.explanation)
 
     def test_asia_session_authorized_when_configured(self):
         """Session asiatique autorisée si configurée."""
@@ -663,6 +671,203 @@ class TestSessionCheck:
         result = validator.validate(signal, candles, smc_data)
 
         assert COND_SESSION not in result.failed_conditions
+
+    def test_full_pipeline_bullish_with_unknown_session(self):
+        """Pipeline complet : H4/H1 bullish, M5 bullish, bullish CHoCH, session=None → BUY accepté."""
+        validator = SignalValidator(min_risk_reward=1.5, max_spread=20)
+        signal = make_buy_signal(rr=2.0)
+        candles = []
+        smc_data = [
+            {"concept": "break_of_structure", "direction": "bullish", "price": 1.0820, "index": 5, "details": {}},
+            {"concept": "change_of_character", "direction": "bullish", "price": 1.0820, "index": 6, "details": {}},
+            {"concept": "fair_value_gap", "direction": "bullish", "price": 1.0810, "index": 7, "details": {"gap_size": 0.0005, "gap_top": 1.0815, "gap_bottom": 1.0805}},
+            {"concept": "order_block", "direction": "bullish", "price": 1.0795, "index": 4, "details": {"mitigation_count": 0, "ob_top": 1.0800, "ob_bottom": 1.0790}},
+            {"concept": "liquidity_sweep", "direction": "bullish", "price": 1.0790, "index": 8, "details": {"type": "buy_side_liquidity_grab"}},
+            {"concept": "premium_discount", "direction": "neutral", "price": 1.0810, "index": 9, "details": {"current_zone": "discount"}},
+        ]
+
+        result = validator.validate(
+            signal, candles, smc_data, htf_trend="bullish"
+        )
+
+        assert result.is_valid is True
+        assert result.checked_conditions[COND_SESSION] is True
+        assert COND_SESSION not in result.failed_conditions
+        assert "VALIDÉ" in result.explanation
+
+    def test_full_pipeline_bearish_choch_blocks_buy(self):
+        """H1 bullish + bearish CHoCH → TRANSITION, BUY bloqué."""
+        validator = SignalValidator(min_risk_reward=1.5, max_spread=20)
+        signal = make_buy_signal(rr=2.0)
+        candles = make_candles(20, spread=3)
+        smc_data = make_full_bullish_smc_data()
+        smc_data.append({
+            "concept": "change_of_character",
+            "direction": "bearish",
+            "price": 1.0790,
+            "index": 9,
+            "details": {},
+        })
+
+        result = validator.validate(signal, candles, smc_data, htf_trend="bullish")
+
+        assert result.is_valid is False
+        assert COND_CHOCH in result.failed_conditions
+
+    def test_session_none_does_not_reject_valid_signal(self):
+        """session=None (données vides) → NEUTRAL, signal accepté si valide."""
+        validator = SignalValidator(min_risk_reward=1.5, max_spread=20)
+        signal = make_buy_signal(rr=2.0)
+        smc_data = make_full_bullish_smc_data()
+
+        result = validator.validate(signal, [], smc_data)
+
+        assert COND_SESSION not in result.failed_conditions
+        assert result.checked_conditions[COND_SESSION] is True
+
+    def test_explicitly_forbidden_session_rejects(self):
+        """Session détectée mais explicitement interdite → REJECT."""
+        validator = SignalValidator(
+            min_risk_reward=1.5,
+            max_spread=20,
+            authorized_sessions=[TradingSession.LONDON],
+        )
+        signal = make_buy_signal(rr=2.0)
+        candles = []
+        for i in range(20):
+            candles.append(Candle(
+                symbol="EURUSD",
+                timeframe=TimeFrame.H1,
+                time=datetime(2024, 1, 1, 14, i, tzinfo=timezone.utc),
+                open=Decimal("1.0800"),
+                high=Decimal("1.0810"),
+                low=Decimal("1.0790"),
+                close=Decimal("1.0805"),
+                volume=100,
+                spread=3,
+            ))
+        smc_data = make_full_bullish_smc_data()
+
+        result = validator.validate(signal, candles, smc_data)
+
+        assert result.is_valid is False
+        assert COND_SESSION in result.failed_conditions
+
+
+class TestSessionDefaultPolicy:
+    """Politique de sessions par défaut : toutes les sessions autorisées.
+
+    - Session détectée (asia / london / new_york) → AUTORISÉE
+    - Session inconnue (None) → NEUTRE (pas de hard failure)
+    - Session explicitement désactivée → HARD REJECT
+    """
+
+    def _candles_at_hour(self, hour: int, symbol: str = "EURUSD"):
+        """Bougies XAUUSD/EURUSD à `hour`:xx UTC."""
+        candles = []
+        for i in range(20):
+            candles.append(Candle(
+                symbol=symbol,
+                timeframe=TimeFrame.H1,
+                time=datetime(2024, 1, 1, hour, i, tzinfo=timezone.utc),
+                open=Decimal("1.0800"),
+                high=Decimal("1.0810"),
+                low=Decimal("1.0790"),
+                close=Decimal("1.0805"),
+                volume=100,
+                spread=3,
+            ))
+        return candles
+
+    def test_asia_session_authorized(self):
+        """session=asian → session_authorized=True (par défaut)."""
+        validator = SignalValidator(min_risk_reward=1.5, max_spread=20)
+        ok, detail = validator._check_session(self._candles_at_hour(2))
+        assert ok is True
+        assert "Session non autorisée" not in detail
+
+    def test_london_session_authorized(self):
+        """session=london → session_authorized=True (par défaut)."""
+        validator = SignalValidator(min_risk_reward=1.5, max_spread=20)
+        ok, detail = validator._check_session(self._candles_at_hour(8))
+        assert ok is True
+        assert "Session non autorisée" not in detail
+
+    def test_new_york_session_authorized(self):
+        """session=new_york → session_authorized=True (par défaut)."""
+        validator = SignalValidator(min_risk_reward=1.5, max_spread=20)
+        ok, detail = validator._check_session(self._candles_at_hour(14))
+        assert ok is True
+        assert "Session non autorisée" not in detail
+
+    def test_unknown_session_is_neutral(self):
+        """session=None (session inconnue) → NEUTRAL, pas de hard failure."""
+        validator = SignalValidator(min_risk_reward=1.5, max_spread=20)
+        ok, detail = validator._check_session(self._candles_at_hour(10))
+        # 10:xx UTC n'est couvert par aucune fenêtre configurée ici :
+        # soit la session n'est pas détectée (NEUTRAL), soit elle est
+        # autorisée — dans les deux cas pas de rejet.
+        assert ok is True
+        assert "Session non autorisée" not in detail
+
+    def test_empty_candles_session_is_neutral(self):
+        """Aucune bougie → NEUTRAL, pas de rejet."""
+        validator = SignalValidator(min_risk_reward=1.5, max_spread=20)
+        ok, detail = validator._check_session([])
+        assert ok is True
+        assert "NEUTRAL" in detail
+
+    def test_disabled_session_hard_reject(self):
+        """Session explicitement désactivée → HARD REJECT conservé."""
+        validator = SignalValidator(
+            min_risk_reward=1.5,
+            max_spread=20,
+            authorized_sessions=[TradingSession.LONDON, TradingSession.NEW_YORK],
+        )
+        # 02:xx UTC = session Asia explicitement désactivée
+        ok, detail = validator._check_session(self._candles_at_hour(2))
+        assert ok is False
+        assert "Session non autorisée" in detail
+
+    def test_xauusd_sell_asian_session_passes_session_filter(self):
+        """Scénario réel : XAUUSD SELL, H1 bearish, session=asian.
+
+        Le filtre de session doit PASSER (session_authorized=True).
+        Les autres conditions (bos_valid, order_block_valid,
+        premium_discount_correct) conservent leur logique inchangée.
+        """
+        validator = SignalValidator(min_risk_reward=1.5, max_spread=200)
+        # Signal SELL XAUUSD, confiance 1.00, RR 2.00 (comme dans le log)
+        entry = Decimal("2300.00")
+        risk = Decimal("2.00")
+        signal = Signal(
+            symbol="XAUUSD",
+            signal_type=SignalType.SELL,
+            direction=Direction.SELL,
+            entry_price=entry,
+            stop_loss=entry + risk,
+            take_profit=entry - risk * 2,
+            confidence=1.0,
+            strategy_name="SMC Trend Following",
+            timeframe=TimeFrame.H1,
+            justification="Test XAUUSD SELL asian",
+        )
+        # Bougies XAUUSD à 02:xx UTC = session Asia (17:00→07:00)
+        candles = self._candles_at_hour(2, symbol="XAUUSD")
+        # Données SMC bearish : bos/ob/premium_discount absents (soft failures
+        # dans le log réel), avec un CHoCH bearish pour rester cohérent.
+        smc_data = [
+            {"concept": "change_of_character", "direction": "bearish",
+             "price": 1.0790, "index": 6, "details": {}},
+        ]
+
+        result = validator.validate(signal, candles, smc_data, htf_trend="bearish")
+
+        # Le filtre de session passe : plus de rejet lié à Asia
+        assert COND_SESSION not in result.failed_conditions
+        assert result.checked_conditions[COND_SESSION] is True
+        # Aucun hard failure ne doit provenir de la session
+        assert result.details.get(COND_SESSION, "") != "Session non autorisée (asian)"
 
 
 # =============================================================================

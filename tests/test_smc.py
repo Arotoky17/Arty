@@ -748,6 +748,80 @@ class TestSessionDetector:
         assert len(sessions) > 0
         assert sessions[0].details["in_kill_zone"] is True
 
+    def test_24h_coverage_no_gaps(self):
+        """Les sessions couvrent l'ensemble des 24h sans trou horaire."""
+        detector = SessionDetector()
+        test_times = [
+            datetime(2024, 1, 1, 0, 0, tzinfo=timezone.utc),
+            datetime(2024, 1, 1, 6, 30, tzinfo=timezone.utc),
+            datetime(2024, 1, 1, 7, 0, tzinfo=timezone.utc),
+            datetime(2024, 1, 1, 11, 59, tzinfo=timezone.utc),
+            datetime(2024, 1, 1, 12, 0, tzinfo=timezone.utc),
+            datetime(2024, 1, 1, 16, 59, tzinfo=timezone.utc),
+            datetime(2024, 1, 1, 17, 0, tzinfo=timezone.utc),
+            datetime(2024, 1, 1, 23, 0, tzinfo=timezone.utc),
+            datetime(2024, 1, 2, 0, 0, tzinfo=timezone.utc),
+        ]
+        for dt in test_times:
+            session = detector.get_session_for_time(dt)
+            assert session is not None, f"Aucune session détectée pour {dt.isoformat()}"
+
+    def test_session_00_utc_is_asia(self):
+        """00:00 UTC → session Asia."""
+        detector = SessionDetector()
+        session = detector.get_session_for_time(datetime(2024, 1, 1, 0, 0, tzinfo=timezone.utc))
+        assert session is not None
+        assert session.session == TradingSession.ASIA
+
+    def test_session_0630_utc_is_asia(self):
+        """06:30 UTC → session Asia."""
+        detector = SessionDetector()
+        session = detector.get_session_for_time(datetime(2024, 1, 1, 6, 30, tzinfo=timezone.utc))
+        assert session is not None
+        assert session.session == TradingSession.ASIA
+
+    def test_session_0700_utc_is_london(self):
+        """07:00 UTC → session London."""
+        detector = SessionDetector()
+        session = detector.get_session_for_time(datetime(2024, 1, 1, 7, 0, tzinfo=timezone.utc))
+        assert session is not None
+        assert session.session == TradingSession.LONDON
+
+    def test_session_1159_utc_is_london(self):
+        """11:59 UTC → session London."""
+        detector = SessionDetector()
+        session = detector.get_session_for_time(datetime(2024, 1, 1, 11, 59, tzinfo=timezone.utc))
+        assert session is not None
+        assert session.session == TradingSession.LONDON
+
+    def test_session_1200_utc_is_new_york(self):
+        """12:00 UTC → session New York."""
+        detector = SessionDetector()
+        session = detector.get_session_for_time(datetime(2024, 1, 1, 12, 0, tzinfo=timezone.utc))
+        assert session is not None
+        assert session.session == TradingSession.NEW_YORK
+
+    def test_session_1659_utc_is_new_york(self):
+        """16:59 UTC → session New York."""
+        detector = SessionDetector()
+        session = detector.get_session_for_time(datetime(2024, 1, 1, 16, 59, tzinfo=timezone.utc))
+        assert session is not None
+        assert session.session == TradingSession.NEW_YORK
+
+    def test_session_1700_utc_is_asia(self):
+        """17:00 UTC → session Asia."""
+        detector = SessionDetector()
+        session = detector.get_session_for_time(datetime(2024, 1, 1, 17, 0, tzinfo=timezone.utc))
+        assert session is not None
+        assert session.session == TradingSession.ASIA
+
+    def test_session_2300_utc_is_asia(self):
+        """23:00 UTC → session Asia."""
+        detector = SessionDetector()
+        session = detector.get_session_for_time(datetime(2024, 1, 1, 23, 0, tzinfo=timezone.utc))
+        assert session is not None
+        assert session.session == TradingSession.ASIA
+
 
 # =============================================================================
 # Tests du détecteur SMC principal

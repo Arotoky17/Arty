@@ -6,7 +6,7 @@ Concepts ICT
 ICT distingue plusieurs sessions et "Kill Zones" qui ont des propriétés
 statistiques particulières :
 
-- **Asian Session** : 00:00 – 06:00 UTC (range souvent étroit)
+- **Asian Session** : 17:00 – 07:00 UTC (range souvent étroit, couvre minuit)
 - **London Session** : 07:00 – 12:00 UTC (volatilité, cassures)
 - **New York Session** : 12:00 – 17:00 UTC (liquidité, continuation)
 - **London/NY Overlap** : 12:00 – 17:00 UTC (chevauchement)
@@ -41,8 +41,10 @@ class SessionWindow:
 
 
 # Définition des sessions ICT (heures UTC)
+# Les sessions couvrent maintenant l'ensemble des 24h sans trou horaire.
+# Asia couvre le passage de minuit : 17:00 -> 07:00 UTC.
 _DEFAULT_SESSIONS: tuple[SessionWindow, ...] = (
-    SessionWindow("asian", TradingSession.ASIA, time(0, 0), time(6, 0)),
+    SessionWindow("asian", TradingSession.ASIA, time(17, 0), time(7, 0)),
     SessionWindow("london", TradingSession.LONDON, time(7, 0), time(12, 0)),
     SessionWindow(
         "london_kill_zone",

@@ -119,13 +119,20 @@ class MT5Connector(IMT5Connector):
             return False
 
         try:
-            # 1. Initialiser le terminal MT5
+            # 1. Initialiser le terminal MT5 (avec identifiants pour éviter
+            #    l'erreur "Authorization failed" quand aucune session
+            #    n'est déjà ouverte dans le terminal)
+            init_kwargs: dict[str, Any] = {}
             if self._mt5_settings.path:
-                initialized = await asyncio.to_thread(
-                    mt5.initialize, self._mt5_settings.path
-                )
-            else:
-                initialized = await asyncio.to_thread(mt5.initialize)
+                init_kwargs["path"] = self._mt5_settings.path
+            if self._mt5_settings.login:
+                init_kwargs["login"] = self._mt5_settings.login
+                init_kwargs["password"] = self._mt5_settings.password
+                init_kwargs["server"] = self._mt5_settings.server
+
+            initialized = await asyncio.to_thread(
+                lambda: mt5.initialize(**init_kwargs)
+            )
 
             if not initialized:
                 error = mt5.last_error()
@@ -142,13 +149,7 @@ class MT5Connector(IMT5Connector):
 
             self._terminal_info = self._parse_terminal_info(terminal)
 
-            # Vérifier que le terminal est connecté
-            if not terminal.connected:
-                logger.error("Terminal MT5 non connecté")
-                await asyncio.to_thread(mt5.shutdown)
-                return False
-
-            # 3. Authentifier
+            # 3. Authentifier (re-auth explicite; l'initialize a déjà pu le faire)
             login_result = await asyncio.to_thread(
                 mt5.login,
                 login=self._mt5_settings.login,

@@ -34,6 +34,7 @@ from arty_trading.modules.signals.confidence_policy import (
     evaluate_confidence_policy,
 )
 from arty_trading.modules.signals.validator import SignalValidator, ValidationResult
+from arty_trading.modules.smc.setup_tracker import SetupTracker
 from arty_trading.modules.strategies.base import BaseStrategy
 from arty_trading.modules.strategies.strategies import (
     BreakoutStrategy,
@@ -78,6 +79,7 @@ class SignalGenerator:
         strategies: list[BaseStrategy] | None = None,
         validator: SignalValidator | None = None,
         decision_engine: DecisionEngine | None = None,
+        setup_tracker: SetupTracker | None = None,
     ) -> None:
         """
         Initialise le générateur de signaux.
@@ -91,12 +93,18 @@ class SignalGenerator:
             validator: Validateur de signaux (optionnel). Si fourni, chaque
                 signal est validé avant d'être retourné. Le générateur ne
                 décide plus seul.
+            decision_engine: Moteur de décision ICT (optionnel). Si fourni,
+                enrichit le signal avec le score de décision.
+            setup_tracker: Tracker de setups SMC (optionnel). Si fourni,
+                le générateur vérifie d'abord les setups prêts avant de
+                demander des signaux aux stratégies.
         """
         self._min_confidence = min_confidence
         self._active_strategy = active_strategy
         self._strategies: dict[str, BaseStrategy] = {}
         self._validator = validator
         self._decision_engine = decision_engine
+        self._setup_tracker = setup_tracker
         self._last_validation: ValidationResult | None = None
         self._last_rejection_stage: str | None = None
         self._last_rejection_reason: str | None = None
@@ -122,12 +130,13 @@ class SignalGenerator:
 
         logger.info(
             "SignalGenerator initialisé | stratégie active=%s | min_confidence=%.2f | "
-            "stratégies=%d | activées=%s | validateur=%s",
+            "stratégies=%d | activées=%s | validateur=%s | setup_tracker=%s",
             self._active_strategy,
             self._min_confidence,
             len(self._strategies),
             self.get_enabled_strategies(),
             "oui" if self._validator is not None else "non",
+            "oui" if self._setup_tracker is not None else "non",
         )
 
     # -------------------------------------------------------------------------
@@ -307,113 +316,30 @@ class SignalGenerator:
 
         signals: list[Signal] = []
 
-        for name, strategy in self._strategies.items():
-            if not strategy.enabled:
-                continue
-
-            if not self._is_strategy_allowed(name):
-                logger.debug(
-                    "Stratégie ignorée (non-active) | %s | active=%s",
-                    name,
-                    self._active_strategy,
-                )
-                continue
-
-            try:
-                signal = await strategy.analyze(
-                    candles,
-                    smc_data,
-                    htf_smc_data=htf_smc_data,
-                    htf_trend=htf_trend,
-                )
-            except Exception as exc:
-                logger.error("Erreur stratégie %s | %s", name, exc, exc_info=True)
-                continue
-
-            if signal is None:
-                logger.debug("Aucun signal produit | stratégie=%s", name)
-                continue
-
-            direction_str = "bullish" if signal.direction == Direction.BUY else "bearish"
-
-            market_regime = None
-            if market_context is not None:
-                market_regime = getattr(market_context, "regime", None)
-
-            gate_rejection = self._check_master_direction_gate(
-                master_trend, direction_str, signal, regime=market_regime
-            )
-            if gate_rejection is not None:
+        # -----------------------------------------------------------------
+        # Étape 0 : Vérifier les setups prêts dans le tracker
+        # -----------------------------------------------------------------
+        if self._setup_tracker is not None and candles:
+            symbol = candles[0].symbol
+            ready_setups = self._setup_tracker.get_ready_setups(symbol)
+            if ready_setups:
+                setup = max(ready_setups, key=lambda s: s.confidence_estimate)
                 logger.info(
-                    "Signal REJETÉ (Master Direction Gate) | %s | %s | "
-                    "master=%s | reason=%s | justification=%s",
-                    signal.symbol,
-                    direction_str,
-                    master_trend,
-                    gate_rejection,
-                    signal.justification,
+                    "[SETUP READY] %s | %s | setup_id=%s | state=%s | confidence_estimate=%.2f",
+                    symbol,
+                    "BUY" if setup.direction == Direction.BUY else "SELL",
+                    setup.setup_id,
+                    setup.state.value,
+                    setup.confidence_estimate,
                 )
-                self._last_rejection_stage = "master_gate"
-                self._last_rejection_reason = gate_rejection
-                continue
+                signal = self._build_signal_from_setup(setup, candles, smc_data)
+                if signal is not None:
+                    signals.append(signal)
 
-            htf_trend_for_gate = master_trend or htf_trend or (
-                htf_trends.get("H1") if htf_trends else None
+        if not signals:
+            signals = await self._run_strategies(
+                candles, smc_data, htf_smc_data, htf_trend, master_trend, market_context
             )
-            if htf_trend_for_gate and self._htf_conflicts(htf_trend_for_gate, direction_str):
-                logger.info(
-                    "Signal REJETÉ (HTF conflict) | %s | %s | htf=%s | justification=%s",
-                    signal.symbol,
-                    direction_str,
-                    htf_trend_for_gate,
-                    signal.justification,
-                )
-                self._last_rejection_stage = "htf_conflict"
-                self._last_rejection_reason = "htf_conflict"
-                continue
-
-            # Politique adaptative confiance/RR (Phase Adaptive Confidence).
-            # Plan de contrôle : <0.60 rejet, 0.60-0.84 exige RR >= 2.0,
-            # >=0.85 comportement historique. Tous les autres gates restent
-            # appliqués en aval (validator, decision engine, risk manager,
-            # final gate).
-            policy = evaluate_confidence_policy(
-                signal.confidence,
-                signal.risk_reward_ratio,
-                base_threshold=self._min_confidence,
-            )
-            self._last_confidence_policy = policy
-            if not policy.allowed:
-                logger.info(
-                    "Signal REJETÉ (politique confiance/RR) | stratégie=%s | "
-                    "confiance=%.2f | bucket=%s | R/R=%.2f | RR_requis=%s | "
-                    "raison=%s | direction=%s | justification=%s",
-                    name,
-                    signal.confidence,
-                    policy.confidence_bucket,
-                    signal.risk_reward_ratio,
-                    policy.required_rr,
-                    policy.reason,
-                    signal.direction.value,
-                    signal.justification,
-                )
-                self._last_rejection_stage = "confidence"
-                self._last_rejection_reason = policy.reason
-                continue
-
-            logger.info(
-                "Signal ACCEPTÉ | stratégie=%s | confiance=%.2f | seuil=%.2f | "
-                "direction=%s | type=%s | R/R=%.2f | concepts=%s | justification=%s",
-                name,
-                signal.confidence,
-                self._min_confidence,
-                signal.direction.value,
-                signal.signal_type.value,
-                signal.risk_reward_ratio,
-                signal.smc_concepts,
-                signal.justification,
-            )
-            signals.append(signal)
 
         if not signals:
             logger.info(
@@ -740,3 +666,189 @@ class SignalGenerator:
         """
         for name, strategy in self._strategies.items():
             strategy.enabled = name == self._active_strategy
+
+    async def _run_strategies(
+        self,
+        candles: list[Candle],
+        smc_data: list[dict],
+        htf_smc_data: list[dict] | None = None,
+        htf_trend: str | None = None,
+        master_trend: str | None = None,
+        market_context: Any | None = None,
+    ) -> list[Signal]:
+        """Exécute les stratégies activées et retourne les signaux acceptés."""
+        signals: list[Signal] = []
+
+        for name, strategy in self._strategies.items():
+            if not strategy.enabled:
+                continue
+
+            if not self._is_strategy_allowed(name):
+                logger.debug(
+                    "Stratégie ignorée (non-active) | %s | active=%s",
+                    name,
+                    self._active_strategy,
+                )
+                continue
+
+            try:
+                signal = await strategy.analyze(
+                    candles,
+                    smc_data,
+                    htf_smc_data=htf_smc_data,
+                    htf_trend=htf_trend,
+                )
+            except Exception as exc:
+                logger.error("Erreur stratégie %s | %s", name, exc, exc_info=True)
+                continue
+
+            if signal is None:
+                logger.debug("Aucun signal produit | stratégie=%s", name)
+                continue
+
+            direction_str = "bullish" if signal.direction == Direction.BUY else "bearish"
+
+            market_regime = None
+            if market_context is not None:
+                market_regime = getattr(market_context, "regime", None)
+
+            gate_rejection = self._check_master_direction_gate(
+                master_trend, direction_str, signal, regime=market_regime
+            )
+            if gate_rejection is not None:
+                logger.info(
+                    "Signal REJETÉ (Master Direction Gate) | %s | %s | "
+                    "master=%s | reason=%s | justification=%s",
+                    signal.symbol,
+                    direction_str,
+                    master_trend,
+                    gate_rejection,
+                    signal.justification,
+                )
+                self._last_rejection_stage = "master_gate"
+                self._last_rejection_reason = gate_rejection
+                continue
+
+            htf_trend_for_gate = master_trend or htf_trend or (
+                htf_smc_data[0].get("direction") if htf_smc_data else None
+            )
+            if htf_trend_for_gate and self._htf_conflicts(htf_trend_for_gate, direction_str):
+                logger.info(
+                    "Signal REJETÉ (HTF conflict) | %s | %s | htf=%s | justification=%s",
+                    signal.symbol,
+                    direction_str,
+                    htf_trend_for_gate,
+                    signal.justification,
+                )
+                self._last_rejection_stage = "htf_conflict"
+                self._last_rejection_reason = "htf_conflict"
+                continue
+
+            policy = evaluate_confidence_policy(
+                signal.confidence,
+                signal.risk_reward_ratio,
+                base_threshold=self._min_confidence,
+            )
+            self._last_confidence_policy = policy
+            if not policy.allowed:
+                logger.info(
+                    "Signal REJETÉ (politique confiance/RR) | stratégie=%s | "
+                    "confiance=%.2f | bucket=%s | R/R=%.2f | RR_requis=%s | "
+                    "raison=%s | direction=%s | justification=%s",
+                    name,
+                    signal.confidence,
+                    policy.confidence_bucket,
+                    signal.risk_reward_ratio,
+                    policy.required_rr,
+                    policy.reason,
+                    signal.direction.value,
+                    signal.justification,
+                )
+                self._last_rejection_stage = "confidence"
+                self._last_rejection_reason = policy.reason
+                continue
+
+            logger.info(
+                "Signal ACCEPTÉ | stratégie=%s | confiance=%.2f | seuil=%.2f | "
+                "direction=%s | type=%s | R/R=%.2f | concepts=%s | justification=%s",
+                name,
+                signal.confidence,
+                self._min_confidence,
+                signal.direction.value,
+                signal.signal_type.value,
+                signal.risk_reward_ratio,
+                signal.smc_concepts,
+                signal.justification,
+            )
+            signals.append(signal)
+
+        return signals
+
+    def _build_signal_from_setup(
+        self,
+        setup: Any,
+        candles: list[Candle],
+        smc_data: list[dict],
+    ) -> Signal | None:
+        """Construit un signal à partir d'un setup prêt (READY/ENTRY_READY)."""
+        from decimal import Decimal
+        from arty_trading.core.enums import Direction, SignalType, TimeFrame
+
+        direction = setup.direction
+        symbol = setup.symbol
+        timeframe = candles[0].timeframe if candles else TimeFrame.M5
+
+        zone_high = setup.zone_high
+        zone_low = setup.zone_low
+        if zone_high is None or zone_low is None:
+            return None
+
+        entry_price = Decimal(str(setup.zone_price or (zone_high + zone_low) / 2.0))
+        current_price = Decimal(str(float(candles[-1].close))) if candles else entry_price
+
+        atr = Decimal(str(setup.atr_at_detection))
+        if atr == 0 and candles:
+            from arty_trading.utils.helpers import calculate_atr
+            atr = calculate_atr(candles)
+
+        sl_buffer = atr * Decimal("0.5")
+        if direction == Direction.BUY:
+            stop_loss = min(Decimal(str(zone_low)), current_price) - sl_buffer
+            risk = entry_price - stop_loss
+            take_profit = entry_price + risk * Decimal("2.0")
+        else:
+            stop_loss = max(Decimal(str(zone_high)), current_price) + sl_buffer
+            risk = stop_loss - entry_price
+            take_profit = entry_price - risk * Decimal("2.0")
+
+        if risk <= 0:
+            return None
+
+        confidence = max(setup.confidence_estimate, 0.5)
+        concepts = [setup.zone_concept] if setup.zone_concept else []
+        justification = (
+            f"Setup SMC {direction.value} prêt | zone={zone_low:.5f}-{zone_high:.5f} | "
+            f"state={setup.state.value} | setup_id={setup.setup_id}"
+        )
+
+        return Signal(
+            symbol=symbol,
+            signal_type=SignalType.BUY if direction == Direction.BUY else SignalType.SELL,
+            direction=direction,
+            entry_price=entry_price,
+            stop_loss=stop_loss,
+            take_profit=take_profit,
+            confidence=confidence,
+            strategy_name="SMC Trend Following",
+            timeframe=timeframe,
+            smc_concepts=concepts,
+            justification=justification,
+            metadata={
+                "setup_id": setup.setup_id,
+                "setup_state": setup.state.value,
+                "zone_concept": setup.zone_concept,
+                "zone_index": setup.zone_index,
+                "atr_at_detection": setup.atr_at_detection,
+                "htf_trend_at_detection": setup.htf_trend_at_detection,
+            },
+        )

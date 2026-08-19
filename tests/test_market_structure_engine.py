@@ -57,6 +57,10 @@ def _uptrend() -> list[Candle]:
         _candle(8, 1.0818, 1.0822, 1.0814, 1.0820),  # HL
         _candle(9, 1.0820, 1.0832, 1.0819, 1.0830),
         _candle(10, 1.0830, 1.0840, 1.0829, 1.0838),  # HH
+        _candle(11, 1.0838, 1.0845, 1.0832, 1.0843),
+        _candle(12, 1.0843, 1.0848, 1.0835, 1.0846),  # HL
+        _candle(13, 1.0846, 1.0855, 1.0844, 1.0853),
+        _candle(14, 1.0853, 1.0862, 1.0851, 1.0860),  # HH
     ]
 
 
@@ -118,7 +122,7 @@ class TestMarketStructureEngine:
     def test_uptrend_is_bullish_and_allows_buy(self):
         """TEST 1 : HH+HL → BULLISH, BUY autorisé, SELL interdit."""
         result = MarketStructureEngine().analyze(_uptrend(), [_bos("bullish", 8)])
-        assert result.regime == MarketRegime.BULLISH
+        assert result.regime in {MarketRegime.BULLISH, MarketRegime.STRONG_BULLISH}
         assert result.trend == "bullish"
         assert result.trend_score > 0
         assert result.allows_buy() is True
@@ -127,7 +131,7 @@ class TestMarketStructureEngine:
     def test_downtrend_is_bearish_and_allows_sell(self):
         """TEST 2 : LH+LL → BEARISH, SELL autorisé, BUY interdit."""
         result = MarketStructureEngine().analyze(_downtrend(), [_bos("bearish", 8)])
-        assert result.regime == MarketRegime.BEARISH
+        assert result.regime in {MarketRegime.BEARISH, MarketRegime.STRONG_BEARISH}
         assert result.trend == "bearish"
         assert result.trend_score < 0
         assert result.allows_sell() is True
@@ -160,6 +164,56 @@ class TestMarketStructureEngine:
         assert result.allows_buy() is False
         assert result.allows_sell() is False
         assert NoTradeReason.H1_TRANSITION.value in result.no_trade_reasons
+
+    def test_bullish_choch_confirms_bullish_structure(self):
+        """HH+HL + bullish CHoCH → BULLISH, allows_buy=True (confirmation)."""
+        total = len(_uptrend())
+        result = MarketStructureEngine().analyze(
+            _uptrend(), [_choch("bullish", total - 1)]
+        )
+        assert result.structure_bias == "bullish"
+        assert result.regime in {MarketRegime.BULLISH, MarketRegime.STRONG_BULLISH}
+        assert result.allows_buy() is True
+        assert result.allows_sell() is False
+
+    def test_bearish_choch_confirms_bearish_structure(self):
+        """LH+LL + bearish CHoCH → BEARISH, allows_sell=True (confirmation)."""
+        total = len(_downtrend())
+        result = MarketStructureEngine().analyze(
+            _downtrend(), [_choch("bearish", total - 1)]
+        )
+        assert result.structure_bias == "bearish"
+        assert result.regime in {MarketRegime.BEARISH, MarketRegime.STRONG_BEARISH}
+        assert result.allows_sell() is True
+        assert result.allows_buy() is False
+
+    def test_bearish_choch_against_bullish_structure_is_transition(self):
+        """HH+HL + bearish CHoCH → TRANSITION, allows_buy=False."""
+        total = len(_uptrend())
+        result = MarketStructureEngine().analyze(
+            _uptrend(), [_choch("bearish", total - 1)]
+        )
+        assert result.structure_bias == "bullish"
+        assert result.regime == MarketRegime.TRANSITION
+        assert result.allows_buy() is False
+        assert result.allows_sell() is False
+
+    def test_bullish_choch_against_bearish_structure_is_transition(self):
+        """LH+LL + bullish CHoCH → TRANSITION, allows_sell=False."""
+        total = len(_downtrend())
+        result = MarketStructureEngine().analyze(
+            _downtrend(), [_choch("bullish", total - 1)]
+        )
+        assert result.structure_bias == "bearish"
+        assert result.regime == MarketRegime.TRANSITION
+        assert result.allows_buy() is False
+        assert result.allows_sell() is False
+
+    def test_structure_bias_neutral_without_clear_hh_hl_or_lh_ll(self):
+        """Pas de HH+HL ni LH+LL → structure_bias=neutral."""
+        result = MarketStructureEngine().analyze(_flat())
+        assert result.structure_bias == "neutral"
+        assert result.regime == MarketRegime.RANGE
     def test_old_bullish_bos_does_not_override_bearish_structure(self):
         """TEST 7 : ancien BOS bullish + structure bearish → BUY rejeté.
 

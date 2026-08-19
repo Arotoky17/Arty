@@ -4,319 +4,49 @@ Plateforme professionnelle de trading Forex (SMC/ICT + IA) — architecture modu
 
 ---
 
-## Prompt de développement – Plateforme de Trading Forex Professionnelle (SMC/ICT + IA)
+## 🤖 Qu'est-ce qu'Arty ?
 
-Tu es un ingénieur logiciel senior spécialisé en Python, MetaTrader 5, algorithmes de trading, architecture logicielle, intelligence artificielle et finance quantitative.
+**Arty** est un bot de trading Forex automatisé qui analyse le marché avec les concepts **Smart Money Concepts / ICT** et exécute des ordres sur **MetaTrader 5** — en mode **Démo** par défaut (le mode réel est strictement désactivé tant que `ALLOW_LIVE_TRADING=false`).
 
-Je souhaite développer une plateforme professionnelle de trading Forex à partir de zéro, avec une architecture modulaire, évolutive et maintenable.
+### Comment fonctionne le bot
 
-L'objectif n'est pas seulement de créer un bot de trading, mais une plateforme complète capable d'analyser le marché, détecter automatiquement les concepts Smart Money (SMC/ICT), effectuer du backtesting, assister le trader grâce à l'IA et exécuter des ordres sur MetaTrader 5 (en mode Démo dans un premier temps).
+1. **Connexion MT5** — Arty se connecte à votre terminal MetaTrader 5 (identifiants dans `.env`), vérifie que le compte est bien un compte démo et surveille la connexion en continu (reconnexion automatique).
+2. **Analyse de marché** — Le moteur SMC détecte automatiquement les concepts Smart Money sur les bougies en temps réel.
+3. **Génération de signaux** — La stratégie active (*SMC Trend Following*) fusionne les détections SMC et produit des signaux complets : entrée, Stop Loss, Take Profit, ratio R/R et niveau de confiance.
+4. **Gestion du risque** — Chaque signal passe par une batterie de contrôles avant exécution (voir ci-dessous).
+5. **Exécution & suivi** — L'ordre est envoyé à MT5, puis Arty gère la position de façon dynamique (break-even, TP partiel, trailing stop).
 
----
+### Détections Smart Money (SMC/ICT)
 
-### Objectifs du projet
+Le moteur détecte : Break Of Structure (BOS), Change Of Character (CHoCH), Market Structure Shift (MSS), Fair Value Gap (FVG) et inverse FVG, Order Blocks, Breaker & Mitigation Blocks, Liquidity Sweeps, Equal Highs/Lows, zones Premium/Discount, Optimal Trade Entry (OTE), sessions (Asie, Londres, New York), Kill Zones et Points d'Intérêt (POI).
 
-#### Marchés
+Chaque détection est indépendante et peut être activée/désactivée dans la configuration.
 
-- Forex uniquement (version 1)
-- Extension future vers les indices, métaux, matières premières et cryptomonnaies
+### Gestion du risque (sécurité intégrée)
 
-#### Plateforme cible
+- Risque par trade paramétrable (défaut : 1 % du capital) et taille de position automatique
+- Sizing limité par la marge disponible (facteur de sécurité 80 %)
+- Stop Loss et Take Profit obligatoires sur chaque ordre
+- Filtre de spread (par symbole : EURUSD 30 pts, XAUUSD 200 pts)
+- Circuit breakers : perte journalière max (3 %), drawdown max (10 %), pertes consécutives max (3), nombre max de positions ouvertes (3)
+- Un seul trade simultané par symbole
+- Politique confiance/RR adaptative : confiance 0.60–0.85 → RR minimum 2.0 ; confiance ≥ 0.85 → politique standard
+- **Blocage automatique de tout compte réel** en mode démo (alerte critique, aucun ordre exécuté)
 
-- MetaTrader 5
-- Compte Démo uniquement (le mode réel devra être désactivé par défaut)
+### Suivi actif des positions
 
-#### Symboles
+- **Break-even** automatique à +1R
+- **Take Profit partiel** (50 %) à +2R
+- **Trailing stop** à partir de +3R (distance 1R)
 
-Le système doit permettre d'ajouter facilement des symboles.
+### Autres fonctionnalités
 
-Par défaut :
-
-- EURUSD
-- GBPUSD
-- USDJPY
-- XAUUSD
-
----
-
-### Architecture générale
-
-Concevoir une architecture propre (Clean Architecture), orientée modules et facilement extensible.
-
-Le projet devra être découpé en plusieurs modules indépendants.
-
-Exemple :
-
-- configuration
-- authentification MT5
-- récupération des données
-- moteur d'analyse SMC
-- moteur de stratégies
-- moteur de signaux
-- gestion du risque
-- exécution des ordres
-- journalisation
-- notifications
-- tableau de bord
-- IA Assistant
-- backtesting
-- optimisation
-- statistiques
-- utilitaires
-- tests
-
-Chaque module devra être indépendant.
-
----
-
-### Fonctionnalités
-
-#### Connexion MT5
-
-- Connexion robuste
-- Reconnexion automatique
-- Vérification du compte
-- Gestion complète des erreurs
-- Vérification du statut du terminal
-
-#### Données de marché
-
-Le système doit pouvoir récupérer :
-
-- données historiques
-- données temps réel
-- OHLC
-- Tick
-- Volume
-- Spread
-
-avec cache et contrôle des erreurs.
-
-#### Moteur Smart Money (SMC)
-
-Le cœur de la plateforme devra détecter automatiquement :
-
-- Break Of Structure (BOS)
-- Change Of Character (CHoCH)
-- Market Structure Shift (MSS)
-- Fair Value Gap (FVG)
-- Inverse FVG (IFVG)
-- Order Block
-- Breaker Block
-- Mitigation Block
-- Liquidity Sweep
-- Equal High
-- Equal Low
-- Premium / Discount
-- Optimal Trade Entry (OTE)
-- Sessions :
-  - Londres
-  - New York
-  - Asie
-- Kill Zones
-- Points d'intérêt (POI)
-
-Toutes les détections devront être indépendantes afin de pouvoir être activées ou désactivées.
-
-#### Moteur de stratégies
-
-Le système devra permettre plusieurs stratégies.
-
-Exemples :
-
-- SMC Trend Following
-- Breakout
-- Momentum
-- Reversal
-- Scalping
-- Swing Trading
-
-Chaque stratégie devra être activable individuellement.
-
-Le système devra permettre de créer facilement de nouvelles stratégies.
-
-#### Générateur de signaux
-
-Le moteur devra :
-
-- fusionner les informations SMC
-- appliquer les règles de la stratégie
-- attribuer un score de confiance
-- générer un signal Achat/Vente
-
-Chaque signal devra contenir :
-
-- Prix d'entrée
-- Stop Loss
-- Take Profit
-- Ratio Risque/Rendement
-- Niveau de confiance
-- Justification
-
-#### Gestion du risque
-
-Le module devra gérer :
-
-- risque par trade (paramétrable)
-- taille de position automatique
-- Stop Loss obligatoire
-- Take Profit obligatoire
-- risque journalier maximal
-- drawdown maximal
-- nombre maximal de positions
-- nombre maximal de pertes consécutives
-- un seul trade simultané par symbole (paramétrable)
-
-#### Exécution des ordres
-
-Connexion via MetaTrader5 officiel.
-
-Fonctions :
-
-- ouverture
-- fermeture
-- modification
-- trailing stop
-- break-even
-- gestion des erreurs
-- reprise automatique
-
-Le mode Réel devra rester désactivé par défaut.
-
-#### Backtesting
-
-Créer un moteur de backtesting permettant :
-
-- simulation historique
-- courbe de capital
-- Profit Factor
-- Win Rate
-- Drawdown
-- Sharpe Ratio
-- Expectancy
-- statistiques détaillées
-- export CSV et PDF
-
-#### Dashboard
-
-Créer une interface moderne affichant :
-
-- graphiques
-- positions ouvertes
-- historique
-- statistiques
-- signaux
-- état du bot
-- performances
-- gestion des stratégies
-- paramètres
-
-#### IA Assistant
-
-Créer un assistant IA capable de :
-
-- expliquer les signaux
-- analyser les trades
-- résumer les performances
-- répondre aux questions de l'utilisateur
-- suggérer des améliorations
-
-L'IA ne devra jamais ouvrir une position seule sans validation des règles de la stratégie.
-
-#### Journalisation
-
-Créer un système complet de logs :
-
-- console
-- fichier
-- erreurs
-- exécution
-- signaux
-- positions
-
-#### Notifications
-
-Support :
-
-- Telegram
-- Discord
-- Email
-
-#### Configuration
-
-Tous les paramètres devront être modifiables :
-
-- symboles
-- timeframe
-- risque
-- sessions
-- horaires
-- Stop Loss
-- Take Profit
-- filtres
-- stratégies actives
-- mode Démo/Réel
-
----
-
-### Exigences techniques
-
-Le code devra être :
-
-- professionnel
-- documenté
-- fortement commenté
-- modulaire
-- facilement testable
-- facilement maintenable
-
-Respecter les bonnes pratiques Python.
-
-Utiliser :
-
-- MetaTrader5
-- Pandas
-- NumPy
-- Pydantic
-- FastAPI (pour l'API)
-- PostgreSQL
-- SQLAlchemy
-- WebSocket
-- Docker
-- Pytest
-
----
-
-### Documentation
-
-Générer automatiquement :
-
-- README complet
-- Architecture UML
-- Diagrammes de classes
-- Diagrammes de séquence
-- Diagrammes de composants
-- Documentation des API
-- Guide d'installation
-- Guide utilisateur
-- Guide développeur
-
----
-
-### Développement
-
-Développer le projet progressivement.
-
-Pour chaque étape :
-
-1. expliquer l'architecture retenue ;
-2. créer l'arborescence ;
-3. écrire le code complet ;
-4. tester le module ;
-5. documenter le module ;
-6. attendre la validation avant de passer au suivant.
-
-Le projet doit être conçu pour évoluer vers une plateforme de trading professionnelle, robuste, extensible et prête à accueillir de nouvelles stratégies et fonctionnalités.
+- **Backtesting** — simulation historique avec courbe de capital, Profit Factor, Win Rate, Drawdown, Sharpe Ratio, Expectancy
+- **API REST + WebSocket** (FastAPI) — état du bot, positions, signaux, santé, contrôle MT5 (`/health`, `/mt5/connect`, etc.)
+- **Notifications** — Telegram, Discord, Email (trade ouvert/fermé, erreurs critiques, rapport journalier)
+- **Assistant IA** — explique les signaux, analyse les trades et résume les performances (l'IA ne peut jamais ouvrir une position seule)
+- **Persistance PostgreSQL** — trades, statistiques et historique
+- **Symboles actifs** : EURUSD et XAUUSD (facilement extensibles)
 
 ---
 

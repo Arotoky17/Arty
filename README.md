@@ -27,7 +27,7 @@ Chaque détection est indépendante et peut être activée/désactivée dans la 
 - Risque par trade paramétrable (défaut : 1 % du capital) et taille de position automatique
 - Sizing limité par la marge disponible (facteur de sécurité 80 %)
 - Stop Loss et Take Profit obligatoires sur chaque ordre
-- Filtre de spread (par symbole : EURUSD 30 pts, XAUUSD 200 pts)
+- Filtre de spread specialise XAUUSD (defaut : 200 points MT5)
 - Circuit breakers : perte journalière max (3 %), drawdown max (10 %), pertes consécutives max (3), nombre max de positions ouvertes (3)
 - Un seul trade simultané par symbole
 - Politique confiance/RR adaptative : confiance 0.60–0.85 → RR minimum 2.0 ; confiance ≥ 0.85 → politique standard
@@ -46,7 +46,8 @@ Chaque détection est indépendante et peut être activée/désactivée dans la 
 - **Notifications** — Telegram, Discord, Email (trade ouvert/fermé, erreurs critiques, rapport journalier)
 - **Assistant IA** — explique les signaux, analyse les trades et résume les performances (l'IA ne peut jamais ouvrir une position seule)
 - **Persistance PostgreSQL** — trades, statistiques et historique
-- **Symboles actifs** : EURUSD et XAUUSD (facilement extensibles)
+- **Symbole actif** : XAUUSD uniquement. L'architecture conserve les abstractions generiques `symbol`, mais le moteur principal n'analyse et ne trade pas EURUSD/GBPUSD/USDJPY.
+- **Flux multi-timeframe Gold** : H4 contexte macro, H1 tendance/structure, M5 setup/confirmation/entree.
 
 ---
 
@@ -121,7 +122,7 @@ MT5_PATH=C:\Program Files\MetaTrader 5\terminal64.exe
   **réel** (et non démo), le trading est automatiquement refusé et une alerte
   critique est envoyée. Aucun ordre ne sera exécuté sur un compte réel.
 - **Spread filtré** : les trades sont bloqués si le spread dépasse
-  `MAX_SPREAD_POINTS` (défaut 30).
+  `MAX_SPREAD_POINTS` (defaut XAUUSD : 200 points MT5).
 - **Circuit breakers** : perte journalière max, pertes consécutives max et
   drawdown max — le reset journalier se fait automatiquement à minuit UTC.
 

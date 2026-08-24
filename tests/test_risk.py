@@ -268,6 +268,18 @@ class TestCalculatePositionSize:
         md.get_symbol_info.assert_awaited_once_with("EURUSD")
 
     @pytest.mark.asyncio
+    async def test_xauusd_uses_gold_tick_size_and_value(self):
+        """XAUUSD sizing utilise tick size/value MT5, pas les constantes EURUSD."""
+        md = make_market_data(tick_size=0.01, tick_value=1.0, contract_size=100)
+        rm = RiskManager(settings=make_risk_settings(risk_per_trade=0.01), market_data=md)
+        signal = make_signal(symbol="XAUUSD", entry=4000.0, sl=3995.0)
+        account = make_account(balance=10000)
+        volume = await rm.calculate_position_size(signal, account)
+        # risk=100, SL=5.00, tick_size=0.01 => 500 ticks, loss/lot=500 => volume=0.20
+        assert volume == 0.2
+        md.get_symbol_info.assert_awaited_once_with("XAUUSD")
+
+    @pytest.mark.asyncio
     async def test_custom_tick_value_changes_volume(self):
         """Un tick value différent modifie la taille calculée."""
         # tick_value = 0.5 => perte/lot = 200 * 0.5 = 100 => volume = 100 / 100 = 1.0

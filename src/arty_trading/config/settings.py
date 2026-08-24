@@ -20,6 +20,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from arty_trading.core.enums import TimeFrame, TradingMode
 
+GOLD_SYMBOL = "XAUUSD"
+
 
 class MT5Settings(BaseSettings):
     """Paramètres de connexion MetaTrader 5."""
@@ -47,16 +49,13 @@ class RiskSettings(BaseSettings):
     max_consecutive_losses: int = Field(default=3, alias="MAX_CONSECUTIVE_LOSSES")
     one_trade_per_symbol: bool = Field(default=True, alias="ONE_TRADE_PER_SYMBOL")
     max_spread: int = Field(
-        default=30,
+        default=200,
         alias="MAX_SPREAD_POINTS",
         description="Spread maximum autorisé en points ; au-delà, le trade est bloqué",
     )
     max_spread_by_symbol: dict[str, int] = Field(
         default_factory=lambda: {
-            "EURUSD": 30,
-            "GBPUSD": 40,
-            "USDJPY": 30,
-            "XAUUSD": 200,
+            GOLD_SYMBOL: 200,
         },
         alias="MAX_SPREAD_BY_SYMBOL",
         description="Spread maximum par symbole en points",
@@ -105,6 +104,53 @@ class InstrumentProfile:
     # Nombre de bougies directionnelles consécutives confirmant le
     # displacement après un Order Block.
     displacement_confirmation_bars: int = 1
+
+@dataclass(frozen=True)
+class GoldMarketConfig:
+    """Configuration centralisee du marche actif XAUUSD."""
+
+    symbol: str = GOLD_SYMBOL
+    context_timeframe: TimeFrame = TimeFrame.H4
+    htf_timeframe: TimeFrame = TimeFrame.H1
+    entry_timeframe: TimeFrame = TimeFrame.M5
+    atr_period: int = 14
+    displacement_atr_mult: float = 1.2
+    retest_atr_mult: float = 1.5
+    sl_buffer_atr_mult: float = 0.8
+    min_risk_reward: float = 2.0
+    max_spread_points: int = 200
+    max_zone_age_bars: int = 25
+    max_mitigations: int = 2
+    min_confluence_count: int = 2
+    min_fvg_atr: float = 0.25
+    sweep_min_rejection_ratio: float = 0.5
+    sweep_displacement_atr_mult: float = 1.0
+    max_ob_atr_mult: float = 3.0
+    displacement_confirmation_bars: int = 2
+    min_sl_atr_mult: float = 0.4
+    max_sl_atr_mult: float = 4.0
+    momentum_body_atr_mult: float = 1.0
+    rejection_wick_body_ratio: float = 1.5
+
+    def instrument_profile(self) -> InstrumentProfile:
+        """Retourne le profil instrument consomme par le pipeline existant."""
+        return InstrumentProfile(
+            symbol=self.symbol,
+            atr_period=self.atr_period,
+            displacement_atr_mult=self.displacement_atr_mult,
+            retest_atr_mult=self.retest_atr_mult,
+            sl_buffer_atr_mult=self.sl_buffer_atr_mult,
+            min_risk_reward=self.min_risk_reward,
+            max_spread_points=self.max_spread_points,
+            max_zone_age_bars=self.max_zone_age_bars,
+            max_mitigations=self.max_mitigations,
+            min_confluence_count=self.min_confluence_count,
+            min_fvg_atr=self.min_fvg_atr,
+            sweep_min_rejection_ratio=self.sweep_min_rejection_ratio,
+            sweep_displacement_atr_mult=self.sweep_displacement_atr_mult,
+            max_ob_atr_mult=self.max_ob_atr_mult,
+            displacement_confirmation_bars=self.displacement_confirmation_bars,
+        )
 
 
 class SignalSettings(BaseSettings):
@@ -226,6 +272,7 @@ class DecisionSettings(BaseSettings):
     max_atr: float = Field(default=999999.0, alias="MAX_ATR", gt=0.0)
     atr_multiplier: float = Field(default=1.0, alias="ATR_MULTIPLIER", gt=0.0)
     htf_timeframe: str = Field(default="H1", alias="HTF_TIMEFRAME")
+    context_timeframe: str = Field(default="H4", alias="CONTEXT_TIMEFRAME")
     entry_timeframe: str = Field(default="M5", alias="ENTRY_TIMEFRAME")
     master_trend_enabled: bool = Field(default=True, alias="MASTER_TREND_ENABLED")
     allow_counter_trend: bool = Field(default=False, alias="ALLOW_COUNTER_TREND")
@@ -449,16 +496,19 @@ class Settings(BaseSettings):
     )
 
     # Symboles et timeframe
-    default_symbols: str = Field(default="XAUUSD", alias="DEFAULT_SYMBOLS")
+    gold: GoldMarketConfig = Field(default_factory=GoldMarketConfig)
+    active_symbol: str = Field(default=GOLD_SYMBOL, alias="ACTIVE_SYMBOL")
+    default_symbols: str = Field(default=GOLD_SYMBOL, alias="DEFAULT_SYMBOLS")
     enable_legacy_symbols: bool = Field(default=False, alias="ENABLE_LEGACY_SYMBOLS")
     default_timeframe: TimeFrame = Field(default=TimeFrame.H1, alias="DEFAULT_TIMEFRAME")
 
-    # Timeframes du flux MTF (Phase 3) : H1 = biais, M15 = setup, M5 = entrée.
+    # Timeframes du flux Gold : H4 = contexte, H1 = biais, M5 = setup/entree.
+    context_timeframe: TimeFrame = Field(default=TimeFrame.H4, alias="CONTEXT_TIMEFRAME")
     htf_timeframe: TimeFrame = Field(default=TimeFrame.H1, alias="HTF_TIMEFRAME")
-    setup_timeframe: TimeFrame = Field(default=TimeFrame.M15, alias="SETUP_TIMEFRAME")
+    setup_timeframe: TimeFrame = Field(default=TimeFrame.M5, alias="SETUP_TIMEFRAME")
     entry_timeframe: TimeFrame = Field(default=TimeFrame.M5, alias="ENTRY_TIMEFRAME")
 
-    # Profils par instrument (EURUSD + XAUUSD uniquement en phase 1).
+    # Profils instruments conserves pour tests/diagnostics ; seul XAUUSD est actif.
     instrument_profiles: dict[str, InstrumentProfile] = Field(
         default_factory=lambda: {
             "EURUSD": InstrumentProfile(
@@ -493,7 +543,7 @@ class Settings(BaseSettings):
                 displacement_confirmation_bars=2,
             ),
         },
-        description="Profil de trading par symbole (seuls EURUSD et XAUUSD en phase 1)",
+        description="Profil de trading par symbole (execution specialisee XAUUSD)",
     )
 
     # Sous-configurations
@@ -511,12 +561,27 @@ class Settings(BaseSettings):
     notifications: NotificationSettings = Field(default_factory=NotificationSettings)
     ai: AISettings = Field(default_factory=AISettings)
 
-    @field_validator("default_timeframe", mode="before")
+    @field_validator(
+        "default_timeframe",
+        "context_timeframe",
+        "htf_timeframe",
+        "setup_timeframe",
+        "entry_timeframe",
+        mode="before",
+    )
     @classmethod
     def parse_timeframe(cls, v: str | TimeFrame) -> TimeFrame:
         if isinstance(v, TimeFrame):
             return v
         return TimeFrame(v.upper())
+
+    @field_validator("active_symbol", mode="before")
+    @classmethod
+    def parse_active_symbol(cls, v: str) -> str:
+        symbol = str(v).strip().upper()
+        if symbol != GOLD_SYMBOL:
+            raise ValueError("Arty est specialise pour XAUUSD : ACTIVE_SYMBOL doit etre XAUUSD")
+        return symbol
 
     @field_validator("debug", mode="before")
     @classmethod
@@ -554,20 +619,32 @@ class Settings(BaseSettings):
         """
         if self.trading_mode == TradingMode.LIVE and not self.allow_live_trading:
             self.trading_mode = TradingMode.PAPER
+        self.active_symbol = GOLD_SYMBOL
+        self.default_symbols = GOLD_SYMBOL
+        self.context_timeframe = self.gold.context_timeframe
+        self.htf_timeframe = self.gold.htf_timeframe
+        self.setup_timeframe = self.gold.entry_timeframe
+        self.entry_timeframe = self.gold.entry_timeframe
+        self.default_timeframe = self.gold.htf_timeframe
+        self.instrument_profiles[GOLD_SYMBOL] = self.gold.instrument_profile()
+        self.risk.max_spread = self.gold.max_spread_points
+        self.risk.max_spread_by_symbol = {GOLD_SYMBOL: self.gold.max_spread_points}
         return self
 
     @property
     def symbols_list(self) -> list[str]:
         """Retourne la liste des symboles configurés."""
+        return [self.active_symbol]
+
+    @property
+    def configured_symbols_list(self) -> list[str]:
+        """Retourne les symboles demandes par l'environnement, pour diagnostic."""
         return [s.strip().upper() for s in self.default_symbols.split(",") if s.strip()]
 
     @property
     def supported_symbols(self) -> list[str]:
         """Retourne la liste des symboles supportés par la stratégie ICT/SMC."""
-        base = ["EURUSD", "XAUUSD"]
-        if self.enable_legacy_symbols:
-            base.extend(["GBPUSD", "USDJPY"])
-        return base
+        return [self.active_symbol]
 
     def get_instrument_profile(self, symbol: str) -> InstrumentProfile | None:
         """Retourne le profil d'un instrument, ou None si non configuré."""

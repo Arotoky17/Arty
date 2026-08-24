@@ -9,7 +9,7 @@
 # démo configuré dans le fichier .env (MT5_* / TRADING_MODE=demo).
 #
 # Usage :
-#   python scripts/test_efficacy.py [--symbols EURUSD,XAUUSD]
+#   python scripts/test_efficacy.py [--symbols XAUUSD]
 #                                   [--days 30]
 # =============================================================
 
@@ -35,7 +35,7 @@ logger = get_logger("efficacy")
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Test d'efficacité du bot sur données réelles (démo)")
-    parser.add_argument("--symbols", type=str, default="EURUSD,XAUUSD", help="Symboles séparés par des virgules")
+    parser.add_argument("--symbols", type=str, default="XAUUSD", help="Symboles separes par des virgules")
     parser.add_argument("--days", type=int, default=30, help="Nombre de jours d'historique à récupérer")
     return parser.parse_args()
 

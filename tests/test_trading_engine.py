@@ -34,7 +34,7 @@ from arty_trading.modules.risk import RiskManager
 
 
 def make_candle(
-    symbol: str = "EURUSD",
+    symbol: str = "XAUUSD",
     timeframe: TimeFrame = TimeFrame.H1,
     time: datetime | None = None,
     close: str = "1.0850",
@@ -55,7 +55,7 @@ def make_candle(
     )
 
 
-def make_signal(symbol: str = "EURUSD") -> Signal:
+def make_signal(symbol: str = "XAUUSD") -> Signal:
     """Crée un signal de test."""
     return Signal(
         symbol=symbol,
@@ -72,7 +72,7 @@ def make_signal(symbol: str = "EURUSD") -> Signal:
     )
 
 
-def make_trade(symbol: str = "EURUSD") -> Trade:
+def make_trade(symbol: str = "XAUUSD") -> Trade:
     """Crée un trade de test."""
     return Trade(
         symbol=symbol,
@@ -105,17 +105,21 @@ def make_account() -> TradingAccount:
 def make_settings(trading_mode: TradingMode = TradingMode.PAPER) -> MagicMock:
     """Crée un mock de Settings sans dépendre de pydantic-settings ni du .env."""
     settings = MagicMock()
-    settings.symbols_list = ["EURUSD"]
-    settings.supported_symbols = ["EURUSD", "XAUUSD"]
+    settings.symbols_list = ["XAUUSD"]
+    settings.supported_symbols = ["XAUUSD"]
     settings.enable_legacy_symbols = False
     settings.default_timeframe = TimeFrame.H1
+    settings.context_timeframe = TimeFrame.H4
+    settings.htf_timeframe = TimeFrame.H1
+    settings.setup_timeframe = TimeFrame.M5
+    settings.entry_timeframe = TimeFrame.M5
     settings.trading_mode = trading_mode
 
     def get_profile(symbol: str):
-        if symbol.upper() == "EURUSD":
+        if symbol.upper() == "XAUUSD":
             m = MagicMock()
             m.min_risk_reward = 2.0
-            m.max_spread_points = 30
+            m.max_spread_points = 200
             return m
         return None
 
@@ -299,7 +303,7 @@ def make_bullish_h1_candles(start_time: datetime | None = None, n: int = 20) -> 
         o, h, l, c = prices[i]
         t = base_time + timedelta(hours=i)
         candles.append(Candle(
-            symbol="EURUSD", timeframe=TimeFrame.H1, time=t,
+            symbol="XAUUSD", timeframe=TimeFrame.H1, time=t,
             open=Decimal(str(o)), high=Decimal(str(h)),
             low=Decimal(str(l)), close=Decimal(str(c)),
             volume=1000, spread=5,
@@ -316,6 +320,16 @@ class TestCallOrder:
     """Vérifie l'ordre exact des appels dans la chaîne d'analyse."""
 
     @pytest.mark.asyncio
+    async def test_ignores_non_xauusd_symbol(self) -> None:
+        """Le moteur specialise Gold ignore les autres marches."""
+        call_order: list[str] = []
+        engine = build_engine(call_order)
+
+        await engine.analyze_symbol("EURUSD")
+
+        assert call_order == []
+
+    @pytest.mark.asyncio
     async def test_full_flow_call_order(self) -> None:
         """
         L'ordre des appels doit être :
@@ -326,10 +340,9 @@ class TestCallOrder:
         call_order: list[str] = []
         engine = build_engine(call_order)
 
-        await engine.analyze_symbol("EURUSD")
+        await engine.analyze_symbol("XAUUSD")
 
         assert call_order == [
-            "get_latest_candles",
             "get_latest_candles",
             "get_latest_candles",
             "detect",
@@ -349,7 +362,7 @@ class TestCallOrder:
         engine = build_engine(call_order)
 
         # On récupère le mock du smc_detector pour vérifier les args
-        await engine.analyze_symbol("EURUSD")
+        await engine.analyze_symbol("XAUUSD")
 
         # Le mock est une fonction async, on vérifie qu'il a été appelé
         # (le call_order confirme que detect a été appelé)
@@ -361,7 +374,7 @@ class TestCallOrder:
         call_order: list[str] = []
         engine = build_engine(call_order)
 
-        await engine.analyze_symbol("EURUSD")
+        await engine.analyze_symbol("XAUUSD")
 
         assert "generate" in call_order
 
@@ -380,11 +393,10 @@ class TestNoOrderOnValidationFailure:
         call_order: list[str] = []
         engine = build_engine(call_order, validate_result=False)
 
-        await engine.analyze_symbol("EURUSD")
+        await engine.analyze_symbol("XAUUSD")
 
         # L'ordre doit s'arrêter après validate_signal
         assert call_order == [
-            "get_latest_candles",
             "get_latest_candles",
             "get_latest_candles",
             "detect",
@@ -404,11 +416,10 @@ class TestNoOrderOnValidationFailure:
         call_order: list[str] = []
         engine = build_engine(call_order, can_open_result=False)
 
-        await engine.analyze_symbol("EURUSD")
+        await engine.analyze_symbol("XAUUSD")
 
         # L'ordre doit s'arrêter après can_open_trade
         assert call_order == [
-            "get_latest_candles",
             "get_latest_candles",
             "get_latest_candles",
             "detect",
@@ -426,11 +437,10 @@ class TestNoOrderOnValidationFailure:
         call_order: list[str] = []
         engine = build_engine(call_order, signal_result=None)
 
-        await engine.analyze_symbol("EURUSD")
+        await engine.analyze_symbol("XAUUSD")
 
         # L'ordre doit s'arrêter après generate
         assert call_order == [
-            "get_latest_candles",
             "get_latest_candles",
             "get_latest_candles",
             "detect",
@@ -455,7 +465,7 @@ class TestNoOrderOnValidationFailure:
         # Remplacer le mock de market_data pour retourner une liste vide
         engine._market_data.get_latest_candles = mock_empty_candles  # type: ignore[attr-defined]
 
-        await engine.analyze_symbol("EURUSD")
+        await engine.analyze_symbol("XAUUSD")
 
         assert call_order == ["get_latest_candles"]
         assert "detect" not in call_order
@@ -478,16 +488,16 @@ class TestNewBarDetection:
         engine = build_engine(call_order, candle_time=fixed_time)
 
         # Premier appel : déclenche l'analyse complète
-        await engine.analyze_symbol("EURUSD")
+        await engine.analyze_symbol("XAUUSD")
         assert "detect" in call_order
 
         # Deuxième appel : même bougie, ne doit pas re-déclencher l'analyse
         call_order.clear()
-        await engine.analyze_symbol("EURUSD")
+        await engine.analyze_symbol("XAUUSD")
 
         # Seul get_latest_candles doit être appelé (pour vérifier la bougie)
         # Note: 3 appels pour H1, M15 (setup) et M5
-        assert call_order == ["get_latest_candles", "get_latest_candles", "get_latest_candles"]
+        assert call_order == ["get_latest_candles", "get_latest_candles"]
         assert "detect" not in call_order
         assert "generate" not in call_order
         assert "open_order" not in call_order
@@ -501,7 +511,7 @@ class TestNewBarDetection:
 
         # Premier appel avec la première bougie
         engine = build_engine(call_order, candle_time=first_time)
-        await engine.analyze_symbol("EURUSD")
+        await engine.analyze_symbol("XAUUSD")
         assert "detect" in call_order
 
         # Deuxième appel avec une bougie plus récente
@@ -515,7 +525,7 @@ class TestNewBarDetection:
             return [make_candle(time=second_time, timeframe=TimeFrame.M5)]
 
         engine._market_data.get_latest_candles = mock_new_candle  # type: ignore[attr-defined]
-        await engine.analyze_symbol("EURUSD")
+        await engine.analyze_symbol("XAUUSD")
 
         # L'analyse complète doit être re-déclenchée
         assert "detect" in call_order
@@ -537,18 +547,18 @@ class TestEngineStatus:
         call_order: list[str] = []
         engine = build_engine(call_order)
 
-        await engine.analyze_symbol("EURUSD")
+        await engine.analyze_symbol("XAUUSD")
 
         status = engine.get_status()
 
         assert status["running"] is False
-        assert status["symbols"] == ["EURUSD"]
+        assert status["symbols"] == ["XAUUSD"]
         assert status["timeframe"] == "H1"
-        assert "EURUSD" in status["last_candle_time"]
-        assert status["last_candle_time"]["EURUSD"] is not None
-        assert "EURUSD" in status["last_signal"]
-        assert status["last_signal"]["EURUSD"]["direction"] == "buy"
-        assert status["last_signal"]["EURUSD"]["strategy_name"] == "TestStrategy"
+        assert "XAUUSD" in status["last_candle_time"]
+        assert status["last_candle_time"]["XAUUSD"] is not None
+        assert "XAUUSD" in status["last_signal"]
+        assert status["last_signal"]["XAUUSD"]["direction"] == "buy"
+        assert status["last_signal"]["XAUUSD"]["strategy_name"] == "TestStrategy"
 
     @pytest.mark.asyncio
     async def test_get_status_no_signal(self) -> None:
@@ -556,7 +566,7 @@ class TestEngineStatus:
         call_order: list[str] = []
         engine = build_engine(call_order, signal_result=None)
 
-        await engine.analyze_symbol("EURUSD")
+        await engine.analyze_symbol("XAUUSD")
 
         status = engine.get_status()
         assert status["last_signal"] == {}
@@ -568,7 +578,7 @@ class TestEngineStatus:
         status = engine.get_status()
 
         assert status["running"] is False
-        assert status["symbols"] == ["EURUSD"]
+        assert status["symbols"] == ["XAUUSD"]
         assert status["timeframe"] == "H1"
         assert status["last_candle_time"] == {}
         assert status["last_signal"] == {}
@@ -639,7 +649,7 @@ class TestCandleSynchronizerIntegration:
 
         # Le synchroniseur doit avoir enregistré la bougie actuelle
         expected_last = fixed_time + timedelta(hours=19)
-        last = engine.synchronizer.get_last_processed("EURUSD")
+        last = engine.synchronizer.get_last_processed("XAUUSD")
         assert last == expected_last
 
     @pytest.mark.asyncio
@@ -654,11 +664,11 @@ class TestCandleSynchronizerIntegration:
 
         # L'analyse ne doit pas déclencher le pipeline (bougie déjà traitée)
         call_order.clear()
-        await engine.analyze_symbol("EURUSD")
+        await engine.analyze_symbol("XAUUSD")
 
         # Seul get_latest_candles doit être appelé (vérification bougie)
         # Note: 3 appels pour H1, M15 (setup) et M5 (Phase 3)
-        assert call_order == ["get_latest_candles", "get_latest_candles", "get_latest_candles"]
+        assert call_order == ["get_latest_candles", "get_latest_candles"]
         assert "detect" not in call_order
         assert "generate" not in call_order
         assert "open_order" not in call_order
@@ -688,7 +698,7 @@ class TestCandleSynchronizerIntegration:
 
         # L'analyse doit déclencher le pipeline complet
         call_order.clear()
-        await engine.analyze_symbol("EURUSD")
+        await engine.analyze_symbol("XAUUSD")
 
         assert "detect" in call_order
         assert "generate" in call_order
@@ -710,7 +720,7 @@ class TestCandleSynchronizerIntegration:
         await engine._initialize_symbols()
 
         # Le synchroniseur ne doit pas avoir enregistré le symbole
-        assert engine.synchronizer.get_last_processed("EURUSD") is None
+        assert engine.synchronizer.get_last_processed("XAUUSD") is None
 
 
 # =============================================================================
@@ -727,7 +737,7 @@ class TestPipelineSteps:
         call_order: list[str] = []
         engine = build_engine(call_order)
 
-        candles = await engine._download_data("EURUSD")
+        candles = await engine._download_data("XAUUSD")
 
         assert candles is not None
         assert len(candles) == 20
@@ -743,7 +753,7 @@ class TestPipelineSteps:
 
         engine._market_data.get_latest_candles = mock_error  # type: ignore[attr-defined]
 
-        candles = await engine._download_data("EURUSD")
+        candles = await engine._download_data("XAUUSD")
         assert candles is None
 
     @pytest.mark.asyncio
@@ -756,7 +766,7 @@ class TestPipelineSteps:
 
         engine._market_data.get_latest_candles = mock_empty  # type: ignore[attr-defined]
 
-        candles = await engine._download_data("EURUSD")
+        candles = await engine._download_data("XAUUSD")
         assert candles is None
 
     @pytest.mark.asyncio
@@ -766,7 +776,7 @@ class TestPipelineSteps:
         engine = build_engine(call_order)
         candles = [make_candle()]
 
-        smc_data = await engine._analyze_smc("EURUSD", candles)
+        smc_data = await engine._analyze_smc("XAUUSD", candles)
 
         assert smc_data is not None
         assert len(smc_data) == 1
@@ -780,7 +790,7 @@ class TestPipelineSteps:
         candles = [make_candle()]
         smc_data = [{"concept": "BOS"}]
 
-        signal = await engine._generate_signal("EURUSD", candles, smc_data)
+        signal = await engine._generate_signal("XAUUSD", candles, smc_data)
 
         assert signal is not None
         assert signal.direction == Direction.BUY
@@ -793,7 +803,7 @@ class TestPipelineSteps:
         engine = build_engine(call_order)
         signal = make_signal()
 
-        volume = await engine._calculate_risk("EURUSD", signal)
+        volume = await engine._calculate_risk("XAUUSD", signal)
 
         assert volume is not None
         assert volume == 0.1
@@ -809,10 +819,10 @@ class TestPipelineSteps:
         engine = build_engine(call_order)
         signal = make_signal()
 
-        trade = await engine._execute_trade("EURUSD", signal, 0.1)
+        trade = await engine._execute_trade("XAUUSD", signal, 0.1)
 
         assert trade is not None
-        assert trade.symbol == "EURUSD"
+        assert trade.symbol == "XAUUSD"
         assert "open_order" in call_order
 
     @pytest.mark.asyncio
@@ -824,7 +834,7 @@ class TestPipelineSteps:
         # Le risk_manager est un MagicMock, pas un RiskManager concret,
         # donc register_trade ne sera pas appelé. Mais _monitor_trade
         # ne doit pas lever d'exception.
-        await engine._monitor_trade("EURUSD", trade)
+        await engine._monitor_trade("XAUUSD", trade)
 
 
 # =============================================================================
@@ -841,7 +851,7 @@ class TestTradingModes:
         call_order: list[str] = []
         engine = build_engine(call_order, trading_mode=TradingMode.ANALYSIS)
 
-        await engine.analyze_symbol("EURUSD")
+        await engine.analyze_symbol("XAUUSD")
 
         # Le pipeline doit s'arrêter après generate (H1 détecté comme bullish)
         assert "get_latest_candles" in call_order
@@ -860,10 +870,9 @@ class TestTradingModes:
         call_order: list[str] = []
         engine = build_engine(call_order, trading_mode=TradingMode.PAPER)
 
-        await engine.analyze_symbol("EURUSD")
+        await engine.analyze_symbol("XAUUSD")
 
         assert call_order == [
-            "get_latest_candles",
             "get_latest_candles",
             "get_latest_candles",
             "detect",
@@ -882,10 +891,9 @@ class TestTradingModes:
         call_order: list[str] = []
         engine = build_engine(call_order, trading_mode=TradingMode.LIVE)
 
-        await engine.analyze_symbol("EURUSD")
+        await engine.analyze_symbol("XAUUSD")
 
         assert call_order == [
-            "get_latest_candles",
             "get_latest_candles",
             "get_latest_candles",
             "detect",
@@ -908,7 +916,7 @@ class TestTradingModes:
             signal_result=None,
         )
 
-        await engine.analyze_symbol("EURUSD")
+        await engine.analyze_symbol("XAUUSD")
 
         assert "get_latest_candles" in call_order
         assert "detect" in call_order
@@ -955,21 +963,21 @@ class TestStatistics:
         """En mode ANALYSIS, les analyses et signaux doivent être enregistrés."""
         engine = build_engine([], trading_mode=TradingMode.ANALYSIS)
 
-        await engine.analyze_symbol("EURUSD")
+        await engine.analyze_symbol("XAUUSD")
 
         stats = engine.get_statistics()
         assert stats["mode"] == "analysis"
         assert stats["total_analyses"] == 1
         assert stats["total_signals"] == 1
         assert stats["total_trades"] == 0
-        assert stats["analyses_by_symbol"] == {"EURUSD": 1}
+        assert stats["analyses_by_symbol"] == {"XAUUSD": 1}
 
     @pytest.mark.asyncio
     async def test_paper_mode_records_trade(self) -> None:
         """En mode PAPER, les trades doivent être enregistrés."""
         engine = build_engine([], trading_mode=TradingMode.PAPER)
 
-        await engine.analyze_symbol("EURUSD")
+        await engine.analyze_symbol("XAUUSD")
 
         stats = engine.get_statistics()
         assert stats["mode"] == "paper"
@@ -982,7 +990,7 @@ class TestStatistics:
         """En mode LIVE, les trades doivent être enregistrés."""
         engine = build_engine([], trading_mode=TradingMode.LIVE)
 
-        await engine.analyze_symbol("EURUSD")
+        await engine.analyze_symbol("XAUUSD")
 
         stats = engine.get_statistics()
         assert stats["mode"] == "live"
@@ -995,7 +1003,7 @@ class TestStatistics:
         """Si aucun signal n'est généré, aucun trade ne doit être enregistré."""
         engine = build_engine([], signal_result=None)
 
-        await engine.analyze_symbol("EURUSD")
+        await engine.analyze_symbol("XAUUSD")
 
         stats = engine.get_statistics()
         assert stats["total_analyses"] == 1
@@ -1007,7 +1015,7 @@ class TestStatistics:
         """Le statut doit inclure un résumé des statistiques."""
         engine = build_engine([])
 
-        await engine.analyze_symbol("EURUSD")
+        await engine.analyze_symbol("XAUUSD")
 
         status = engine.get_status()
         assert "statistics" in status
@@ -1025,7 +1033,7 @@ class TestStatistics:
         engine = build_engine(call_order, candle_time=first_time)
 
         # Première analyse
-        await engine.analyze_symbol("EURUSD")
+        await engine.analyze_symbol("XAUUSD")
 
         # Deuxième analyse avec une nouvelle bougie
         async def mock_new_candle(*args: object, **kwargs: object) -> list[Candle]:
@@ -1034,13 +1042,13 @@ class TestStatistics:
 
         engine._market_data.get_latest_candles = mock_new_candle  # type: ignore[attr-defined]
         call_order.clear()
-        await engine.analyze_symbol("EURUSD")
+        await engine.analyze_symbol("XAUUSD")
 
         stats = engine.get_statistics()
         assert stats["total_analyses"] == 2
         assert stats["total_signals"] == 2
         assert stats["total_trades"] == 2
-        assert stats["analyses_by_symbol"] == {"EURUSD": 2}
+        assert stats["analyses_by_symbol"] == {"XAUUSD": 2}
 
     def test_get_statistics_summary(self) -> None:
         """get_statistics_summary doit retourner un résumé sans les listes."""
@@ -1101,7 +1109,7 @@ class TestPositionReconciliation:
         """Les positions ouvertes existantes doivent être enregistrées."""
         executor = PaperOrderExecutor()
         # Simuler une position déjà ouverte sur le compte
-        await executor.open_order(make_signal("EURUSD"), 0.1)
+        await executor.open_order(make_signal("XAUUSD"), 0.1)
 
         engine = self._build_engine_with_executor(executor)
 
@@ -1116,7 +1124,7 @@ class TestPositionReconciliation:
     async def test_reconcile_ignored_in_analysis_mode(self) -> None:
         """En mode ANALYSIS, aucune position ne doit être réconciliée."""
         executor = PaperOrderExecutor()
-        await executor.open_order(make_signal("EURUSD"), 0.1)
+        await executor.open_order(make_signal("XAUUSD"), 0.1)
 
         engine = self._build_engine_with_executor(
             executor, trading_mode=TradingMode.ANALYSIS
@@ -1126,3 +1134,5 @@ class TestPositionReconciliation:
 
         assert engine._risk_manager.open_positions_count == 0
         assert engine._managed_trades == {}
+
+

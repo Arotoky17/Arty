@@ -1,7 +1,7 @@
-"""Tests de la restriction des marches a EURUSD + XAUUSD uniquement.
+"""Tests de la restriction du marche a XAUUSD uniquement.
 
-Verifient que GBPUSD et USDJPY ne peuvent plus etre analyses ni executas,
-et que la configuration active contient exactement EURUSD et XAUUSD.
+Verifient que tous les symboles hors XAUUSD ne peuvent plus etre analyses ni
+executes, et que la configuration active contient exactement XAUUSD.
 """
 
 from __future__ import annotations
@@ -17,16 +17,16 @@ from arty_trading.config.settings import Settings
 class TestActiveConfigSymbols:
     """TEST 1, 8 : contenu exact et taille de la liste active."""
 
-    def test_active_config_contains_exactly_eurusd_xauusd(self, monkeypatch):
+    def test_active_config_contains_exactly_xauusd(self, monkeypatch):
         monkeypatch.delenv("DEFAULT_SYMBOLS", raising=False)
         settings = Settings(_env_file=None)
         assert settings.symbols_list == ["XAUUSD"]
 
-    def test_supported_symbols_exactly_two(self, monkeypatch):
+    def test_supported_symbols_exactly_xauusd(self, monkeypatch):
         monkeypatch.delenv("DEFAULT_SYMBOLS", raising=False)
         monkeypatch.delenv("ENABLE_LEGACY_SYMBOLS", raising=False)
         settings = Settings(_env_file=None, enable_legacy_symbols=False)
-        assert len(settings.supported_symbols) == 2
+        assert settings.supported_symbols == ["XAUUSD"]
 
 
 class TestExcludedSymbols:
@@ -49,7 +49,7 @@ class TestExcludedSymbols:
         )
 
         settings = MagicMock()
-        settings.supported_symbols = ["EURUSD", "XAUUSD"]
+        settings.supported_symbols = ["XAUUSD"]
         settings.get_instrument_profile.return_value = None
         r = await final_gate_before_execution(
             "GBPUSD", MagicMock(), MagicMock(), settings
@@ -63,7 +63,7 @@ class TestExcludedSymbols:
         )
 
         settings = MagicMock()
-        settings.supported_symbols = ["EURUSD", "XAUUSD"]
+        settings.supported_symbols = ["XAUUSD"]
         settings.get_instrument_profile.return_value = None
         r = await final_gate_before_execution(
             "USDJPY", MagicMock(), MagicMock(), settings
@@ -72,11 +72,11 @@ class TestExcludedSymbols:
 
 
 class TestAllowedSymbols:
-    """TEST 4, 5 : EURUSD et XAUUSD acceptes."""
+    """TEST 4, 5 : XAUUSD accepte, EURUSD refuse."""
 
-    def test_eurusd_supported(self):
+    def test_eurusd_not_supported(self):
         settings = Settings(_env_file=None, enable_legacy_symbols=False)
-        assert "EURUSD" in settings.supported_symbols
+        assert "EURUSD" not in settings.supported_symbols
 
     def test_xauusd_supported(self):
         settings = Settings(_env_file=None, enable_legacy_symbols=False)
@@ -84,7 +84,7 @@ class TestAllowedSymbols:
 
 
 class TestDemoTestAdaptiveRestriction:
-    """TEST 6, 7, 9 : script demo_test_adaptive restreint a EURUSD + XAUUSD."""
+    """TEST 6, 7, 9 : script demo_test_adaptive restreint a XAUUSD."""
 
     @pytest.fixture()
     def demo_mod(self):
@@ -101,9 +101,13 @@ class TestDemoTestAdaptiveRestriction:
         spec.loader.exec_module(mod)
         return mod
 
-    def test_scans_only_eurusd_and_xauusd(self, demo_mod):
-        assert demo_mod.SYMBOLS == ["EURUSD", "XAUUSD"]
+    def test_scans_only_xauusd(self, demo_mod):
+        assert demo_mod.SYMBOLS == ["XAUUSD"]
         assert set(demo_mod.SYMBOLS) == demo_mod.ALLOWED_SYMBOLS
+
+    def test_symbol_blocked_eurusd(self, demo_mod, capsys):
+        assert demo_mod.send_order("EURUSD", "buy", 0.1, 1.0, 1.1) is None
+        assert "SYMBOL BLOCKED | EURUSD" in capsys.readouterr().out
 
     def test_symbol_blocked_gbpusd(self, demo_mod, capsys):
         assert demo_mod.send_order("GBPUSD", "buy", 0.1, 1.0, 1.1) is None
@@ -125,8 +129,8 @@ class TestDemoTestAdaptiveRestriction:
             )
 
 
-def test_env_file_default_symbols_are_eurusd_xauusd():
-    """Le fichier .env actif ne doit lister que EURUSD,XAUUSD (si present)."""
+def test_env_file_default_symbols_are_xauusd():
+    """Le fichier .env actif ne doit lister que XAUUSD (si present)."""
     env_path = os.path.join(os.path.dirname(__file__), "..", ".env")
     if not os.path.exists(env_path):
         pytest.skip("pas de fichier .env")

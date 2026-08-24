@@ -1,7 +1,7 @@
 """DEMO TEST - Phase Adaptive Confidence / RR Execution sur compte DEMO MT5.
 
 1. Connexion MT5 (verifie que le compte est bien un DEMO avant tout ordre)
-2. Scan EURUSD/XAUUSD (exclusivement) : bougies M5 + tendance H1 + SMC
+2. Scan XAUUSD exclusivement : bougies M5 + tendance H1 + SMC
    (boucle : re-scan toutes les 5 min pendant SCAN_WINDOW_MIN)
 3. Signaux via politique adaptative (confiance >= 0.60 si RR >= 2.0)
 4. Un ordre marche par signal accepte, SL/TP du signal, risque 1%
@@ -26,9 +26,9 @@ from arty_trading.modules.smc.detector import SMCDetector
 from paper_test_adaptive import derive_htf_trend, fetch_candles
 
 MAGIC = 234001
-# Restriction marches : EURUSD + XAUUSD uniquement (GBPUSD/USDJPY exclus)
-ALLOWED_SYMBOLS = {"EURUSD", "XAUUSD"}
-SYMBOLS = ["EURUSD", "XAUUSD"]
+# Restriction marche : XAUUSD uniquement.
+ALLOWED_SYMBOLS = {"XAUUSD"}
+SYMBOLS = ["XAUUSD"]
 MONITOR_TIMEOUT_S = 7200  # 2h max par position
 POLL_S = 10
 MAX_TRADES = 3

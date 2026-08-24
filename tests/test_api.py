@@ -24,6 +24,7 @@ def app():
             "ALLOW_LIVE_TRADING": "false",
             "DEFAULT_SYMBOLS": "EURUSD,GBPUSD,USDJPY,XAUUSD",
             "DEFAULT_TIMEFRAME": "M5",
+            "ACTIVE_SYMBOL": "XAUUSD",
         },
     ):
         get_settings.cache_clear()
@@ -52,8 +53,12 @@ async def test_get_symbols(app):
         response = await client.get("/config/symbols")
     assert response.status_code == 200
     data = response.json()
-    assert "EURUSD" in data["symbols"]
-    assert data["timeframe"] == "M5"
+    assert data["symbols"] == ["XAUUSD"]
+    assert data["active_symbol"] == "XAUUSD"
+    assert data["context_timeframe"] == "H4"
+    assert data["htf_timeframe"] == "H1"
+    assert data["entry_timeframe"] == "M5"
+    assert data["timeframe"] == "H1"
 
 
 @pytest.mark.asyncio

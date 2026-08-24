@@ -10,7 +10,7 @@ configurations (validateur on/off, seuil de confiance) pour caractériser la
 nouvelle version.
 
 Usage :
-    python scripts/run_backtest.py [--symbol EURUSD|XAUUSD] [--candles 600]
+    python scripts/run_backtest.py [--symbol XAUUSD] [--candles 600]
 """
 from __future__ import annotations
 
@@ -191,7 +191,7 @@ def print_setup_breakdown(name: str, breakdown: dict[str, dict]) -> None:
 
 async def main() -> int:
     parser = argparse.ArgumentParser(description="Backtest nouvelle version Arty")
-    parser.add_argument("--symbol", default="EURUSD", choices=["EURUSD", "XAUUSD"])
+    parser.add_argument("--symbol", default="XAUUSD", choices=["XAUUSD"])
     parser.add_argument("--candles", type=int, default=600)
     args = parser.parse_args()
 

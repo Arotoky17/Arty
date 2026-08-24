@@ -49,9 +49,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         app_env=settings.app_env,
     )
     logger.info(
-        "Arty démarré | v%s | mode=%s",
+        "Arty demarre | v%s | mode=%s | marche specialise=%s | context=%s | htf=%s | entry=%s",
         __version__,
         settings.trading_mode.value,
+        settings.active_symbol,
+        settings.context_timeframe.value,
+        settings.htf_timeframe.value,
+        settings.entry_timeframe.value,
     )
 
     # Initialisation du connecteur MT5
@@ -155,6 +159,7 @@ def create_app() -> FastAPI:
         symbol_spread_overrides={
             symbol: profile.max_spread_points
             for symbol, profile in settings.instrument_profiles.items()
+            if symbol in settings.supported_symbols
         },
     )
     app.state.signal_generator = SignalGenerator(
@@ -212,6 +217,10 @@ def create_app() -> FastAPI:
         """Retourne les symboles configurés."""
         return {
             "symbols": settings.symbols_list,
+            "active_symbol": settings.active_symbol,
+            "context_timeframe": settings.context_timeframe.value,
+            "htf_timeframe": settings.htf_timeframe.value,
+            "entry_timeframe": settings.entry_timeframe.value,
             "timeframe": settings.default_timeframe.value,
         }
 

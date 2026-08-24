@@ -79,7 +79,8 @@ class TestSettings:
         with patch.dict(os.environ, {"DEFAULT_TIMEFRAME": "M5"}):
             get_settings.cache_clear()
             settings = Settings()
-            assert settings.default_timeframe == TimeFrame.M5
+            assert settings.default_timeframe == TimeFrame.H1
+            assert settings.entry_timeframe == TimeFrame.M5
             get_settings.cache_clear()
 
     def test_risk_settings_defaults(self):
@@ -96,8 +97,24 @@ class TestSettings:
         with patch.dict(os.environ, {"DEFAULT_SYMBOLS": "EURUSD,GBPUSD"}):
             get_settings.cache_clear()
             settings = Settings()
-            assert settings.symbols_list == ["EURUSD", "GBPUSD"]
+            assert settings.symbols_list == ["XAUUSD"]
+            assert settings.supported_symbols == ["XAUUSD"]
             get_settings.cache_clear()
+
+    def test_active_symbol_is_xauusd_only(self, monkeypatch):
+        monkeypatch.delenv("DEFAULT_SYMBOLS", raising=False)
+        monkeypatch.delenv("ACTIVE_SYMBOL", raising=False)
+        settings = Settings(_env_file=None)
+        assert settings.active_symbol == "XAUUSD"
+        assert settings.symbols_list == ["XAUUSD"]
+        assert settings.supported_symbols == ["XAUUSD"]
+        assert settings.context_timeframe == TimeFrame.H4
+        assert settings.htf_timeframe == TimeFrame.H1
+        assert settings.entry_timeframe == TimeFrame.M5
+
+    def test_active_symbol_rejects_other_markets(self):
+        with pytest.raises(ValueError):
+            Settings(_env_file=None, ACTIVE_SYMBOL="EURUSD")
 
     def test_get_settings_singleton(self):
         get_settings.cache_clear()

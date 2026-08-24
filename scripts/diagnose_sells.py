@@ -190,7 +190,7 @@ async def diagnose(symbol: str, n_candles: int, min_confidence: float, rr_min: f
 
 async def main() -> int:
     parser = argparse.ArgumentParser(description="Diagnostic CONTINUATION|SELL")
-    parser.add_argument("--symbol", default="XAUUSD", choices=["EURUSD", "XAUUSD"])
+    parser.add_argument("--symbol", default="XAUUSD", choices=["XAUUSD"])
     parser.add_argument("--candles", type=int, default=600)
     args = parser.parse_args()
     # Config avec validateur (celle du rapport Phase 3F) puis sans.

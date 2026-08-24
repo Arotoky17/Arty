@@ -535,13 +535,13 @@ class TradingEngine:
         # ------------------------------------------------------------------
         # Étape 1 : Téléchargement des données H1 + M5
         # ------------------------------------------------------------------
-        htf_candles = await self._download_data(symbol, self._settings.default_timeframe)
+        htf_candles = await self._download_data(symbol, self._settings.htf_timeframe)
         if htf_candles is None:
             self._fail_step(diagnostic, PipelineStep.DATA_AVAILABLE, RejectionReason.NO_MARKET_DATA)
             self._decision_debugger.finalize_opportunity(diagnostic)
             return
 
-        ltf_candles = await self._download_data(symbol, TimeFrame.M5)
+        ltf_candles = await self._download_data(symbol, self._settings.entry_timeframe)
         if ltf_candles is None:
             self._fail_step(diagnostic, PipelineStep.DATA_AVAILABLE, RejectionReason.NO_MARKET_DATA)
             self._decision_debugger.finalize_opportunity(diagnostic)
@@ -549,13 +549,18 @@ class TradingEngine:
 
         # Phase 3 : timeframe de setup (M15). Optionnel — si indisponible,
         # le pipeline continue en H1/M5 (rétro-compatibilité).
-        setup_tf_candles = await self._download_data(
-            symbol, self._settings.setup_timeframe
+        setup_tf_candles = (
+            ltf_candles
+            if self._settings.setup_timeframe == self._settings.entry_timeframe
+            else await self._download_data(symbol, self._settings.setup_timeframe)
         )
         if setup_tf_candles is None:
             logger.info(
-                "M15 indisponible | %s | pipeline H1/M5 sans timeframe de setup",
+                "%s indisponible | %s | pipeline %s/%s sans timeframe de setup",
+                self._settings.setup_timeframe.value,
                 symbol,
+                self._settings.htf_timeframe.value,
+                self._settings.entry_timeframe.value,
             )
 
         self._record_step(diagnostic, PipelineStep.DATA_AVAILABLE)
@@ -580,13 +585,14 @@ class TradingEngine:
         self._synchronizer.mark_processed(symbol, latest_candle.time)
         self._statistics.record_analysis(symbol)
         self._decision_debugger.record_candle_analyzed(
-            symbol_upper, TimeFrame.M5, latest_candle.time
+            symbol_upper, self._settings.entry_timeframe, latest_candle.time
         )
 
         logger.info("=" * 56)
         logger.info(
-            "Nouvelle bougie détectée | %s | M5 | time=%s",
+            "Nouvelle bougie détectée | %s | %s | time=%s",
             symbol,
+            self._settings.entry_timeframe.value,
             latest_candle.time.isoformat(),
         )
         logger.info("=" * 56)

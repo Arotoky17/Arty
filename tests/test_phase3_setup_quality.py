@@ -276,7 +276,8 @@ class TestInstrumentProfileWiring:
     def test_timeframe_settings(self):
         s = Settings()
         assert s.htf_timeframe == TimeFrame.H1
-        assert s.setup_timeframe == TimeFrame.M15
+        assert s.context_timeframe == TimeFrame.H4
+        assert s.setup_timeframe == TimeFrame.M5
         assert s.entry_timeframe == TimeFrame.M5
 
     def test_detector_params_exist(self):

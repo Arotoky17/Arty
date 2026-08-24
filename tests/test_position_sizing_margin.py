@@ -198,26 +198,25 @@ class TestTradingRulesUnchanged:
         demo.compute_volume("EURUSD", "sell", BALANCE, RISK, 1.1000, 1.0980)
         # send_order transmet SL/TP tels quels
         demo._mt5.symbol_info_tick.return_value = MagicMock(ask=1.1001, bid=1.0999)
-        demo.send_order("EURUSD", "sell", 0.5, 1.0980, 1.0960)
+        demo.send_order("XAUUSD", "sell", 0.5, 3995.0, 3985.0)
         req = demo._mt5.order_send.call_args[0][0]
-        assert req["sl"] == 1.0980 and req["tp"] == 1.0960
+        assert req["sl"] == 3995.0 and req["tp"] == 3985.0
         assert req["type"] == demo._mt5.ORDER_TYPE_SELL  # direction inchangee
 
     def test_retcode_10019_logged(self, demo, capsys):
         demo._mt5.symbol_info_tick.return_value = MagicMock(ask=1.1, bid=1.1)
         res = MagicMock(retcode=10019, comment="No money")
         demo._mt5.order_send.return_value = res
-        assert demo.send_order("EURUSD", "buy", 0.5, 1.09, 1.12) is None
+        assert demo.send_order("XAUUSD", "buy", 0.5, 3990.0, 4020.0) is None
         assert "NO_MONEY" in capsys.readouterr().out
 
     def test_no_retry_with_bigger_volume(self, demo):
         demo._mt5.symbol_info_tick.return_value = MagicMock(ask=1.1, bid=1.1)
         res = MagicMock(retcode=10019, comment="No money")
         demo._mt5.order_send.return_value = res
-        demo.send_order("EURUSD", "buy", 0.5, 1.09, 1.12)
+        demo.send_order("XAUUSD", "buy", 0.5, 3990.0, 4020.0)
         assert demo._mt5.order_send.call_count == 1
 
     def test_symbol_restriction_unchanged(self, demo):
-        assert demo.ALLOWED_SYMBOLS == {"EURUSD", "XAUUSD"}
-        assert demo.SYMBOLS == ["EURUSD", "XAUUSD"]
-
+        assert demo.ALLOWED_SYMBOLS == {"XAUUSD"}
+        assert demo.SYMBOLS == ["XAUUSD"]

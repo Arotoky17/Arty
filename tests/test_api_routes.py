@@ -176,7 +176,7 @@ class TestRiskRoutes:
         response = await client.post(
             "/risk/validate",
             json={
-                "symbol": "EURUSD",
+                "symbol": "XAUUSD",
                 "direction": "buy",
                 "entry_price": 1.0800,
                 "stop_loss": 1.0780,
@@ -219,7 +219,7 @@ class TestExecutionRoutes:
         response = await client.post(
             "/execution/open",
             json={
-                "symbol": "EURUSD",
+                "symbol": "XAUUSD",
                 "direction": "buy",
                 "volume": 0.1,
                 "stop_loss": 1.0780,

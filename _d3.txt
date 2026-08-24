@@ -1,0 +1,6 @@
+﻿
+_diag3.py:15:    generate_multi_regime_candles,
+_diag3.py:25:m5, spans = 
+generate_multi_regime_candles(n_m5=1200, seed=42)
+
+

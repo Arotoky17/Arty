@@ -1,0 +1,4 @@
+trades=0
+trends={'neutral': 2641}
+stages={'master_gate': 2298, None: 343}
+reasons={'MASTER_TREND_CONFLICT': 2298, None: 343}

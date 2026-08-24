@@ -850,5 +850,12 @@ class SignalGenerator:
                 "zone_index": setup.zone_index,
                 "atr_at_detection": setup.atr_at_detection,
                 "htf_trend_at_detection": setup.htf_trend_at_detection,
+                # Phase 3D : type de setup classé (statistiques par type).
+                "setup_type": getattr(setup, "metadata", {}).get(
+                    "setup_type", "UNKNOWN"
+                ),
+                "setup_tf_trend": getattr(setup, "metadata", {}).get(
+                    "setup_tf_trend", "neutral"
+                ),
             },
         )

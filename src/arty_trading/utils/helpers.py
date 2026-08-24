@@ -63,6 +63,65 @@ def pip_value(symbol: str, lot_size: float = 1.0, account_currency: str = "USD")
     return lot_size * 10.0  # 10 USD/pip pour 1 lot standard EURUSD
 
 
+def is_displacement(
+    candles: list[Candle],
+    index: int,
+    atr: Decimal,
+    body_atr_mult: float = 1.0,
+    range_atr_mult: float = 1.2,
+    direction: str | None = None,
+) -> bool:
+    """
+    Vérifie si la bougie ``candles[index]`` constitue un displacement (impulsion).
+
+    Un displacement est une impulsion significative, mesurée relativement à la
+    volatilité (ATR) — jamais en distance fixe. Conditions :
+
+    - corps >= ``body_atr_mult`` × ATR
+    - amplitude totale >= ``range_atr_mult`` × ATR
+    - direction cohérente (bougie directionnelle si ``direction`` est fourni)
+    - clôture dans la moitié extrême de l'amplitude (rejet de la mèche opposée)
+
+    Args:
+        candles: Liste des bougies
+        index: Index de la bougie à tester
+        atr: ATR courant (Decimal)
+        body_atr_mult: Seuil du corps en multiple d'ATR
+        range_atr_mult: Seuil de l'amplitude en multiple d'ATR
+        direction: "bullish", "bearish" ou None (peu importe)
+
+    Returns:
+        True si la bougie est un displacement au sens ci-dessus.
+    """
+    if index < 0 or index >= len(candles) or atr is None or atr <= 0:
+        return False
+
+    candle = candles[index]
+    body = abs(candle.close - candle.open)
+    rng = candle.high - candle.low
+
+    if body < atr * Decimal(str(body_atr_mult)):
+        return False
+    if rng < atr * Decimal(str(range_atr_mult)):
+        return False
+
+    if direction == "bullish" and candle.close <= candle.open:
+        return False
+    if direction == "bearish" and candle.close >= candle.open:
+        return False
+
+    # La clôture doit se trouver dans la moitié extrême de l'amplitude :
+    # clôture haute pour un displacement haussier, basse pour baissier.
+    if rng > 0:
+        close_position = (candle.close - candle.low) / rng
+        if direction == "bullish" and close_position < Decimal("0.5"):
+            return False
+        if direction == "bearish" and close_position > Decimal("0.5"):
+            return False
+
+    return True
+
+
 def calculate_atr(candles: list[Candle], period: int = 14) -> Decimal:
     """
     Calcule l'Average True Range (ATR) sur les bougies fournies.

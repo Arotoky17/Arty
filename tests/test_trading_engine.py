@@ -230,7 +230,7 @@ def with_mocked_trend(engine: TradingEngine, trend: str = "bullish") -> TradingE
     """Patche l'analyseur de tendance pour forcer une tendance donnée dans les tests."""
     original_analyze = engine._analyze_multitimeframe
 
-    async def mock_analyze(symbol: str, htf_candles: list[Candle], ltf_candles: list[Candle]):
+    async def mock_analyze(symbol: str, htf_candles: list[Candle], ltf_candles: list[Candle], setup_tf_candles: list[Candle] | None = None):
         from arty_trading.modules.decision.market_context import MarketContext
         from arty_trading.modules.decision.master_trend import TrendAnalysis
         from decimal import Decimal
@@ -331,6 +331,7 @@ class TestCallOrder:
         assert call_order == [
             "get_latest_candles",
             "get_latest_candles",
+            "get_latest_candles",
             "detect",
             "detect",
             "generate",
@@ -385,6 +386,7 @@ class TestNoOrderOnValidationFailure:
         assert call_order == [
             "get_latest_candles",
             "get_latest_candles",
+            "get_latest_candles",
             "detect",
             "detect",
             "generate",
@@ -408,6 +410,7 @@ class TestNoOrderOnValidationFailure:
         assert call_order == [
             "get_latest_candles",
             "get_latest_candles",
+            "get_latest_candles",
             "detect",
             "detect",
             "generate",
@@ -427,6 +430,7 @@ class TestNoOrderOnValidationFailure:
 
         # L'ordre doit s'arrêter après generate
         assert call_order == [
+            "get_latest_candles",
             "get_latest_candles",
             "get_latest_candles",
             "detect",
@@ -482,8 +486,8 @@ class TestNewBarDetection:
         await engine.analyze_symbol("EURUSD")
 
         # Seul get_latest_candles doit être appelé (pour vérifier la bougie)
-        # Note: 2 appels pour H1 et M5
-        assert call_order == ["get_latest_candles", "get_latest_candles"]
+        # Note: 3 appels pour H1, M15 (setup) et M5
+        assert call_order == ["get_latest_candles", "get_latest_candles", "get_latest_candles"]
         assert "detect" not in call_order
         assert "generate" not in call_order
         assert "open_order" not in call_order
@@ -653,8 +657,8 @@ class TestCandleSynchronizerIntegration:
         await engine.analyze_symbol("EURUSD")
 
         # Seul get_latest_candles doit être appelé (vérification bougie)
-        # Note: 2 appels pour H1 et M5
-        assert call_order == ["get_latest_candles", "get_latest_candles"]
+        # Note: 3 appels pour H1, M15 (setup) et M5 (Phase 3)
+        assert call_order == ["get_latest_candles", "get_latest_candles", "get_latest_candles"]
         assert "detect" not in call_order
         assert "generate" not in call_order
         assert "open_order" not in call_order
@@ -861,6 +865,7 @@ class TestTradingModes:
         assert call_order == [
             "get_latest_candles",
             "get_latest_candles",
+            "get_latest_candles",
             "detect",
             "detect",
             "generate",
@@ -880,6 +885,7 @@ class TestTradingModes:
         await engine.analyze_symbol("EURUSD")
 
         assert call_order == [
+            "get_latest_candles",
             "get_latest_candles",
             "get_latest_candles",
             "detect",

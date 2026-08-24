@@ -38,6 +38,8 @@ class LiquidityDetector(BaseDetector):
         swing_window: int = 2,
         tolerance_pips: float = 2.0,
         pip_size: float = 0.0001,
+        min_rejection_ratio: float = 0.0,
+        displacement_atr_mult: float = 0.0,
     ) -> None:
         """
         Args:
@@ -45,10 +47,19 @@ class LiquidityDetector(BaseDetector):
             swing_window: Fenêtre pour les swing points
             tolerance_pips: Tolérance en pips pour Equal High/Low
             pip_size: Taille d'un pip
+            min_rejection_ratio: Ratio de rejet minimum (clôture au-delà du
+                niveau / profondeur du dépassement). 0 = désactivé (comportement
+                historique). > 0 : distingue un vrai sweep d'un simple wick.
+            displacement_atr_mult: Facteur ATR minimum pour le corps de la
+                bougie de rejet (ou de la bougie suivante). 0 = désactivé.
+                > 0 : un sweep n'est confirmé que s'il est suivi d'un
+                displacement dans le sens du retournement.
         """
         super().__init__(enabled=enabled)
         self._swing_window = swing_window
         self._tolerance = Decimal(str(tolerance_pips * pip_size))
+        self._min_rejection_ratio = min_rejection_ratio
+        self._displacement_atr_mult = displacement_atr_mult
 
     @property
     def name(self) -> str:
@@ -78,12 +89,27 @@ class LiquidityDetector(BaseDetector):
         return detections
 
     def _detect_sweeps(self, candles: list[Candle]) -> list[SMCDetection]:
-        """Détecte les liquidity sweeps (stop hunts)."""
+        """Détecte les liquidity sweeps (stop hunts).
+
+        Un TRUE liquidity sweep est distingué d'un simple wick par :
+        - un ratio de rejet suffisant (clôture nettement au-delà du niveau
+          balayé, proportionnellement à la profondeur du dépassement) ;
+        - un displacement dans le sens du retournement (bougie de rejet ou
+          bougie suivante avec corps >= ``displacement_atr_mult`` × ATR).
+
+        Les métriques de qualité sont toujours incluses dans ``details``.
+        """
         detections: list[SMCDetection] = []
         swing_points = find_swing_points(candles, self._swing_window)
 
         if len(swing_points) < 2:
             return detections
+
+        atr = Decimal("0")
+        if self._displacement_atr_mult > 0:
+            from arty_trading.utils.helpers import calculate_atr
+
+            atr = calculate_atr(candles, period=14)
 
         for sp in swing_points:
             # Chercher une bougie après le swing point qui dépasse le niveau
@@ -94,6 +120,28 @@ class LiquidityDetector(BaseDetector):
                 if sp.type == "low":
                     # Bullish sweep : prix descend sous le swing low puis remonte
                     if candle.low < sp.price and candle.close > sp.price:
+                        penetration = sp.price - candle.low
+                        rejection = candle.close - sp.price
+                        rejection_ratio = (
+                            float(rejection / penetration) if penetration > 0 else 0.0
+                        )
+                        displacement_confirmed = self._has_post_sweep_displacement(
+                            candles, i, atr, "bullish", sp.price
+                        )
+
+                        if self._min_rejection_ratio > 0 and (
+                            rejection_ratio < self._min_rejection_ratio
+                        ):
+                            break  # Simple wick, pas un sweep -> swing épuisé
+                        if (
+                            self._displacement_atr_mult > 0
+                            and not displacement_confirmed
+                        ):
+                            # Pas encore de displacement : chercher une bougie
+                            # ultérieure confirmant le rejet.
+                            continue
+
+                        quality = "strong" if rejection_ratio >= 1.0 else "weak"
                         detections.append(
                             SMCDetection(
                                 concept=SMCConcept.LIQUIDITY_SWEEP,
@@ -105,6 +153,10 @@ class LiquidityDetector(BaseDetector):
                                     "swept_index": sp.index,
                                     "sweep_low": float(candle.low),
                                     "type": "buy_side_liquidity_grab",
+                                    "rejection_ratio": round(rejection_ratio, 3),
+                                    "penetration": float(penetration),
+                                    "displacement_confirmed": displacement_confirmed,
+                                    "quality": quality,
                                 },
                             )
                         )
@@ -113,6 +165,26 @@ class LiquidityDetector(BaseDetector):
                 elif sp.type == "high":
                     # Bearish sweep : prix monte au-dessus du swing high puis descend
                     if candle.high > sp.price and candle.close < sp.price:
+                        penetration = candle.high - sp.price
+                        rejection = sp.price - candle.close
+                        rejection_ratio = (
+                            float(rejection / penetration) if penetration > 0 else 0.0
+                        )
+                        displacement_confirmed = self._has_post_sweep_displacement(
+                            candles, i, atr, "bearish", sp.price
+                        )
+
+                        if self._min_rejection_ratio > 0 and (
+                            rejection_ratio < self._min_rejection_ratio
+                        ):
+                            break  # Simple wick, pas un sweep -> swing épuisé
+                        if (
+                            self._displacement_atr_mult > 0
+                            and not displacement_confirmed
+                        ):
+                            continue
+
+                        quality = "strong" if rejection_ratio >= 1.0 else "weak"
                         detections.append(
                             SMCDetection(
                                 concept=SMCConcept.LIQUIDITY_SWEEP,
@@ -124,12 +196,52 @@ class LiquidityDetector(BaseDetector):
                                     "swept_index": sp.index,
                                     "sweep_high": float(candle.high),
                                     "type": "sell_side_liquidity_grab",
+                                    "rejection_ratio": round(rejection_ratio, 3),
+                                    "penetration": float(penetration),
+                                    "displacement_confirmed": displacement_confirmed,
+                                    "quality": quality,
                                 },
                             )
                         )
                         break  # Un seul sweep par swing point
 
         return detections
+
+    def _has_post_sweep_displacement(
+        self,
+        candles: list[Candle],
+        index: int,
+        atr: Decimal,
+        direction: str,
+        swept_level: Decimal,
+    ) -> bool:
+        """Vérifie qu'un displacement suit le sweep (bougie i ou i+1).
+
+        Le displacement doit être dans le sens du retournement et clôturer
+        au-delà du niveau balayé. Retourne False si le filtre est désactivé
+        ou si l'ATR est indisponible.
+        """
+        if self._displacement_atr_mult <= 0 or atr <= 0:
+            return False
+
+        from arty_trading.utils.helpers import is_displacement
+
+        for j in (index, index + 1):
+            if j >= len(candles):
+                break
+            if is_displacement(
+                candles,
+                j,
+                atr,
+                body_atr_mult=self._displacement_atr_mult,
+                range_atr_mult=self._displacement_atr_mult,
+                direction=direction,
+            ):
+                if direction == "bullish" and candles[j].close > swept_level:
+                    return True
+                if direction == "bearish" and candles[j].close < swept_level:
+                    return True
+        return False
 
     def _detect_equal_levels(self, candles: list[Candle]) -> list[SMCDetection]:
         """Détecte les Equal Highs et Equal Lows."""

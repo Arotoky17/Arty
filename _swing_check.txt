@@ -1,0 +1,3 @@
+﻿swings: 0
+trend: neutral conf: 0.0
+trend dist: {'neutral': 201}

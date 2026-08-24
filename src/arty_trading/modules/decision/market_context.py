@@ -54,6 +54,10 @@ class MarketContext:
     ltf_candles: list[Candle] = field(default_factory=list)
     htf_smc_data: list[dict] = field(default_factory=list)
     ltf_smc_data: list[dict] = field(default_factory=list)
+    # Phase 3 : timeframe intermédiaire de setup (M15 par défaut).
+    setup_tf: TimeFrame = TimeFrame.M15
+    setup_smc_data: list[dict] = field(default_factory=list)
+    setup_trend: str = "neutral"
     metadata: dict[str, Any] = field(default_factory=dict)
 
     # Régime de marché / score de tendance (MarketStructureEngine).
@@ -114,6 +118,9 @@ class MarketContext:
             "spread": self.spread,
             "atr": float(self.atr),
             "entry_confirmation": self.entry_confirmation,
+            "setup_tf": self.setup_tf.value,
+            "setup_trend": self.setup_trend,
+            "setup_smc_data_count": len(self.setup_smc_data),
             "structure_valid": self.structure_valid,
             "structure_age": self.structure_age,
             "no_trade_reasons": list(self.no_trade_reasons),

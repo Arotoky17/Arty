@@ -192,8 +192,14 @@ class TestSMCTrendStrategy:
         assert signal.direction == Direction.BUY
 
     @pytest.mark.asyncio
-    async def test_falls_back_to_opposite_direction_when_primary_htf_blocked(self):
-        """Dernier BOS (pullback haussier) bloqué par un HTF baissier → SELL aligné capturé."""
+    async def test_no_fallback_to_opposite_direction_when_latest_bos_blocked(self):
+        """Phase 3 : dernier BOS haussier bloqué par HTF baissier → AUCUN signal.
+
+        Historiquement, la stratégie retombait sur un setup opposé plus ancien
+        (bug « H1 baissier → le bot achète »). La direction est désormais
+        dictée par l'événement de structure le plus récent ; s'il est bloqué
+        par le HTF, aucun signal n'est émis (pas de fallback).
+        """
         candles = make_uptrend_candles(20)
         # Dernière bougie baissière : confirme le retest baissier (~prix actuel).
         candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) - 0.0020)
@@ -201,7 +207,8 @@ class TestSMCTrendStrategy:
             # BOS haussier (pullback) le plus récent, mais HTF = bearish.
             {"concept": "break_of_structure", "direction": "bullish", "price": 1.0985, "index": 8, "details": {}},
             {"concept": "order_block", "direction": "bullish", "price": 1.0980, "index": 7, "details": {"ob_top": 1.0990, "ob_bottom": 1.0975}},
-            # Setup baissier (plus ancien) aligné avec le HTF bearish.
+            # Setup baissier (plus ancien) aligné avec le HTF bearish :
+            # ne doit PAS être utilisé comme fallback.
             {"concept": "break_of_structure", "direction": "bearish", "price": 1.0990, "index": 5, "details": {}},
             {"concept": "fair_value_gap", "direction": "bearish", "price": 1.0985, "index": 6, "details": {"gap_top": 1.0990, "gap_bottom": 1.0980}},
             {"concept": "order_block", "direction": "bearish", "price": 1.0990, "index": 4, "details": {"ob_top": 1.0995, "ob_bottom": 1.0980}},
@@ -209,6 +216,61 @@ class TestSMCTrendStrategy:
         signal = await SMCTrendStrategy(confidence_min=0.1).analyze(
             candles, smc_data, htf_trend="bearish"
         )
+        assert signal is None
+
+    @pytest.mark.asyncio
+    async def test_fallback_opposite_direction_never_attempted(self):
+        """Spy explicite : quand le BOS le plus récent (haussier) est bloqué
+        par le HTF baissier, la stratégie ne doit jamais tenter de construire
+        un signal dans la direction opposée (SELL), même si un setup baissier
+        complet existe dans smc_data.
+        """
+        candles = make_uptrend_candles(20)
+        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) - 0.0020)
+        smc_data = [
+            {"concept": "break_of_structure", "direction": "bullish", "price": 1.0985, "index": 8, "details": {}},
+            {"concept": "order_block", "direction": "bullish", "price": 1.0980, "index": 7, "details": {"ob_top": 1.0990, "ob_bottom": 1.0975}},
+            # Setup baissier complet (BOS + FVG + OB) qui SERAIT utilisé par un fallback.
+            {"concept": "break_of_structure", "direction": "bearish", "price": 1.0990, "index": 5, "details": {}},
+            {"concept": "fair_value_gap", "direction": "bearish", "price": 1.0985, "index": 6, "details": {"gap_top": 1.0990, "gap_bottom": 1.0980}},
+            {"concept": "order_block", "direction": "bearish", "price": 1.0990, "index": 4, "details": {"ob_top": 1.0995, "ob_bottom": 1.0980}},
+        ]
+
+        strategy = SMCTrendStrategy(confidence_min=0.1)
+        attempted: list[Direction] = []
+        original = strategy._build_trend_signal
+
+        def spy(symbol, timeframe, current_price, smc, cnds, direction):
+            attempted.append(direction)
+            return original(symbol, timeframe, current_price, smc, cnds, direction)
+
+        strategy._build_trend_signal = spy  # type: ignore[method-assign]
+
+        signal = await strategy.analyze(candles, smc_data, htf_trend="bearish")
+
+        # Le fallback vers SELL n'a jamais été tenté, et aucun signal n'est émis.
+        assert signal is None
+        assert Direction.SELL not in attempted
+        # BUY a bien été tenté (le BOS le plus récent) puis bloqué par le HTF.
+        assert attempted in ([Direction.BUY], [])
+
+    @pytest.mark.asyncio
+    async def test_bearish_setup_fixture_is_signal_capable(self):
+        """Sanity : le même setup baissier, s'il est le BOS le plus récent et
+        aligné avec le HTF baissier, produit bien un SELL — preuve que
+        l'absence de signal dans le test de fallback vient bien du blocage
+        HTF, pas d'un fixture inutilisable.
+        """
+        candles = make_uptrend_candles(20)
+        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) - 0.0020)
+        smc_data = [
+            {"concept": "break_of_structure", "direction": "bullish", "price": 1.0985, "index": 5, "details": {}},
+            {"concept": "order_block", "direction": "bullish", "price": 1.0980, "index": 4, "details": {"ob_top": 1.0990, "ob_bottom": 1.0975}},
+            {"concept": "break_of_structure", "direction": "bearish", "price": 1.0990, "index": 8, "details": {}},
+            {"concept": "fair_value_gap", "direction": "bearish", "price": 1.0985, "index": 7, "details": {"gap_top": 1.0990, "gap_bottom": 1.0980}},
+            {"concept": "order_block", "direction": "bearish", "price": 1.0990, "index": 6, "details": {"ob_top": 1.0995, "ob_bottom": 1.0980}},
+        ]
+        signal = await SMCTrendStrategy(confidence_min=0.1).analyze(candles, smc_data, htf_trend="bearish")
         assert signal is not None
         assert signal.direction == Direction.SELL
 

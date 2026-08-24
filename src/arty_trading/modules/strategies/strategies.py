@@ -56,12 +56,11 @@ class SMCTrendStrategy(BaseStrategy):
         timeframe = candles[0].timeframe
         current_price = candles[-1].close
 
-        # === Priorité au BOS le plus récent (bullish OU bearish) ===
-        # Le sens primaire est dicté par le BOS le plus récent (bullish OU
-        # bearish) : c'est la structure de marché la plus actuelle. Si ce sens
-        # est bloqué par l'alignement HTF (ou ne produit pas de retest confirmé),
-        # on retombe sur le sens opposé afin de ne pas rater un setup valide
-        # aligné sur la tendance HTF.
+        # Sens primaire : la direction du BOS le plus récent (bullish OU bearish).
+        # Le sens primaire est dicté par le BOS le plus récent. Si ce sens
+        # est bloqué par l'alignement HTF, aucun signal n'est généré par
+        # cette stratégie (elle est purement trend-following).
+        # Pour du contre-trend, utiliser ReversalStrategy.
         bullish_bos = self._filter_smc(smc_data, "break_of_structure", "bullish")
         bearish_bos = self._filter_smc(smc_data, "break_of_structure", "bearish")
 
@@ -79,23 +78,12 @@ class SMCTrendStrategy(BaseStrategy):
             if sig is not None:
                 candidates.append(sig)
 
-        # Sens primaire : la direction du BOS le plus récent (bullish OU bearish).
         if latest_bull and (
             not latest_bear or latest_bull["index"] > latest_bear["index"]
         ):
             _try_direction(Direction.BUY)
         elif latest_bear:
             _try_direction(Direction.SELL)
-
-        # Si aucun signal n'est produit pour le sens primaire (le plus souvent
-        # parce que ce sens est bloqué par l'alignement HTF — ex. dernier BOS 5M
-        # = pullback haussier alors que le H1 est baissier — ou faute de retest
-        # confirmé), on tente le sens opposé pour ne pas rater un setup valide et
-        # aligné sur la tendance HTF. Aucun contre-tendance n'est généré : le
-        # garde-fou `_is_htf_aligned` est appliqué à chaque direction.
-        if not candidates:
-            _try_direction(Direction.SELL)
-            _try_direction(Direction.BUY)
 
         if not candidates:
             return None

@@ -1,0 +1,9 @@
+H1 n=30 trend=neutral
+H1 n=50 trend=neutral
+H1 n=80 trend=neutral
+H1 n=120 trend=neutral
+H1 n=250 trend=bullish
+M15 n=30 trend=neutral
+M15 n=80 trend=neutral
+M15 n=1000 trend=bullish
+price start=2000.37 end=2090.14

@@ -380,7 +380,8 @@ class TestFullValidation:
         assert COND_NEWS in result.failed_conditions
 
     def test_invalid_htf_trend_misaligned(self):
-        """Signal rejeté si tendance HTF non alignée."""
+        """Tendance HTF non alignée réduit le score mais ne rejette plus
+        systématiquement (scoring pondéré)."""
         validator = SignalValidator(min_risk_reward=1.5, max_spread=20)
         signal = make_buy_signal(rr=2.0)
         candles = make_candles(20, spread=3)
@@ -389,8 +390,10 @@ class TestFullValidation:
         # Tendance HTF bearish alors que le signal est BUY
         result = validator.validate(signal, candles, smc_data, htf_trend="bearish")
 
-        assert result.is_valid is False
-        assert COND_HTF_TREND in result.failed_conditions
+        assert COND_HTF_TREND not in result.failed_conditions
+        assert result.checked_conditions[COND_HTF_TREND] is False
+        assert result.weighted_score == 75
+        assert result.tier == "valid"
 
     def test_valid_htf_trend_explicit(self):
         """Tendance HTF explicite alignée."""
@@ -420,7 +423,7 @@ class TestFullValidation:
         assert COND_HTF_TREND not in result.failed_conditions
 
     def test_invalid_htf_smc_data_misaligned(self):
-        """Tendance HTF dérivée des données SMC HTF non alignée."""
+        """Tendance HTF dérivée des données SMC HTF non alignée : scored, pas hard reject."""
         validator = SignalValidator(min_risk_reward=1.5, max_spread=20)
         signal = make_buy_signal(rr=2.0)
         candles = make_candles(20, spread=3)
@@ -431,8 +434,10 @@ class TestFullValidation:
 
         result = validator.validate(signal, candles, smc_data, htf_smc_data=htf_smc_data)
 
-        assert result.is_valid is False
-        assert COND_HTF_TREND in result.failed_conditions
+        assert COND_HTF_TREND not in result.failed_conditions
+        assert result.checked_conditions[COND_HTF_TREND] is False
+        assert result.weighted_score == 75
+        assert result.tier == "valid"
 
     def test_htf_alignment_disabled(self):
         """La vérification HTF peut être désactivée."""
@@ -460,7 +465,8 @@ class TestFullValidation:
         assert result.checked_conditions[COND_NEWS] is True
 
     def test_choch_contradictory(self):
-        """CHoCH dans la direction opposée invalide le signal."""
+        """CHoCH dans la direction opposée réduit le score mais ne rejette plus
+        systématiquement (scoring pondéré)."""
         validator = SignalValidator(min_risk_reward=1.5, max_spread=20)
         signal = make_buy_signal(rr=2.0)
         candles = make_candles(20, spread=3)
@@ -475,8 +481,10 @@ class TestFullValidation:
 
         result = validator.validate(signal, candles, smc_data)
 
-        assert result.is_valid is False
-        assert COND_CHOCH in result.failed_conditions
+        assert COND_CHOCH not in result.failed_conditions
+        assert result.checked_conditions[COND_CHOCH] is False
+        assert result.weighted_score == 45
+        assert result.tier == "reject"
 
     def test_choch_same_direction_ok(self):
         """CHoCH dans la direction du signal est valide."""
@@ -540,7 +548,7 @@ class TestFullValidation:
             assert cond in result.details
 
     def test_empty_smc_data(self):
-        """Données SMC vides → plusieurs conditions échouent."""
+        """Données SMC vides → plusieurs conditions échouent, score faible."""
         validator = SignalValidator(min_risk_reward=1.5, max_spread=20)
         signal = make_buy_signal(rr=2.0)
         candles = make_candles(20, spread=3)
@@ -548,7 +556,9 @@ class TestFullValidation:
         result = validator.validate(signal, candles, [])
 
         assert result.is_valid is False
-        assert COND_HTF_TREND in result.failed_conditions
+        assert result.checked_conditions[COND_HTF_TREND] is False
+        assert result.weighted_score == 15
+        assert result.tier == "reject"
         assert result.confluence_passed == 0
         assert result.confluence_total == 5
         assert result.confluence_score == 0.0
@@ -696,7 +706,7 @@ class TestSessionCheck:
         assert "VALIDÉ" in result.explanation
 
     def test_full_pipeline_bearish_choch_blocks_buy(self):
-        """H1 bullish + bearish CHoCH → TRANSITION, BUY bloqué."""
+        """H1 bullish + bearish CHoCH → weighted_score réduit, signal en WATCH."""
         validator = SignalValidator(min_risk_reward=1.5, max_spread=20)
         signal = make_buy_signal(rr=2.0)
         candles = make_candles(20, spread=3)
@@ -711,8 +721,11 @@ class TestSessionCheck:
 
         result = validator.validate(signal, candles, smc_data, htf_trend="bullish")
 
-        assert result.is_valid is False
-        assert COND_CHOCH in result.failed_conditions
+        assert COND_CHOCH not in result.failed_conditions
+        assert result.checked_conditions[COND_CHOCH] is False
+        assert result.checked_conditions[COND_BOS] is False
+        assert result.weighted_score == 65
+        assert result.tier == "watch"
 
     def test_session_none_does_not_reject_valid_signal(self):
         """session=None (données vides) → NEUTRAL, signal accepté si valide."""
@@ -937,15 +950,22 @@ class TestSignalGeneratorIntegration:
 
     @pytest.mark.asyncio
     async def test_generate_with_htf_trend(self):
-        """Le signal est rejeté si la tendance HTF est non alignée."""
+        """Tendance HTF non alignée : le validateur accepte (score 75),
+        même si la stratégie amont rejette toujours."""
         validator = SignalValidator(min_risk_reward=1.0, max_spread=20)
         gen = SignalGenerator(min_confidence=0.1, validator=validator)
         candles = make_candles(20, spread=3)
         smc_data = make_full_bullish_smc_data()
 
-        signal = await gen.generate(candles, smc_data, htf_trend="bearish")
+        # Ici on teste le validateur directement, pas le générateur complet
+        # (la stratégie SMC peut elle-même rejeter sur HTF avant le validateur).
+        signal = make_buy_signal(rr=2.0)
+        result = validator.validate(signal, candles, smc_data, htf_trend="bearish")
 
-        assert signal is None
+        assert result.is_valid is True
+        assert result.weighted_score == 75
+        assert result.tier == "valid"
+        assert COND_HTF_TREND not in result.failed_conditions
 
     @pytest.mark.asyncio
     async def test_generate_without_validator_backward_compatible(self):
@@ -1173,9 +1193,13 @@ class TestBOSSoft:
         assert result.confluence_passed == 4
 
     def test_no_bos_with_insufficient_confluences_reject(self):
-        """Absence de BOS + confluences insuffisantes → REJECT."""
+        """Absence de BOS : le score pondéré détermine l'acceptation.
+
+        Avec le scoring pondéré, l'absence d'une confluence ne rejette plus
+        systématiquement : c'est le weighted_score qui décide.
+        """
         validator = SignalValidator(
-            min_risk_reward=1.5, max_spread=20, min_confluence_count=5
+            min_risk_reward=1.5, max_spread=20, min_score=90
         )
         signal = make_buy_signal(rr=2.0)
         candles = make_candles(20, spread=3)
@@ -1186,11 +1210,12 @@ class TestBOSSoft:
 
         assert result.is_valid is False
         assert COND_BOS not in result.failed_conditions
-        assert result.confluence_passed == 4
-        assert result.confluence_total == 5
+        assert result.weighted_score == 80
+        assert result.tier == "excellent"
 
     def test_master_direction_opposite_still_rejects(self):
-        """Master Direction opposé → REJECT obligatoire."""
+        """Master Direction opposé réduit le score mais ne rejette plus
+        systématiquement (scoring pondéré)."""
         validator = SignalValidator(min_risk_reward=1.5, max_spread=20)
         signal = make_buy_signal(rr=2.0)
         candles = make_candles(20, spread=3)
@@ -1198,8 +1223,10 @@ class TestBOSSoft:
 
         result = validator.validate(signal, candles, smc_data, htf_trend="bearish")
 
-        assert result.is_valid is False
-        assert COND_HTF_TREND in result.failed_conditions
+        assert COND_HTF_TREND not in result.failed_conditions
+        assert result.checked_conditions[COND_HTF_TREND] is False
+        assert result.weighted_score == 75
+        assert result.tier == "valid"
 
 
 # =============================================================================

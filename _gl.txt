@@ -1,0 +1,40 @@
+﻿
+> src\arty_trading\logging\logger.py:108:def 
+get_logger(category: LogCategory | str = 
+LogCategory.SYSTEM) -> logging.Logger:
+  src\arty_trading\logging\logger.py:109:    """
+  src\arty_trading\logging\logger.py:110:    Retourne un 
+logger nommé par catégorie.
+  src\arty_trading\logging\logger.py:111:
+  src\arty_trading\logging\logger.py:112:    Args:
+  src\arty_trading\logging\logger.py:113:        category: 
+Catégorie métier (LogCategory ou string)
+  src\arty_trading\logging\logger.py:114:
+  src\arty_trading\logging\logger.py:115:    Returns:
+  src\arty_trading\logging\logger.py:116:        Logger 
+configuré
+  src\arty_trading\logging\logger.py:117:    """
+  src\arty_trading\logging\logger.py:118:    cat = 
+category.value if isinstance(category, LogCategory) else 
+category
+  src\arty_trading\logging\logger.py:119:    return 
+logging.getLogger(f"arty_trading.{cat}")
+  src\arty_trading\logging\logger.py:120:
+  src\arty_trading\logging\logger.py:121:
+  src\arty_trading\logging\logger.py:122:def log_signal(
+  src\arty_trading\logging\logger.py:123:    symbol: str,
+  src\arty_trading\logging\logger.py:124:    direction: str,
+  src\arty_trading\logging\logger.py:125:    entry: float,
+  src\arty_trading\logging\logger.py:126:    sl: float,
+  src\arty_trading\logging\logger.py:127:    tp: float,
+  src\arty_trading\logging\logger.py:128:    confidence: 
+float,
+  src\arty_trading\logging\logger.py:129:    strategy: str,
+  src\arty_trading\logging\logger.py:130:    **extra: Any,
+  src\arty_trading\logging\logger.py:131:) -> None:
+  src\arty_trading\logging\logger.py:132:    """Enregistre 
+un signal de trading."""
+  src\arty_trading\logging\logger.py:133:    logger = 
+get_logger(LogCategory.SIGNAL)
+
+

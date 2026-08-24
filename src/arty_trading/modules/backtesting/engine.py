@@ -52,6 +52,9 @@ class BacktestEngine:
         self._equity_curve: list[Decimal] = [initial_balance]
         self._ticket_counter = 1
         self._position_manager = position_manager
+        # Phase 3E : journal par trade (type de setup, direction, résultat).
+        self._trade_journal: list[dict] = []
+        self._journal_by_ticket: dict[int, dict] = {}
 
     @property
     def balance(self) -> Decimal:
@@ -81,6 +84,10 @@ class BacktestEngine:
     ) -> BacktestStats:
         if not candles:
             return calculate_stats([], self._equity_curve, self._initial_balance)
+
+        # Réinitialiser le journal pour chaque run.
+        self._trade_journal = []
+        self._journal_by_ticket = {}
 
         for i, candle in enumerate(candles):
             self._apply_position_management(i, candles)
@@ -160,6 +167,38 @@ class BacktestEngine:
             ticket=self._ticket_counter,
         )
         self._ticket_counter += 1
+
+        # Phase 3E : journal du trade (type de setup, direction, risque).
+        from arty_trading.modules.smc.setup_classifier import classify_setup_type
+
+        metadata = getattr(signal, "metadata", {}) or {}
+        smc_concepts = list(getattr(signal, "smc_concepts", []) or [])
+        zone_concept = metadata.get("zone_concept") or (
+            smc_concepts[0] if smc_concepts else ""
+        )
+        setup_type = metadata.get("setup_type")
+        if not setup_type or setup_type == "UNKNOWN":
+            setup_type = classify_setup_type(
+                zone_concept=zone_concept,
+                direction=signal.direction.value.lower()
+                if hasattr(signal.direction, "value")
+                else str(signal.direction),
+                smc_data=[],
+                zone_index=metadata.get("zone_index", 0),
+            )
+        entry = {
+            "ticket": self._ticket_counter - 1,
+            "setup_type": setup_type,
+            "zone_concept": zone_concept,
+            "direction": "BUY" if signal.direction == Direction.BUY else "SELL",
+            "entry_price": float(signal.entry_price),
+            "stop_loss": float(signal.stop_loss),
+            "profit": 0.0,
+            "r_multiple": 0.0,
+        }
+        self._trade_journal.append(entry)
+        self._journal_by_ticket[entry["ticket"]] = entry
+
         self._open_trades.append(trade)
         self._trades.append(trade)
         if self._position_manager is not None:
@@ -277,6 +316,19 @@ class BacktestEngine:
         trade.close_price = close_price
         trade.profit = profit
 
+        # Phase 3E : compléter le journal avec le résultat du trade.
+        journal_entry = self._journal_by_ticket.get(trade.ticket)
+        if journal_entry is not None:
+            journal_entry["profit"] = float(profit)
+            risk = abs(float(trade.entry_price) - float(trade.stop_loss))
+            journal_entry["r_multiple"] = (
+                (float(close_price) - float(trade.entry_price)) / risk
+                if risk > 0 and trade.direction == Direction.BUY
+                else (float(trade.entry_price) - float(close_price)) / risk
+                if risk > 0
+                else 0.0
+            )
+
         self._balance += profit
         self._open_trades.remove(trade)
 
@@ -301,3 +353,38 @@ class BacktestEngine:
             "open_trades": len(self._open_trades),
             "profit": str(self._balance - self._initial_balance),
         }
+
+    @property
+    def trade_journal(self) -> list[dict]:
+        """Phase 3E : journal détaillé des trades (type, direction, résultat)."""
+        return list(self._trade_journal)
+
+    def setup_type_breakdown(self) -> dict[str, dict]:
+        """
+        Phase 3F : statistiques par type de setup et par direction.
+
+        Returns:
+            Dict {setup_type: {trades, wins, win_rate, total_profit, avg_r}}.
+        """
+        breakdown: dict[str, dict] = {}
+        for entry in self._trade_journal:
+            for key in (
+                entry.get("setup_type", "UNKNOWN"),
+                f"{entry.get('setup_type', 'UNKNOWN')}|{entry.get('direction', '')}",
+            ):
+                stats = breakdown.setdefault(
+                    key, {"trades": 0, "wins": 0, "total_profit": 0.0, "total_r": 0.0}
+                )
+                stats["trades"] += 1
+                stats["wins"] += 1 if entry.get("profit", 0.0) > 0 else 0
+                stats["total_profit"] += entry.get("profit", 0.0)
+                stats["total_r"] += entry.get("r_multiple", 0.0)
+
+        for stats in breakdown.values():
+            stats["win_rate"] = (
+                round(stats["wins"] / stats["trades"], 3) if stats["trades"] else 0.0
+            )
+            stats["avg_r"] = (
+                round(stats["total_r"] / stats["trades"], 3) if stats["trades"] else 0.0
+            )
+        return breakdown

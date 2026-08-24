@@ -56,6 +56,7 @@ from arty_trading.application.trade_decision_diagnostic import (
     TradeDecisionDiagnostic,
 )
 from arty_trading.application.trade_journal import TradeJournal
+from arty_trading.application.setup_service import update_setups_from_market_context
 from arty_trading.application.trade_orchestrator import TradeOrchestrator
 from arty_trading.config.settings import Settings
 from arty_trading.core.entities import Candle, Signal, Trade
@@ -525,6 +526,10 @@ class TradingEngine:
             )
             return
 
+        # Phase 3 : appliquer la qualité de détection du profil instrument
+        # (filtres sweep/FVG/OB en multiples d'ATR) au détecteur SMC.
+        self._configure_detector_for_symbol(symbol_upper)
+
         diagnostic = self._create_diagnostic(symbol)
 
         # ------------------------------------------------------------------
@@ -541,6 +546,17 @@ class TradingEngine:
             self._fail_step(diagnostic, PipelineStep.DATA_AVAILABLE, RejectionReason.NO_MARKET_DATA)
             self._decision_debugger.finalize_opportunity(diagnostic)
             return
+
+        # Phase 3 : timeframe de setup (M15). Optionnel — si indisponible,
+        # le pipeline continue en H1/M5 (rétro-compatibilité).
+        setup_tf_candles = await self._download_data(
+            symbol, self._settings.setup_timeframe
+        )
+        if setup_tf_candles is None:
+            logger.info(
+                "M15 indisponible | %s | pipeline H1/M5 sans timeframe de setup",
+                symbol,
+            )
 
         self._record_step(diagnostic, PipelineStep.DATA_AVAILABLE)
 
@@ -579,7 +595,7 @@ class TradingEngine:
         # Étape 3 : Analyse MTF (H1 direction + M5 confirmation)
         # ------------------------------------------------------------------
         market_context = await self._analyze_multitimeframe(
-            symbol, htf_candles, ltf_candles
+            symbol, htf_candles, ltf_candles, setup_tf_candles=setup_tf_candles
         )
         if market_context is None:
             self._fail_step(
@@ -893,6 +909,46 @@ class TradingEngine:
     # Étapes du pipeline
     # -------------------------------------------------------------------------
 
+    def _configure_detector_for_symbol(self, symbol: str) -> None:
+        """
+        Phase 3 — applique les filtres de qualité du profil instrument aux
+        sous-détecteurs SMC (liquidity, FVG, order blocks).
+
+        Les paramètres inconnus d'un détecteur sont ignorés silencieusement
+        (rétro-compatibilité avec des détecteurs mockés dans les tests).
+        """
+        try:
+            profile = self._settings.get_instrument_profile(symbol)
+        except Exception:
+            profile = None
+        if profile is None:
+            return
+
+        detectors = getattr(self._smc_detector, "detectors", None)
+        if not isinstance(detectors, dict):
+            return
+
+        param_map = {
+            "liquidity": {
+                "_min_rejection_ratio": profile.sweep_min_rejection_ratio,
+                "_displacement_atr_mult": profile.sweep_displacement_atr_mult,
+            },
+            "fair_value_gap": {
+                "_min_gap_atr": profile.min_fvg_atr,
+            },
+            "order_blocks": {
+                "_max_ob_atr_mult": profile.max_ob_atr_mult,
+                "_displacement_confirmation_bars": profile.displacement_confirmation_bars,
+            },
+        }
+        for name, params in param_map.items():
+            detector = detectors.get(name)
+            if detector is None:
+                continue
+            for attr, value in params.items():
+                if hasattr(detector, attr):
+                    setattr(detector, attr, value)
+
     async def _download_data(
         self, symbol: str, timeframe: TimeFrame | None = None
     ) -> list[Candle] | None:
@@ -931,7 +987,11 @@ class TradingEngine:
         return candles
 
     async def _analyze_multitimeframe(
-        self, symbol: str, htf_candles: list[Candle], ltf_candles: list[Candle]
+        self,
+        symbol: str,
+        htf_candles: list[Candle],
+        ltf_candles: list[Candle],
+        setup_tf_candles: list[Candle] | None = None,
     ) -> Any | None:
         """
         Étape 3 — Analyse multi-timeframe (MTF).
@@ -940,7 +1000,8 @@ class TradingEngine:
         - H4 : Contexte macro — **informatif seulement**, loggé pour le rapport.
           N'autorise ni ne bloque un trade.
         - H1 : Master trend — **Gate absolu**. Détermine la direction autorisée.
-        - M15 : Contexte intermédiaire — Bonus de confluence uniquement.
+        - M15 : Setup — zones FVG/OB + tendance locale (Phase 3). Bonus de
+          confluence et source des setups ; ne modifie jamais le biais H1.
         - M5 : Confirmation + entrée — CHoCH/BOS/displacement/retest/rejection.
 
         La structure H1 est calculée une seule fois par bougie H1 fermée
@@ -952,12 +1013,13 @@ class TradingEngine:
             symbol: Symbole à analyser
             htf_candles: Bougies du timeframe supérieur (1H)
             ltf_candles: Bougies du timeframe d'entrée (5M)
+            setup_tf_candles: Bougies du timeframe de setup (15M), optionnel
 
         Returns:
             MarketContext ou None si l'analyse échoue
         """
         return await self._market_context_builder.build(
-            symbol, htf_candles, ltf_candles
+            symbol, htf_candles, ltf_candles, setup_tf_candles=setup_tf_candles
         )
 
     def _log_market_context(self, ctx: Any) -> None:
@@ -970,6 +1032,9 @@ class TradingEngine:
             data.get("trend_details", {}).get("pattern", "N/A"),
         )
         logger.info("[LEVEL] premium=%s discount=%s", data["premium"], data["discount"])
+        logger.info("[15M] setup_tf=%s trend=%s detections=%d",
+                     data.get("setup_tf", "M15"), data.get("setup_trend", "neutral"),
+                     data.get("setup_smc_data_count", 0))
         logger.info("[5M] LTF detections=%d", len(ctx.ltf_smc_data))
         logger.info("[DIRECTION GATE] master=%s allows_buy=%s allows_sell=%s",
                      data["master_trend"], data["allows_buy"], data["allows_sell"])
@@ -990,110 +1055,13 @@ class TradingEngine:
 
     def _update_setups(self, symbol: str, market_context: Any) -> None:
         """
-        Met à jour le state machine des setups pour le symbole.
+        Met a jour le state machine des setups pour le symbole.
 
-        - Expire les setups anciens
-        - Crée de nouveaux setups sur zones valides
-        - Évalue les setups actifs (distance, tendance, structure)
-        - Détecte les setups dupliqués
+        Delegue a ``application.setup_service.update_setups_from_market_context``
+        (meme logique partagee avec le backtest multi-timeframe).
         """
-        tracker = self._setup_tracker
-        tracker.expire_old_setups(symbol)
-
-        # --- Récupérer les paramètres de marché ---
-        smc_data: list[dict[str, Any]] = getattr(market_context, "ltf_smc_data", []) or []
-        htf_trend: str = getattr(market_context, "master_trend", "neutral")
-        ltf_candles: list[Candle] = getattr(market_context, "ltf_candles", []) or []
-        atr = float(getattr(market_context, "atr", 0))
-        profile = self._settings.get_instrument_profile(symbol)
-        max_distance_atr_mult = profile.retest_atr_mult if profile else 1.0
-        max_zone_age_bars = profile.max_zone_age_bars if profile else 20
-        current_price = float(ltf_candles[-1].close) if ltf_candles else None
-
-        # --- Créer des setups à partir des zones SMC détectées ---
-        for detection in smc_data:
-            concept = detection.get("concept", "")
-            direction_str = detection.get("direction", "")
-
-            # Ne créer un setup que pour les concepts de zone (FVG, Order Block)
-            # et uniquement dans la direction de la tendance maître H1.
-            if concept not in ("fair_value_gap", "order_block"):
-                continue
-            if direction_str not in ("bullish", "bearish"):
-                continue
-            if htf_trend not in ("bullish", "bearish"):
-                continue
-            if direction_str != htf_trend:
-                continue
-
-            zone_index = detection.get("index", 0)
-            details = detection.get("details", {})
-
-            if concept == "fair_value_gap":
-                zone_top = details.get("gap_top")
-                zone_bottom = details.get("gap_bottom")
-            elif concept == "order_block":
-                zone_top = details.get("ob_top")
-                zone_bottom = details.get("ob_bottom")
-            else:
-                continue
-
-            if zone_top is None or zone_bottom is None:
-                continue
-
-            from arty_trading.core.enums import Direction as DirEnum
-            direction_enum = DirEnum.BUY if direction_str == "bullish" else DirEnum.SELL
-            zone_price = (float(zone_top) + float(zone_bottom)) / 2.0
-
-            # Éviter les doublons
-            if tracker.is_duplicate(symbol, direction_enum, concept, zone_index):
-                continue
-
-            # Créer le setup avec les données de marché
-            setup = tracker.create_setup(
-                symbol=symbol,
-                direction=direction_enum,
-                zone_concept=concept,
-                zone_index=zone_index,
-                zone_price=zone_price,
-                zone_high=float(zone_top),
-                zone_low=float(zone_bottom),
-                atr=atr,
-                htf_trend=htf_trend,
-                ttl_bars=max_zone_age_bars,
-            )
-            if setup is not None:
-                logger.info(
-                    "[SETUP DETECTED] %s | %s | zone=%.5f-%.5f | concept=%s idx=%d id=%s | trend=%s atr=%.6f",
-                    symbol, direction_str, float(zone_bottom), float(zone_top),
-                    concept, zone_index, setup.setup_id, htf_trend, atr,
-                )
-
-        # --- Évaluer les setups actifs (transitions de state machine) ---
-        if ltf_candles:
-            transitions = tracker.evaluate(
-                symbol=symbol,
-                candles=ltf_candles,
-                smc_data=smc_data,
-                htf_trend=htf_trend,
-                atr=atr,
-                max_distance_atr_mult=max_distance_atr_mult,
-                max_zone_age_bars=max_zone_age_bars,
-                current_price=current_price,
-            )
-            for t in transitions:
-                logger.info(
-                    "[SETUP TRANSITION] %s | %s | %s → %s | reason=%s",
-                    symbol, t.setup_id, t.state.value, t.state.value, "",
-                )
-
-        active = tracker.get_active_setups(symbol)
-        logger.info(
-            "SETUPS | %s | actifs=%d | expirés/récemment traités=%d",
-            symbol,
-            len(active),
-            sum(1 for s in tracker._setups.get(symbol.upper(), [])
-                if s.state in (SetupState.CONSUMED, SetupState.SETUP_EXPIRED, SetupState.INVALIDATED)),
+        update_setups_from_market_context(
+            self._setup_tracker, symbol, market_context, self._settings
         )
 
     async def _revalidate_before_execution(

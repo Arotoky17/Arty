@@ -26,7 +26,7 @@ class TestSettings:
         """Le défaut ne doit pas dépendre du fichier .env local."""
         monkeypatch.delenv("DEFAULT_SYMBOLS", raising=False)
         settings = Settings(_env_file=None)
-        assert settings.symbols_list == ["EURUSD", "XAUUSD"]
+        assert settings.symbols_list == ["XAUUSD"]
 
     def test_default_trading_mode_is_analysis(self, monkeypatch):
         """Le mode par défaut doit être ANALYSIS (sécurité).

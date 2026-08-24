@@ -91,6 +91,20 @@ class InstrumentProfile:
     # Nombre minimum de confluences SMC à valider (parmi FVG, Order Block,
     # Liquidity Sweep, Premium/Discount) pour autoriser un signal.
     min_confluence_count: int = 2
+    # --- Phase 3 : qualité de détection (0 = désactivé / comportement historique) ---
+    # Taille minimale d'un FVG en multiple d'ATR (filtre les micro-gaps).
+    min_fvg_atr: float = 0.0
+    # Ratio de rejet minimum d'un liquidity sweep (clôture au-delà du niveau /
+    # profondeur du dépassement). Distingue un vrai sweep d'un simple wick.
+    sweep_min_rejection_ratio: float = 0.0
+    # Facteur ATR du corps du displacement confirmant un sweep. 0 = pas
+    # d'exigence de displacement.
+    sweep_displacement_atr_mult: float = 0.0
+    # Hauteur maximale d'un Order Block en multiple d'ATR (filtre les clumps).
+    max_ob_atr_mult: float = 0.0
+    # Nombre de bougies directionnelles consécutives confirmant le
+    # displacement après un Order Block.
+    displacement_confirmation_bars: int = 1
 
 
 class SignalSettings(BaseSettings):
@@ -164,6 +178,27 @@ class ValidatorSettings(BaseSettings):
             "confluences sont comptées (elles ne bloquent pas), contrairement "
             "aux conditions HARD de sécurité."
         ),
+    )
+    min_score: int = Field(
+        default=70,
+        alias="VALIDATOR_MIN_SCORE",
+        ge=0,
+        le=100,
+        description="Score minimum (0-100) pour qu'un signal soit accepté après weighted scoring.",
+    )
+    excellent_score: int = Field(
+        default=80,
+        alias="VALIDATOR_EXCELLENT_SCORE",
+        ge=0,
+        le=100,
+        description="Score minimum pour un setup EXCELLENT.",
+    )
+    watch_score: int = Field(
+        default=60,
+        alias="VALIDATOR_WATCH_SCORE",
+        ge=0,
+        le=100,
+        description="Score minimum pour un setup WATCH (no trade).",
     )
 
 
@@ -414,9 +449,14 @@ class Settings(BaseSettings):
     )
 
     # Symboles et timeframe
-    default_symbols: str = Field(default="EURUSD,XAUUSD", alias="DEFAULT_SYMBOLS")
+    default_symbols: str = Field(default="XAUUSD", alias="DEFAULT_SYMBOLS")
     enable_legacy_symbols: bool = Field(default=False, alias="ENABLE_LEGACY_SYMBOLS")
     default_timeframe: TimeFrame = Field(default=TimeFrame.H1, alias="DEFAULT_TIMEFRAME")
+
+    # Timeframes du flux MTF (Phase 3) : H1 = biais, M15 = setup, M5 = entrée.
+    htf_timeframe: TimeFrame = Field(default=TimeFrame.H1, alias="HTF_TIMEFRAME")
+    setup_timeframe: TimeFrame = Field(default=TimeFrame.M15, alias="SETUP_TIMEFRAME")
+    entry_timeframe: TimeFrame = Field(default=TimeFrame.M5, alias="ENTRY_TIMEFRAME")
 
     # Profils par instrument (EURUSD + XAUUSD uniquement en phase 1).
     instrument_profiles: dict[str, InstrumentProfile] = Field(
@@ -444,6 +484,13 @@ class Settings(BaseSettings):
                 max_zone_age_bars=25,
                 max_mitigations=2,
                 min_confluence_count=2,
+                # Phase 3 : qualité de détection (multiples d'ATR, pas de
+                # distance fixe). Valeurs à calibrer via backtest comparatif.
+                min_fvg_atr=0.25,
+                sweep_min_rejection_ratio=0.5,
+                sweep_displacement_atr_mult=1.0,
+                max_ob_atr_mult=3.0,
+                displacement_confirmation_bars=2,
             ),
         },
         description="Profil de trading par symbole (seuls EURUSD et XAUUSD en phase 1)",

@@ -56,6 +56,7 @@ class MarketContextBuilder:
         symbol: str,
         htf_candles: list[Candle],
         ltf_candles: list[Candle],
+        setup_tf_candles: list[Candle] | None = None,
     ) -> Any | None:
         """
         Analyse multi-timeframe et construit le ``MarketContext``.
@@ -65,11 +66,16 @@ class MarketContextBuilder:
         2. Détection SMC H1 et M5.
         3. Contexte macro H4 (informatif, loggé).
         4. Construction du ``MarketContext``.
+        5. (Phase 3) Détection SMC M15 (setup) + tendance M15 dérivée du
+           dernier BOS/CHoCH M15. Le M15 ne modifie JAMAIS le biais H1.
 
         Args:
             symbol: Symbole à analyser.
             htf_candles: Bougies du timeframe supérieur (1H).
             ltf_candles: Bougies du timeframe d'entrée (5M).
+            setup_tf_candles: Bougies du timeframe de setup (15M), optionnel.
+                Si None, les champs M15 du contexte restent vides/neutres
+                (rétro-compatibilité).
 
         Returns:
             ``MarketContext`` ou ``None`` si l'analyse échoue.
@@ -131,13 +137,54 @@ class MarketContextBuilder:
             ltf_smc_data=ltf_smc_data,
         )
 
+        # Phase 3 : détection SMC M15 (timeframe de setup).
+        # Le M15 fournit les zones de setup et une tendance locale, mais ne
+        # modifie jamais le biais H1 (master_trend reste calculé sur H1).
+        setup_smc_data: list[dict] = []
+        if setup_tf_candles:
+            try:
+                setup_smc_data = await self._smc_detector.detect(
+                    setup_tf_candles, symbol
+                )
+            except Exception as exc:
+                logger.error("Erreur analyse SMC M15 | %s | %s", symbol, exc)
+
+        setup_trend = _derive_setup_trend(setup_smc_data)
+
+        market_context.setup_smc_data = setup_smc_data
+        market_context.setup_trend = setup_trend
+        if setup_tf_candles:
+            market_context.setup_tf = setup_tf_candles[-1].timeframe
+
         logger.info(
-            "Analyse MTF | %s | H4=%s | H1=%s | M5 detections=%d | H1 detections=%d",
+            "Analyse MTF | %s | H4=%s | H1=%s | M15=%s (detections=%d) | M5 detections=%d | H1 detections=%d",
             symbol,
             h4_trend,
             market_context.master_trend,
+            setup_trend,
+            len(setup_smc_data),
             len(ltf_smc_data),
             len(htf_smc_data),
         )
 
         return market_context
+
+
+def _derive_setup_trend(setup_smc_data: list[dict]) -> str:
+    """
+    Dérive la tendance du timeframe de setup (M15) des détections SMC.
+
+    Utilise le dernier événement de structure (BOS/CHoCH/MSS) confirmé sur
+    clôture. Retourne "neutral" si aucune détection de structure.
+    """
+    structure_events = [
+        d
+        for d in setup_smc_data
+        if d.get("concept") in ("bos", "choch", "mss", "internal_bos")
+    ]
+    if not structure_events:
+        return "neutral"
+
+    latest = max(structure_events, key=lambda d: d.get("index", 0))
+    direction = latest.get("direction", "neutral")
+    return direction if direction in ("bullish", "bearish") else "neutral"

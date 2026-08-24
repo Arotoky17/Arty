@@ -31,16 +31,22 @@ class FairValueGapDetector(BaseDetector):
         enabled: bool = True,
         min_gap_pips: float = 5.0,
         pip_size: float = 0.0001,
+        min_gap_atr: float = 0.0,
     ) -> None:
         """
         Args:
             enabled: Activer/désactiver le détecteur
             min_gap_pips: Taille minimale du gap en pips (5.0 par défaut - filtre les faux positifs)
             pip_size: Taille d'un pip (0.0001 pour EURUSD, 0.01 pour JPY)
+            min_gap_atr: Taille minimale du gap en multiple d'ATR. 0 = désactivé
+                (comportement historique). > 0 : le seuil effectif est
+                max(seuil fixe, min_gap_atr × ATR), ce qui élimine les
+                micro-gaps sans signification sur les instruments volatils.
         """
         super().__init__(enabled=enabled)
         self._min_gap = Decimal(str(min_gap_pips * pip_size))
         self._pip_size = pip_size
+        self._min_gap_atr = min_gap_atr
 
     @property
     def name(self) -> str:
@@ -63,6 +69,16 @@ class FairValueGapDetector(BaseDetector):
         detections: list[SMCDetection] = []
         active_fvgs: list[dict] = []  # FVG non encore remplis
 
+        # Seuil effectif : max(seuil fixe, min_gap_atr × ATR)
+        atr = Decimal("0")
+        if self._min_gap_atr > 0:
+            from arty_trading.utils.helpers import calculate_atr
+
+            atr = calculate_atr(candles, period=14)
+        min_gap = self._min_gap
+        if self._min_gap_atr > 0 and atr > 0:
+            min_gap = max(min_gap, atr * Decimal(str(self._min_gap_atr)))
+
         for i in range(len(candles) - 2):
             c0 = candles[i]
             c2 = candles[i + 2]
@@ -70,7 +86,7 @@ class FairValueGapDetector(BaseDetector):
             # Bullish FVG : high[0] < low[2]
             if c0.high < c2.low:
                 gap_size = c2.low - c0.high
-                if gap_size >= self._min_gap:
+                if gap_size >= min_gap:
                     fvg = SMCDetection(
                         concept=SMCConcept.FVG,
                         direction="bullish",
@@ -80,6 +96,7 @@ class FairValueGapDetector(BaseDetector):
                             "gap_top": float(c2.low),
                             "gap_bottom": float(c0.high),
                             "gap_size": float(gap_size),
+                            "gap_size_atr": float(gap_size / atr) if atr > 0 else None,
                             "candle_index": i + 1,
                         },
                     )
@@ -96,7 +113,7 @@ class FairValueGapDetector(BaseDetector):
             # Bearish FVG : low[0] > high[2]
             if c0.low > c2.high:
                 gap_size = c0.low - c2.high
-                if gap_size >= self._min_gap:
+                if gap_size >= min_gap:
                     fvg = SMCDetection(
                         concept=SMCConcept.FVG,
                         direction="bearish",
@@ -106,6 +123,7 @@ class FairValueGapDetector(BaseDetector):
                             "gap_top": float(c0.low),
                             "gap_bottom": float(c2.high),
                             "gap_size": float(gap_size),
+                            "gap_size_atr": float(gap_size / atr) if atr > 0 else None,
                             "candle_index": i + 1,
                         },
                     )

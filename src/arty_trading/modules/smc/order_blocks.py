@@ -37,6 +37,8 @@ class OrderBlockDetector(BaseDetector):
         displacement_threshold: float = 1.0,
         mitigation_lookback: int = 20,
         max_mitigations: int = 2,
+        max_ob_atr_mult: float = 0.0,
+        displacement_confirmation_bars: int = 1,
     ) -> None:
         """
         Args:
@@ -48,11 +50,21 @@ class OrderBlockDetector(BaseDetector):
                 la mitigation
             max_mitigations: Nombre maximum de retours sur la zone avant de
                 considérer celle-ci comme épuisée
+            max_ob_atr_mult: Hauteur maximale de l'OB en multiple d'ATR.
+                0 = désactivé. > 0 : filtre les OB gigantesques (clumps de
+                volatilité) qui ne sont pas de vraies zones institutionnelles.
+            displacement_confirmation_bars: Nombre de bougies directionnelles
+                consécutives exigées après la bougie OB pour confirmer le
+                déplacement (1 = comportement historique). Le corps cumulé
+                doit dépasser le seuil de displacement et chaque bougie doit
+                être dans le sens du déplacement.
         """
         super().__init__(enabled=enabled)
         self._displacement_threshold = displacement_threshold
         self._mitigation_lookback = mitigation_lookback
         self._max_mitigations = max_mitigations
+        self._max_ob_atr_mult = max_ob_atr_mult
+        self._displacement_confirmation_bars = max(1, displacement_confirmation_bars)
 
     @property
     def name(self) -> str:
@@ -87,11 +99,18 @@ class OrderBlockDetector(BaseDetector):
             # Bullish OB : chercher une bougie baissière suivie d'un déplacement haussier
             if candles[i].close < candles[i].open:  # Bougie baissière
                 # Vérifier le déplacement haussier suivant
-                next_candle = candles[i + 1]
-                next_body = abs(next_candle.close - next_candle.open)
-                if next_candle.close > next_candle.open and next_body >= displacement_min:
+                confirmed, next_body = self._confirmed_displacement(
+                    candles, i + 1, "bullish", displacement_min
+                )
+                if confirmed:
                     ob_top = candles[i].high
                     ob_bottom = candles[i].low
+
+                    # Filtre de taille : OB gigantesque = clump de volatilité
+                    if self._max_ob_atr_mult > 0 and atr > 0 and (
+                        ob_top - ob_bottom > atr * Decimal(str(self._max_ob_atr_mult))
+                    ):
+                        continue
                     # Vérifier si l'OB est mitigé plus tard
                     mitigated_count = self._is_mitigated(candles, i + 2, ob_top, ob_bottom, "bullish")
                     violated = self._is_violated(candles, i + 2, ob_bottom, "bullish")
@@ -133,11 +152,18 @@ class OrderBlockDetector(BaseDetector):
             # Bearish OB : chercher une bougie haussière suivie d'un déplacement baissier
             if candles[i].close > candles[i].open:  # Bougie haussière
                 # Vérifier le déplacement baissier suivant
-                next_candle = candles[i + 1]
-                next_body = abs(next_candle.close - next_candle.open)
-                if next_candle.close < next_candle.open and next_body >= displacement_min:
+                confirmed, next_body = self._confirmed_displacement(
+                    candles, i + 1, "bearish", displacement_min
+                )
+                if confirmed:
                     ob_top = candles[i].high
                     ob_bottom = candles[i].low
+
+                    # Filtre de taille : OB gigantesque = clump de volatilité
+                    if self._max_ob_atr_mult > 0 and atr > 0 and (
+                        ob_top - ob_bottom > atr * Decimal(str(self._max_ob_atr_mult))
+                    ):
+                        continue
                     # Vérifier si l'OB est mitigé plus tard
                     mitigated_count = self._is_mitigated(candles, i + 2, ob_top, ob_bottom, "bearish")
                     violated = self._is_violated(candles, i + 2, ob_top, "bearish")
@@ -185,6 +211,34 @@ class OrderBlockDetector(BaseDetector):
         ]
 
         return detections
+
+    def _confirmed_displacement(
+        self,
+        candles: list[Candle],
+        start_idx: int,
+        direction: str,
+        displacement_min: Decimal,
+    ) -> tuple[bool, Decimal]:
+        """
+        Vérifie le déplacement confirmé après une bougie OB.
+
+        Exige ``displacement_confirmation_bars`` bougies consécutives dans le
+        sens du déplacement, avec un corps cumulé >= ``displacement_min``.
+        Retourne (confirmé, corps cumulé).
+        """
+        n = self._displacement_confirmation_bars
+        cumulative = Decimal("0")
+        for j in range(start_idx, min(start_idx + n, len(candles))):
+            c = candles[j]
+            body = abs(c.close - c.open)
+            if direction == "bullish" and c.close <= c.open:
+                return False, Decimal("0")
+            if direction == "bearish" and c.close >= c.open:
+                return False, Decimal("0")
+            cumulative += body
+        if cumulative >= displacement_min:
+            return True, cumulative
+        return False, cumulative
 
     def _is_mitigated(
         self,

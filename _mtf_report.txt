@@ -1,0 +1,21 @@
+==============================================================================
+BACKTEST MULTI-TIMEFRAME (H1 contexte / M15 setup / M5 entrée)
+==============================================================================
+trades=0 balance finale=10000 profit=0
+win_rate=0.0% PF=0.00 maxDD=0.0% expectancy=0.00 final=10000.00
+
+  Par direction:
+  (aucun trade)
+
+  Par type de setup:
+  (aucun trade)
+
+  Par tier Validator/Decision:
+  (aucun trade)
+
+  Par score:
+  (aucun trade)
+
+  Par régime:
+  (aucun trade)
+==============================================================================

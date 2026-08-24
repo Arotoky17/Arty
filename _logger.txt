@@ -1,0 +1,100 @@
+﻿"""
+SystÃ¨me de journalisation structurÃ© pour Arty Trading.
+
+Fournit :
+- Logs console colorÃ©s (dÃ©veloppement)
+- Logs fichier rotatifs par catÃ©gorie
+- Helpers pour signaux, trades et erreurs
+- IntÃ©gration structlog pour le format JSON en production
+"""
+
+from __future__ import annotations
+
+import logging
+import sys
+from datetime import datetime
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
+from typing import Any
+
+from arty_trading.core.enums import LogCategory
+
+
+# Format des messages
+CONSOLE_FORMAT = "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
+FILE_FORMAT = "%(asctime)s | %(levelname)-8s | %(name)s | %(funcName)s:%(lineno)d | %(message)s"
+DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+# Taille max des fichiers de log (10 Mo) et nombre de backups
+MAX_LOG_SIZE = 10 * 1024 * 1024
+BACKUP_COUNT = 5
+
+_loggers_initialized = False
+
+
+def setup_logging(
+    level: str = "INFO",
+    logs_dir: str = "logs",
+    app_env: str = "development",
+) -> None:
+    """
+    Configure le systÃ¨me de logging global.
+
+    Args:
+        level: Niveau de log (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+        logs_dir: RÃ©pertoire de stockage des fichiers de log
+        app_env: Environnement (development = console colorÃ©e)
+    """
+    global _loggers_initialized
+    if _loggers_initialized:
+        return
+
+    log_path = Path(logs_dir)
+    log_path.mkdir(parents=True, exist_ok=True)
+
+    log_level = getattr(logging, level.upper(), logging.INFO)
+
+    # Configuration racine
+    root_logger = logging.getLogger("arty_trading")
+    root_logger.setLevel(log_level)
+    root_logger.handlers.clear()
+
+    # Handler console
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setLevel(log_level)
+    console_handler.setFormatter(logging.Formatter(CONSOLE_FORMAT, DATE_FORMAT))
+    root_logger.addHandler(console_handler)
+
+    # Handlers fichier par catÃ©gorie
+    for category in LogCategory:
+        file_handler = RotatingFileHandler(
+            log_path / f"{category.value}.log",
+            maxBytes=MAX_LOG_SIZE,
+            backupCount=BACKUP_COUNT,
+            encoding="utf-8",
+        )
+        file_handler.setLevel(log_level)
+        file_handler.setFormatter(logging.Formatter(FILE_FORMAT, DATE_FORMAT))
+        # Filtre par catÃ©gorie via le nom du logger
+        file_handler.addFilter(_CategoryFilter(category.value))
+        root_logger.addHandler(file_handler)
+
+    # Fichier erreurs dÃ©diÃ© (tous niveaux ERROR+)
+    error_handler = RotatingFileHandler(
+        log_path / "errors.log",
+        maxBytes=MAX_LOG_SIZE,
+        backupCount=BACKUP_COUNT,
+        encoding="utf-8",
+    )
+    error_handler.setLevel(logging.ERROR)
+    error_handler.setFormatter(logging.Formatter(FILE_FORMAT, DATE_FORMAT))
+    root_logger.addHandler(error_handler)
+
+    _loggers_initialized = True
+    root_logger.info("SystÃ¨me de logging initialisÃ© | env=%s | level=%s", app_env, level)
+
+
+class _CategoryFilter(logging.Filter):
+    """Filtre les logs par catÃ©gorie mÃ©tier."""
+
+    def __init__(self, category: str) -> None:

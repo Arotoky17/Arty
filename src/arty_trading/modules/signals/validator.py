@@ -69,6 +69,47 @@ ALL_CONDITIONS: tuple[str, ...] = (
     COND_RR,
 )
 
+# Conditions scored par le moteur de scoring pondéré.
+_SCORED_CONDITIONS: tuple[str, ...] = (
+    COND_HTF_TREND,
+    COND_BOS,
+    COND_CHOCH,
+    COND_LIQUIDITY_SWEEP,
+    COND_ORDER_BLOCK,
+    COND_FVG,
+    COND_PREMIUM_DISCOUNT,
+)
+
+# Poids du scoring pondéré (total = 100).
+_CONDITION_WEIGHTS: dict[str, int] = {
+    COND_HTF_TREND: 20,
+    COND_BOS: 15,
+    COND_CHOCH: 15,
+    COND_LIQUIDITY_SWEEP: 15,
+    COND_ORDER_BLOCK: 10,
+    COND_FVG: 10,
+    COND_PREMIUM_DISCOUNT: 10,
+}
+
+# Hard rejects : rejet direct, quel que soit le score.
+_HARD_REJECTS: tuple[str, ...] = (
+    COND_SESSION,
+    COND_SPREAD,
+    COND_NEWS,
+    COND_RR,
+)
+
+# Labels pour les logs détaillés.
+_CONDITION_LABELS: dict[str, str] = {
+    COND_HTF_TREND: "h1_bias",
+    COND_BOS: "bos",
+    COND_CHOCH: "choch",
+    COND_LIQUIDITY_SWEEP: "sweep",
+    COND_ORDER_BLOCK: "ob",
+    COND_FVG: "fvg",
+    COND_PREMIUM_DISCOUNT: "premium_discount",
+}
+
 # Couverture de la logique de validation :
 # - Les conditions HARD sont OBLIGATOIRES : un seul échec rejette le signal
 #   (aucun trade possible). Ce sont les garde-fous de sécurité.
@@ -123,23 +164,26 @@ class ValidationResult:
 
     ``failed_conditions`` ne contient que les conditions **HARD** (bloquantes)
     : tant qu'une seule d'entre elles échoue, ``is_valid`` est False.
-    Les confluences optionnelles (FVG, Order Block, Liquidity Sweep,
+    Les conditions scored (HTF, BOS, CHOCH, Liquidity, OB, FVG,
     Premium/Discount) ne bloquent pas : elles sont comptabilisées dans
-    ``confluence_score`` / ``confluence_passed``. Le signal est accepté si
-    aucune condition HARD n'échoue **et** si suffisamment de confluences sont
-    présentes (``confluence_passed >= min_confluence_count``).
+    ``weighted_score``. Le signal est accepté si aucune condition HARD
+    n'échoue **et** si ``weighted_score >= min_score``.
 
     Attributes:
-        is_valid: True si toutes les conditions HARD sont validées ET si le
-            nombre minimum de confluences est atteint.
+        is_valid: True si aucune condition HARD n'échoue ET si le weighted_score
+            est >= au seuil configuré.
         score: Proportion de conditions validées sur l'ensemble (0.0 à 1.0).
+            Conservé pour compatibilité descendante.
+        weighted_score: Score pondéré sur 100 (0-100).
+        tier: Niveau du setup ("excellent", "valid", "watch", "reject").
         failed_conditions: Liste des conditions HARD échouées (bloquantes).
+        hard_reject_reasons: Liste explicite des raisons de rejet dur.
         explanation: Résumé textuel du résultat.
         checked_conditions: Détail condition par condition (nom → bool).
         details: Détail textuel par condition (nom → description).
         confluence_score: Proportion de confluences validées (0.0 à 1.0).
-        confluence_passed: Nombre de confluences validées (sur 4).
-        confluence_total: Nombre total de confluences évaluées (toujours 4).
+        confluence_passed: Nombre de confluences validées (sur 5).
+        confluence_total: Nombre total de confluences évaluées (toujours 5).
     """
 
     is_valid: bool
@@ -151,13 +195,19 @@ class ValidationResult:
     confluence_score: float = 0.0
     confluence_passed: int = 0
     confluence_total: int = 0
+    weighted_score: int = 0
+    tier: str = "reject"
+    hard_reject_reasons: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         """Convertit le résultat en dictionnaire."""
         return {
             "is_valid": self.is_valid,
             "score": round(self.score, 4),
+            "weighted_score": self.weighted_score,
+            "tier": self.tier,
             "failed_conditions": list(self.failed_conditions),
+            "hard_reject_reasons": list(self.hard_reject_reasons),
             "explanation": self.explanation,
             "checked_conditions": dict(self.checked_conditions),
             "details": dict(self.details),
@@ -206,6 +256,9 @@ class SignalValidator:
         session_detector: SessionDetector | None = None,
         min_confluence_count: int = DEFAULT_MIN_CONFLUENCE_COUNT,
         symbol_spread_overrides: dict[str, int] | None = None,
+        min_score: int = 70,
+        excellent_score: int = 80,
+        watch_score: int = 60,
     ) -> None:
         """
         Initialise le validateur de signaux.
@@ -224,6 +277,9 @@ class SignalValidator:
             symbol_spread_overrides: Dictionnaire optionnel {symbole: max_spread}
                 pour utiliser un seuil de spread spécifique par symbole.
                 Si le symbole n'est pas présent, le max_spread global est utilisé.
+            min_score: Score weighted minimum pour accepter un signal (défaut 70).
+            excellent_score: Score minimum pour un setup EXCELLENT (défaut 80).
+            watch_score: Score minimum pour un setup WATCH (défaut 60).
         """
         if not 0 <= min_confluence_count <= len(CONFLUENCE_CONDITIONS):
             raise ValueError(
@@ -240,11 +296,15 @@ class SignalValidator:
         self._session_detector = session_detector or SessionDetector()
         self._min_confluence_count = min_confluence_count
         self._symbol_spread_overrides = symbol_spread_overrides or {}
+        self._min_score = min_score
+        self._excellent_score = excellent_score
+        self._watch_score = watch_score
 
         logger.info(
             "SignalValidator initialisé | min_rr=%.2f | max_spread=%d | "
             "sessions=%s | htf_alignment=%s | news_filter=%s | "
-            "min_confluence=%d/%d | symbol_spread_overrides=%s",
+            "min_confluence=%d/%d | symbol_spread_overrides=%s | "
+            "min_score=%d | excellent=%d | watch=%d",
             self._min_rr,
             self._max_spread,
             [s.value for s in self._authorized_sessions],
@@ -253,6 +313,9 @@ class SignalValidator:
             self._min_confluence_count,
             len(CONFLUENCE_CONDITIONS),
             self._symbol_spread_overrides,
+            self._min_score,
+            self._excellent_score,
+            self._watch_score,
         )
 
     # -------------------------------------------------------------------------
@@ -294,8 +357,23 @@ class SignalValidator:
 
     @property
     def min_confluence_count(self) -> int:
-        """Nombre minimum de confluences à valider (parmi les 4 optionnelles)."""
+        """Nombre minimum de confluences à valider (parmi les 5 optionnelles)."""
         return self._min_confluence_count
+
+    @property
+    def min_score(self) -> int:
+        """Score weighted minimum pour accepter un signal."""
+        return self._min_score
+
+    @property
+    def excellent_score(self) -> int:
+        """Score minimum pour un setup EXCELLENT."""
+        return self._excellent_score
+
+    @property
+    def watch_score(self) -> int:
+        """Score minimum pour un setup WATCH (no trade)."""
+        return self._watch_score
 
     # -------------------------------------------------------------------------
     # Validation principale
@@ -327,8 +405,8 @@ class SignalValidator:
             has_high_impact_news: True s'il y a des news à impact élevé.
 
         Returns:
-            ValidationResult contenant is_valid, score, failed_conditions,
-            explanation.
+            ValidationResult contenant is_valid, score, weighted_score, tier,
+            failed_conditions, hard_reject_reasons, explanation.
         """
         logger.info(
             "Validation démarrée | %s | %s | stratégie=%s | confiance=%.2f | R/R=%.2f",
@@ -439,52 +517,63 @@ class SignalValidator:
         if not ok:
             failed.append(COND_RR)
 
-        # Calcul du score global (sur l'ensemble des 11 conditions).
+        # Calcul du score global (proportion de conditions validées, 0.0-1.0).
         total = len(checked)
         passed = sum(1 for v in checked.values() if v)
         score = passed / total if total > 0 else 0.0
 
-        # Partition : seules les conditions HARD bloquent le trade. Les
-        # confluences optionnelles sont comptabilisées avec un seuil minimum.
-        hard_failed = [c for c in failed if c in HARD_CONDITIONS]
-        soft_failed = [c for c in failed if c not in HARD_CONDITIONS]
+        # Hard rejects : rejet direct, quel que soit le score pondéré.
+        hard_reject_reasons = [c for c in failed if c in _HARD_REJECTS]
+
+        # Weighted scoring sur les conditions scored.
+        weighted_score = 0
+        for cond, weight in _CONDITION_WEIGHTS.items():
+            if checked.get(cond, False):
+                weighted_score += weight
+
+        # Tier
+        if weighted_score >= self._excellent_score:
+            tier = "excellent"
+        elif weighted_score >= self._min_score:
+            tier = "valid"
+        elif weighted_score >= self._watch_score:
+            tier = "watch"
+        else:
+            tier = "reject"
+
+        # is_valid : pas de hard reject ET score >= seuil.
+        is_valid = len(hard_reject_reasons) == 0 and weighted_score >= self._min_score
+
+        # Confluence (conservé pour compatibilité descendante).
         confluence_total = sum(1 for c in CONFLUENCE_CONDITIONS if c in checked)
         confluence_passed = confluence_total - sum(
             1 for c in CONFLUENCE_CONDITIONS if c in failed
         )
-        hard_ok = len(hard_failed) == 0
-        confluence_ok = confluence_passed >= self._min_confluence_count
-        is_valid = hard_ok and confluence_ok
-        confluence_str = f"{confluence_passed}/{confluence_total}"
-
         if confluence_total > 0:
             confluence_score = confluence_passed / confluence_total
         else:
             confluence_score = 1.0
 
-        # Diagnostics détaillés
-        self._log_diagnostics(
-            signal, score, rr=signal.risk_reward_ratio,
-            confluence_str=confluence_str,
-            hard_failures=hard_failed,
-            soft_failures=soft_failed,
-            is_valid=is_valid,
+        # Log détaillé par signal.
+        self._log_weighted_score(
+            signal, direction_str, weighted_score, tier, checked, hard_reject_reasons
         )
 
         # Explication textuelle
         if is_valid:
             explanation = (
                 f"Signal VALIDÉ | {signal.symbol} | {signal.direction.value} | "
-                f"score={score:.2f} | {passed}/{total} conditions | "
-                f"confluences={confluence_str} (min={self._min_confluence_count}) | "
+                f"score={score:.2f} | weighted={weighted_score}/100 | tier={tier} | "
+                f"confluences={confluence_passed}/{confluence_total} | "
                 f"stratégie={signal.strategy_name}"
             )
         else:
+            reasons = hard_reject_reasons if hard_reject_reasons else ["low_score"]
             explanation = (
                 f"Signal REJETÉ | {signal.symbol} | {signal.direction.value} | "
-                f"score={score:.2f} | {passed}/{total} conditions | "
-                f"échecs_hard={hard_failed} | "
-                f"confluences={confluence_str} (min={self._min_confluence_count}) | "
+                f"score={score:.2f} | weighted={weighted_score}/100 | tier={tier} | "
+                f"raisons={reasons} | "
+                f"confluences={confluence_passed}/{confluence_total} | "
                 f"stratégie={signal.strategy_name}"
             )
 
@@ -493,13 +582,16 @@ class SignalValidator:
         return ValidationResult(
             is_valid=is_valid,
             score=score,
-            failed_conditions=hard_failed,
+            failed_conditions=hard_reject_reasons,
             explanation=explanation,
             checked_conditions=checked,
             details=details,
             confluence_score=confluence_score,
             confluence_passed=confluence_passed,
             confluence_total=confluence_total,
+            weighted_score=weighted_score,
+            tier=tier,
+            hard_reject_reasons=hard_reject_reasons,
         )
 
     # -------------------------------------------------------------------------
@@ -802,34 +894,41 @@ class SignalValidator:
     # Helpers
     # -------------------------------------------------------------------------
 
-    def _log_diagnostics(
+    def _log_weighted_score(
         self,
         signal: Signal,
-        score: float,
-        rr: float,
-        confluence_str: str,
-        hard_failures: list[str],
-        soft_failures: list[str],
-        is_valid: bool,
+        direction_str: str,
+        weighted_score: int,
+        tier: str,
+        checked: dict[str, bool],
+        hard_reject_reasons: list[str],
     ) -> None:
-        """Log un diagnostic détaillé de la validation."""
-        decision = "ACCEPT" if is_valid else "REJECT"
+        """Log le détail du scoring pondéré."""
+        parts = []
+        for cond in (
+            COND_HTF_TREND,
+            COND_BOS,
+            COND_CHOCH,
+            COND_LIQUIDITY_SWEEP,
+            COND_ORDER_BLOCK,
+            COND_FVG,
+            COND_PREMIUM_DISCOUNT,
+        ):
+            label = _CONDITION_LABELS.get(cond, cond)
+            weight = _CONDITION_WEIGHTS.get(cond, 0)
+            passed = checked.get(cond, False)
+            value = weight if passed else 0
+            parts.append(f"{label}={value:+d}" if passed else f"{label}=0")
+
+        decision = "ACCEPT" if weighted_score >= self._min_score and not hard_reject_reasons else "REJECT"
         logger.info(
-            "VALIDATOR | %s | %s\n"
-            "confidence=%.2f\n"
-            "RR=%.2f\n"
-            "confluences=%s\n"
-            "hard_failures=%s\n"
-            "soft_failures=%s\n"
-            "decision=%s",
-            signal.symbol,
-            signal.direction.value,
-            signal.confidence,
-            rr,
-            confluence_str,
-            hard_failures,
-            soft_failures,
+            "[VALIDATOR] direction=%s score=%d/100 %s decision=%s tier=%s hard_rejects=%s",
+            direction_str,
+            weighted_score,
+            " ".join(parts),
             decision,
+            tier,
+            hard_reject_reasons if hard_reject_reasons else "none",
         )
 
     def _log_condition(

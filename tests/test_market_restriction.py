@@ -20,7 +20,7 @@ class TestActiveConfigSymbols:
     def test_active_config_contains_exactly_eurusd_xauusd(self, monkeypatch):
         monkeypatch.delenv("DEFAULT_SYMBOLS", raising=False)
         settings = Settings(_env_file=None)
-        assert settings.symbols_list == ["EURUSD", "XAUUSD"]
+        assert settings.symbols_list == ["XAUUSD"]
 
     def test_supported_symbols_exactly_two(self, monkeypatch):
         monkeypatch.delenv("DEFAULT_SYMBOLS", raising=False)
@@ -135,6 +135,6 @@ def test_env_file_default_symbols_are_eurusd_xauusd():
             line = line.strip()
             if line.startswith("DEFAULT_SYMBOLS="):
                 value = line.split("=", 1)[1].strip()
-                assert [s.strip().upper() for s in value.split(",")] == ["EURUSD", "XAUUSD"]
+                assert [s.strip().upper() for s in value.split(",")] == ["XAUUSD"]
                 return
     pytest.fail("DEFAULT_SYMBOLS absent du .env")

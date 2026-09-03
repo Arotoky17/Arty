@@ -134,18 +134,41 @@ async def final_gate_before_execution(
         gate_logger.warning("FINAL GATE REJECT | %s | H1=BEARISH + BUY", symbol)
         return False
 
-    # 3. Régime H1 toujours directionnel
+    # 3. Structure H1 actuelle obligatoire : un signal ne peut pas être
+    # exécuté sur une simple préférence BUY/SELL ou une structure périmée.
+    structure_valid = getattr(market_context, "structure_valid", False)
+    if not structure_valid:
+        gate_logger.warning(
+            "FINAL GATE REJECT | %s | structure H1 absente, invalide ou périmée",
+            symbol,
+        )
+        return False
+
+    allows_direction = (
+        market_context.allows_buy()
+        if signal.direction == Direction.BUY
+        else market_context.allows_sell()
+    )
+    if not allows_direction:
+        gate_logger.warning(
+            "FINAL GATE REJECT | %s | direction=%s non autorisée par la structure H1",
+            symbol,
+            direction_str,
+        )
+        return False
+
+    # 4. Régime H1 toujours directionnel
     regime = getattr(market_context, "regime", "unknown")
     if regime in ("range", "transition"):
         gate_logger.warning("FINAL GATE REJECT | %s | régime=%s", symbol, regime)
         return False
 
-    # 4. SL != entry, TP != entry
+    # 5. SL != entry, TP != entry
     if signal.stop_loss == signal.entry_price or signal.take_profit == signal.entry_price:
         gate_logger.warning("FINAL GATE REJECT | %s | SL ou TP invalide", symbol)
         return False
 
-    # 5. RR minimum
+    # 6. RR minimum
     rr = signal.risk_reward_ratio
     profile = settings.get_instrument_profile(symbol)
     min_rr = profile.min_risk_reward if profile else 2.0
@@ -153,7 +176,7 @@ async def final_gate_before_execution(
         gate_logger.warning("FINAL GATE REJECT | %s | R/R=%.2f < min=%.2f", symbol, rr, min_rr)
         return False
 
-    # 6. Spread toujours acceptable
+    # 7. Spread toujours acceptable
     current_spread = getattr(market_context, "spread", 0)
     max_spread = profile.max_spread_points if profile else 30
     if current_spread > max_spread:
@@ -165,7 +188,7 @@ async def final_gate_before_execution(
         )
         return False
 
-    # 7. Retest toujours frais + rejet encore confirmé (anti trade contre-tendance).
+    # 8. Retest toujours frais + rejet encore confirmé (anti trade contre-tendance).
     profile = settings.get_instrument_profile(symbol)
     retest_diag = retest_still_valid_detailed(
         getattr(market_context, "ltf_candles", []),

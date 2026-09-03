@@ -264,6 +264,8 @@ def with_mocked_trend(engine: TradingEngine, trend: str = "bullish") -> TradingE
             swing_low=trend_result.swing_low,
             ltf_smc_data=ltf_smc,
             htf_smc_data=htf_smc,
+            regime="bullish" if trend == "bullish" else "bearish",
+            structure_valid=True,
         )
         return ctx
 
@@ -648,7 +650,7 @@ class TestCandleSynchronizerIntegration:
         await engine._initialize_symbols()
 
         # Le synchroniseur doit avoir enregistré la bougie actuelle
-        expected_last = fixed_time + timedelta(hours=19)
+        expected_last = fixed_time
         last = engine.synchronizer.get_last_processed("XAUUSD")
         assert last == expected_last
 
@@ -678,9 +680,9 @@ class TestCandleSynchronizerIntegration:
         """Après initialisation, une nouvelle bougie doit déclencher l'analyse."""
         call_order: list[str] = []
         initial_time = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
-        # La nouvelle bougie doit être strictement après la dernière bougie H1
-        # enregistrée par _initialize_symbols (initial_time + 19h).
-        new_time = initial_time + timedelta(hours=20)
+        # La nouvelle bougie doit être strictement après la dernière bougie M5
+        # enregistrée par _initialize_symbols.
+        new_time = initial_time + timedelta(minutes=5)
         engine = build_engine(call_order, candle_time=initial_time)
 
         # Initialiser avec la bougie actuelle

@@ -45,6 +45,7 @@ def _context(master_trend: str = "bullish", regime: str = "unknown",
         master_trend=master_trend,
         regime=regime,
         spread=spread,
+        structure_valid=True,
         ltf_candles=candles or [],
         ltf_smc_data=smc_data or [],
     )
@@ -123,6 +124,23 @@ async def test_final_gate_rr_below_min() -> None:
 async def test_final_gate_spread_too_high() -> None:
     settings = _settings(profile=_Profile())
     r = await final_gate_before_execution("XAUUSD", _signal(), _context("bullish", spread=50), settings)
+    assert r is False
+
+
+@pytest.mark.asyncio
+async def test_final_gate_invalid_structure_rejects_buy() -> None:
+    settings = _settings(profile=_Profile())
+    context = _context("bullish")
+    context.structure_valid = False
+    r = await final_gate_before_execution("XAUUSD", _signal(), context, settings)
+    assert r is False
+
+
+@pytest.mark.asyncio
+async def test_final_gate_structure_direction_must_allow_signal() -> None:
+    settings = _settings(profile=_Profile())
+    context = _context("bearish")
+    r = await final_gate_before_execution("XAUUSD", _signal(), context, settings)
     assert r is False
 
 

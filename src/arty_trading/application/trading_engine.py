@@ -1354,7 +1354,7 @@ class TradingEngine:
         for symbol in self._symbols:
             try:
                 candles = await self._market_data.get_latest_candles(
-                    symbol, self._timeframe, self._candle_count
+                    symbol, self._settings.entry_timeframe, self._candle_count
                 )
                 if not candles:
                     market_logger.warning("Initialisation ignorée (aucune bougie) | %s", symbol)

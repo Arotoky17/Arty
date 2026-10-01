@@ -175,6 +175,10 @@ async def test_strategy_accepts_grade_a_with_confirmation() -> None:
     assert signal is not None
     assert signal.direction == Direction.BUY
     assert signal.metadata["ob_grade"] == "A"
+    assert signal.stop_loss < signal.entry_price < signal.take_profit
+    risk = float(signal.entry_price - signal.stop_loss)
+    reward = float(signal.take_profit - signal.entry_price)
+    assert round(reward / risk, 2) == signal.risk_reward_ratio
     assert signal.risk_reward_ratio >= 2.5
 
 

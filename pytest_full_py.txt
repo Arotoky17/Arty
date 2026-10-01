@@ -1,0 +1,1349 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.15, pytest-9.1.1, pluggy-1.6.0
+rootdir: D:\Arty
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.15.1, asyncio-1.4.0, cov-7.1.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 965 items
+
+tests\test_ai.py ..........................                              [  2%]
+tests\test_api.py F..                                                    [  3%]
+tests\test_api_routes.py .....................                           [  5%]
+tests\test_backtest.py ....                                              [  5%]
+tests\test_backtest_mtf.py ....F.FFF.F.                                  [  6%]
+tests\test_backtesting.py ......................                         [  9%]
+tests\test_candle_synchronizer.py ..................                     [ 10%]
+tests\test_confidence_policy.py .......................                  [ 13%]
+tests\test_config.py ......................                              [ 15%]
+tests\test_core_entities.py .....                                        [ 16%]
+tests\test_decision_engine.py .....                                      [ 16%]
+tests\test_execution.py .......................                          [ 19%]
+tests\test_execution_guards.py ...........                               [ 20%]
+tests\test_logging.py ....                                               [ 20%]
+tests\test_m5_confirmation.py .................                          [ 22%]
+tests\test_m5_confirmation_checker.py .......                            [ 23%]
+tests\test_market_context_builder.py ..                                  [ 23%]
+tests\test_market_data.py ............................                   [ 26%]
+tests\test_market_restriction.py ........EEEEE.                          [ 27%]
+tests\test_market_structure_engine.py ..................                 [ 29%]
+tests\test_master_trend.py ...............................               [ 32%]
+tests\test_modify_sltp.py ...............                                [ 34%]
+tests\test_mt5_connector.py ................                             [ 35%]
+tests\test_mtf.py .                                                      [ 36%]
+tests\test_news_and_journal.py ..                                        [ 36%]
+tests\test_notifications.py .......................                      [ 38%]
+tests\test_ob_quality.py ..............................                  [ 41%]
+tests\test_ob_quality_gate.py FFFFFF.......                              [ 43%]
+tests\test_order_block_quality.py ...................................... [ 47%]
+............                                                             [ 48%]
+tests\test_order_block_tracker.py ...................................... [ 52%]
+.                                                                        [ 52%]
+tests\test_phase2_1_repro.py .................                           [ 54%]
+tests\test_phase3_setup_quality.py ..............................        [ 57%]
+tests\test_phase3a_audit.py .....................                        [ 59%]
+tests\test_position_manager.py ..........................                [ 62%]
+tests\test_position_monitor.py ....                                      [ 62%]
+tests\test_position_reconciliation.py ........                           [ 63%]
+tests\test_position_sizing_margin.py EEEEEEEEEEEEEEEE                    [ 64%]
+tests\test_position_state_store.py .....                                 [ 65%]
+tests\test_risk.py ...................................                   [ 69%]
+tests\test_setup_tracker_armed.py ............                           [ 70%]
+tests\test_signal_validator.py ......................................... [ 74%]
+............................                                             [ 77%]
+tests\test_smc.py ...................................................... [ 83%]
+......................                                                   [ 85%]
+tests\test_smc_trend_ob_quality.py .....                                 [ 85%]
+tests\test_strategies.py ............................................... [ 90%]
+....                                                                     [ 91%]
+tests\test_trade_decision_diagnostic.py ..........................       [ 93%]
+tests\test_trade_orchestrator.py .....                                   [ 94%]
+tests\test_trading_engine.py .FFFFFF.FFFF.......F.........FFFF..FFFFFF.. [ 98%]
+..                                                                       [ 99%]
+tests\test_utils.py ........                                             [ 99%]
+tests\unit\test_cli_entrypoint.py .                                      [100%]
+
+=================================== ERRORS ====================================
+__ ERROR at setup of TestDemoTestAdaptiveRestriction.test_scans_only_xauusd ___
+tests\test_market_restriction.py:101: in demo_mod
+    spec.loader.exec_module(mod)
+<frozen importlib._bootstrap_external>:1019: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1156: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1214: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'D:\\Arty\\demo_test_adaptive.py'
+_ ERROR at setup of TestDemoTestAdaptiveRestriction.test_symbol_blocked_eurusd _
+tests\test_market_restriction.py:101: in demo_mod
+    spec.loader.exec_module(mod)
+<frozen importlib._bootstrap_external>:1019: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1156: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1214: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'D:\\Arty\\demo_test_adaptive.py'
+_ ERROR at setup of TestDemoTestAdaptiveRestriction.test_symbol_blocked_gbpusd _
+tests\test_market_restriction.py:101: in demo_mod
+    spec.loader.exec_module(mod)
+<frozen importlib._bootstrap_external>:1019: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1156: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1214: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'D:\\Arty\\demo_test_adaptive.py'
+_ ERROR at setup of TestDemoTestAdaptiveRestriction.test_symbol_blocked_usdjpy _
+tests\test_market_restriction.py:101: in demo_mod
+    spec.loader.exec_module(mod)
+<frozen importlib._bootstrap_external>:1019: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1156: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1214: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'D:\\Arty\\demo_test_adaptive.py'
+_ ERROR at setup of TestDemoTestAdaptiveRestriction.test_scan_once_asserts_on_unallowed_symbol _
+tests\test_market_restriction.py:101: in demo_mod
+    spec.loader.exec_module(mod)
+<frozen importlib._bootstrap_external>:1019: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1156: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1214: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'D:\\Arty\\demo_test_adaptive.py'
+___________ ERROR at setup of TestVolumeCalculation.test_eurusd_buy ___________
+tests\test_position_sizing_margin.py:53: in demo
+    spec.loader.exec_module(mod)
+<frozen importlib._bootstrap_external>:1019: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1156: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1214: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'D:\\Arty\\demo_test_adaptive.py'
+__________ ERROR at setup of TestVolumeCalculation.test_eurusd_sell ___________
+tests\test_position_sizing_margin.py:53: in demo
+    spec.loader.exec_module(mod)
+<frozen importlib._bootstrap_external>:1019: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1156: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1214: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'D:\\Arty\\demo_test_adaptive.py'
+___________ ERROR at setup of TestVolumeCalculation.test_xauusd_buy ___________
+tests\test_position_sizing_margin.py:53: in demo
+    spec.loader.exec_module(mod)
+<frozen importlib._bootstrap_external>:1019: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1156: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1214: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'D:\\Arty\\demo_test_adaptive.py'
+__________ ERROR at setup of TestVolumeCalculation.test_xauusd_sell ___________
+tests\test_position_sizing_margin.py:53: in demo
+    spec.loader.exec_module(mod)
+<frozen importlib._bootstrap_external>:1019: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1156: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1214: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'D:\\Arty\\demo_test_adaptive.py'
+____ ERROR at setup of TestMarginConstraint.test_volume_reduced_by_margin _____
+tests\test_position_sizing_margin.py:53: in demo
+    spec.loader.exec_module(mod)
+<frozen importlib._bootstrap_external>:1019: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1156: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1214: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'D:\\Arty\\demo_test_adaptive.py'
+_ ERROR at setup of TestMarginConstraint.test_insufficient_margin_blocks_order _
+tests\test_position_sizing_margin.py:53: in demo
+    spec.loader.exec_module(mod)
+<frozen importlib._bootstrap_external>:1019: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1156: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1214: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'D:\\Arty\\demo_test_adaptive.py'
+____ ERROR at setup of TestMarginConstraint.test_margin_safety_factor_080 _____
+tests\test_position_sizing_margin.py:53: in demo
+    spec.loader.exec_module(mod)
+<frozen importlib._bootstrap_external>:1019: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1156: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1214: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'D:\\Arty\\demo_test_adaptive.py'
+__ ERROR at setup of TestMarginConstraint.test_margin_never_increases_volume __
+tests\test_position_sizing_margin.py:53: in demo
+    spec.loader.exec_module(mod)
+<frozen importlib._bootstrap_external>:1019: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1156: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1214: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'D:\\Arty\\demo_test_adaptive.py'
+_ ERROR at setup of TestMarginConstraint.test_margin_calculation_failure_blocks _
+tests\test_position_sizing_margin.py:53: in demo
+    spec.loader.exec_module(mod)
+<frozen importlib._bootstrap_external>:1019: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1156: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1214: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'D:\\Arty\\demo_test_adaptive.py'
+____ ERROR at setup of TestVolumeNormalization.test_volume_step_respected _____
+tests\test_position_sizing_margin.py:53: in demo
+    spec.loader.exec_module(mod)
+<frozen importlib._bootstrap_external>:1019: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1156: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1214: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'D:\\Arty\\demo_test_adaptive.py'
+_____ ERROR at setup of TestVolumeNormalization.test_volume_min_respected _____
+tests\test_position_sizing_margin.py:53: in demo
+    spec.loader.exec_module(mod)
+<frozen importlib._bootstrap_external>:1019: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1156: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1214: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'D:\\Arty\\demo_test_adaptive.py'
+_____ ERROR at setup of TestVolumeNormalization.test_volume_max_respected _____
+tests\test_position_sizing_margin.py:53: in demo
+    spec.loader.exec_module(mod)
+<frozen importlib._bootstrap_external>:1019: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1156: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1214: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'D:\\Arty\\demo_test_adaptive.py'
+___ ERROR at setup of TestTradingRulesUnchanged.test_sl_and_tp_not_modified ___
+tests\test_position_sizing_margin.py:53: in demo
+    spec.loader.exec_module(mod)
+<frozen importlib._bootstrap_external>:1019: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1156: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1214: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'D:\\Arty\\demo_test_adaptive.py'
+____ ERROR at setup of TestTradingRulesUnchanged.test_retcode_10019_logged ____
+tests\test_position_sizing_margin.py:53: in demo
+    spec.loader.exec_module(mod)
+<frozen importlib._bootstrap_external>:1019: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1156: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1214: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'D:\\Arty\\demo_test_adaptive.py'
+_ ERROR at setup of TestTradingRulesUnchanged.test_no_retry_with_bigger_volume _
+tests\test_position_sizing_margin.py:53: in demo
+    spec.loader.exec_module(mod)
+<frozen importlib._bootstrap_external>:1019: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1156: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1214: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'D:\\Arty\\demo_test_adaptive.py'
+_ ERROR at setup of TestTradingRulesUnchanged.test_symbol_restriction_unchanged _
+tests\test_position_sizing_margin.py:53: in demo
+    spec.loader.exec_module(mod)
+<frozen importlib._bootstrap_external>:1019: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1156: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1214: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'D:\\Arty\\demo_test_adaptive.py'
+================================== FAILURES ===================================
+______________________________ test_health_check ______________________________
+tests\test_api.py:42: in test_health_check
+    assert data["status"] == "healthy"
+E   AssertionError: assert 'degraded' == 'healthy'
+E     
+E     - healthy
+E     + degraded
+----------------------------- Captured log setup ------------------------------
+WARNING  arty_trading.ai:openai_provider.py:34 OpenAI API key non configuree - mode hors-ligne
+WARNING  arty_trading.notification:telegram.py:35 Telegram non configure - bot_token ou chat_id manquant
+WARNING  arty_trading.notification:discord.py:31 Discord non configure - webhook_url manquant
+WARNING  arty_trading.notification:email.py:47 Email non configure - parametres SMTP manquants
+___________________ test_mtf_views_use_only_closed_candles ____________________
+tests\test_backtest_mtf.py:158: in test_mtf_views_use_only_closed_candles
+    assert gen.calls > 0
+E   assert 0 > 0
+E    +  where 0 = <tests.test_backtest_mtf._NullGenerator object at 0x00000247732516A0>.calls
+__________________ test_h1_bearish_blocks_bullish_m15_setup ___________________
+tests\test_backtest_mtf.py:213: in test_h1_bearish_blocks_bullish_m15_setup
+    update_setups_from_market_context(tracker, "XAUUSD", ctx, Settings())
+src\arty_trading\application\setup_service.py:94: in update_setups_from_market_context
+    _record_observed_phases(
+src\arty_trading\application\setup_service.py:489: in _record_observed_phases
+    post_zone_candles = [candle for candle in candles if candle.time >= zone_available_at]
+                                                                        ^^^^^^^^^^^^^^^^^
+E   NameError: name 'zone_available_at' is not defined
+__________________ test_h1_bullish_allows_bullish_m15_setup ___________________
+tests\test_backtest_mtf.py:222: in test_h1_bullish_allows_bullish_m15_setup
+    update_setups_from_market_context(tracker, "XAUUSD", ctx, Settings())
+src\arty_trading\application\setup_service.py:94: in update_setups_from_market_context
+    _record_observed_phases(
+src\arty_trading\application\setup_service.py:489: in _record_observed_phases
+    post_zone_candles = [candle for candle in candles if candle.time >= zone_available_at]
+                                                                        ^^^^^^^^^^^^^^^^^
+E   NameError: name 'zone_available_at' is not defined
+_______________ test_m15_setup_without_m5_confirmation_no_trade _______________
+tests\test_backtest_mtf.py:234: in test_m15_setup_without_m5_confirmation_no_trade
+    update_setups_from_market_context(tracker, "XAUUSD", ctx, Settings())
+src\arty_trading\application\setup_service.py:94: in update_setups_from_market_context
+    _record_observed_phases(
+src\arty_trading\application\setup_service.py:489: in _record_observed_phases
+    post_zone_candles = [candle for candle in candles if candle.time >= zone_available_at]
+                                                                        ^^^^^^^^^^^^^^^^^
+E   NameError: name 'zone_available_at' is not defined
+______________________ test_legacy_dataset_reproducible _______________________
+tests\test_backtest_mtf.py:265: in test_legacy_dataset_reproducible
+    mod = _load_legacy_module()
+          ^^^^^^^^^^^^^^^^^^^^^
+tests\test_backtest_mtf.py:260: in _load_legacy_module
+    spec.loader.exec_module(mod)
+<frozen importlib._bootstrap_external>:1023: in exec_module
+    ???
+<frozen importlib._bootstrap>:488: in _call_with_frames_removed
+    ???
+scripts\run_backtest.py:34: in <module>
+    @dataclass
+     ^^^^^^^^^
+C:\Users\Toky\AppData\Local\Programs\Python\Python313\Lib\dataclasses.py:1354: in dataclass
+    return wrap(cls)
+           ^^^^^^^^^
+C:\Users\Toky\AppData\Local\Programs\Python\Python313\Lib\dataclasses.py:1344: in wrap
+    return _process_class(cls, init, repr, eq, order, unsafe_hash,
+C:\Users\Toky\AppData\Local\Programs\Python\Python313\Lib\dataclasses.py:997: in _process_class
+    and _is_type(type, cls, dataclasses, dataclasses.KW_ONLY,
+C:\Users\Toky\AppData\Local\Programs\Python\Python313\Lib\dataclasses.py:757: in _is_type
+    ns = sys.modules.get(cls.__module__).__dict__
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'NoneType' object has no attribute '__dict__'. Did you mean: '__dir__'?
+_____ TestSetupServiceFiltering.test_disabled_by_default_creates_ob_setup _____
+tests\test_ob_quality_gate.py:127: in test_disabled_by_default_creates_ob_setup
+    update_setups_from_market_context(tracker, "XAUUSD", ctx, Settings())
+src\arty_trading\application\setup_service.py:94: in update_setups_from_market_context
+    _record_observed_phases(
+src\arty_trading\application\setup_service.py:489: in _record_observed_phases
+    post_zone_candles = [candle for candle in candles if candle.time >= zone_available_at]
+                                                                        ^^^^^^^^^^^^^^^^^
+E   NameError: name 'zone_available_at' is not defined
+________ TestSetupServiceFiltering.test_low_grade_ob_creates_no_setup _________
+tests\test_ob_quality_gate.py:137: in test_low_grade_ob_creates_no_setup
+    update_setups_from_market_context(tracker, "XAUUSD", ctx, grading_settings("B"))
+src\arty_trading\application\setup_service.py:94: in update_setups_from_market_context
+    _record_observed_phases(
+src\arty_trading\application\setup_service.py:489: in _record_observed_phases
+    post_zone_candles = [candle for candle in candles if candle.time >= zone_available_at]
+                                                                        ^^^^^^^^^^^^^^^^^
+E   NameError: name 'zone_available_at' is not defined
+________ TestSetupServiceFiltering.test_min_grade_a_rejects_grade_b_ob ________
+tests\test_ob_quality_gate.py:143: in test_min_grade_a_rejects_grade_b_ob
+    update_setups_from_market_context(tracker, "XAUUSD", ctx, grading_settings("A"))
+src\arty_trading\application\setup_service.py:94: in update_setups_from_market_context
+    _record_observed_phases(
+src\arty_trading\application\setup_service.py:489: in _record_observed_phases
+    post_zone_candles = [candle for candle in candles if candle.time >= zone_available_at]
+                                                                        ^^^^^^^^^^^^^^^^^
+E   NameError: name 'zone_available_at' is not defined
+_____ TestSetupServiceFiltering.test_high_grade_ob_created_with_metadata ______
+tests\test_ob_quality_gate.py:151: in test_high_grade_ob_created_with_metadata
+    update_setups_from_market_context(tracker, "XAUUSD", ctx, grading_settings("B"))
+src\arty_trading\application\setup_service.py:94: in update_setups_from_market_context
+    _record_observed_phases(
+src\arty_trading\application\setup_service.py:489: in _record_observed_phases
+    post_zone_candles = [candle for candle in candles if candle.time >= zone_available_at]
+                                                                        ^^^^^^^^^^^^^^^^^
+E   NameError: name 'zone_available_at' is not defined
+__________ TestSetupServiceFiltering.test_m5_confirmation_propagated __________
+tests\test_ob_quality_gate.py:166: in test_m5_confirmation_propagated
+    update_setups_from_market_context(tracker, "XAUUSD", ctx, grading_settings("B"))
+src\arty_trading\application\setup_service.py:94: in update_setups_from_market_context
+    _record_observed_phases(
+src\arty_trading\application\setup_service.py:489: in _record_observed_phases
+    post_zone_candles = [candle for candle in candles if candle.time >= zone_available_at]
+                                                                        ^^^^^^^^^^^^^^^^^
+E   NameError: name 'zone_available_at' is not defined
+__________ TestSetupServiceFiltering.test_fvg_setups_are_not_graded ___________
+tests\test_ob_quality_gate.py:183: in test_fvg_setups_are_not_graded
+    update_setups_from_market_context(tracker, "XAUUSD", ctx, grading_settings("A"))
+src\arty_trading\application\setup_service.py:94: in update_setups_from_market_context
+    _record_observed_phases(
+src\arty_trading\application\setup_service.py:489: in _record_observed_phases
+    post_zone_candles = [candle for candle in candles if candle.time >= zone_available_at]
+                                                                        ^^^^^^^^^^^^^^^^^
+E   NameError: name 'zone_available_at' is not defined
+___________________ TestCallOrder.test_full_flow_call_order ___________________
+tests\test_trading_engine.py:346: in test_full_flow_call_order
+    await engine.analyze_symbol("XAUUSD")
+src\arty_trading\application\trading_engine.py:657: in analyze_symbol
+    self._update_setups(symbol, market_context)
+src\arty_trading\application\trading_engine.py:1085: in _update_setups
+    update_setups_from_market_context(
+src\arty_trading\application\setup_service.py:94: in update_setups_from_market_context
+    _record_observed_phases(
+src\arty_trading\application\setup_service.py:492: in _record_observed_phases
+    direction,
+    ^^^^^^^^^
+E   UnboundLocalError: cannot access local variable 'direction' where it is not associated with a value
+---------------------------- Captured stdout call -----------------------------
+2026-10-01 20:58:35 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | H1 | 20 bougies
+2026-10-01 20:58:35 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | M5 | 1 bougies
+2026-10-01 20:58:35 | DEBUG    | arty_trading.system | Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:35 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:35 | INFO     | arty_trading.system | Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:35 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:35 | INFO     | arty_trading.system | [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+2026-10-01 20:58:35 | INFO     | arty_trading.system | [TREND] H1=bullish structure=N/A
+2026-10-01 20:58:35 | INFO     | arty_trading.system | [LEVEL] premium=None discount=None
+2026-10-01 20:58:35 | INFO     | arty_trading.system | [15M] setup_tf=M15 trend=neutral detections=0
+2026-10-01 20:58:35 | INFO     | arty_trading.system | [5M] LTF detections=1
+2026-10-01 20:58:35 | INFO     | arty_trading.system | [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+------------------------------ Captured log call ------------------------------
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | H1 | 20 bougies
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | M5 | 1 bougies
+DEBUG    arty_trading.system:candle_synchronizer.py:87 Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:592 ========================================================
+INFO     arty_trading.system:trading_engine.py:593 Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:599 ========================================================
+INFO     arty_trading.system:trading_engine.py:1050 [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+INFO     arty_trading.system:trading_engine.py:1051 [TREND] H1=bullish structure=N/A
+INFO     arty_trading.system:trading_engine.py:1056 [LEVEL] premium=None discount=None
+INFO     arty_trading.system:trading_engine.py:1057 [15M] setup_tf=M15 trend=neutral detections=0
+INFO     arty_trading.system:trading_engine.py:1060 [5M] LTF detections=1
+INFO     arty_trading.system:trading_engine.py:1061 [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+__________ TestCallOrder.test_detect_called_with_candles_and_symbol ___________
+tests\test_trading_engine.py:368: in test_detect_called_with_candles_and_symbol
+    await engine.analyze_symbol("XAUUSD")
+src\arty_trading\application\trading_engine.py:657: in analyze_symbol
+    self._update_setups(symbol, market_context)
+src\arty_trading\application\trading_engine.py:1085: in _update_setups
+    update_setups_from_market_context(
+src\arty_trading\application\setup_service.py:94: in update_setups_from_market_context
+    _record_observed_phases(
+src\arty_trading\application\setup_service.py:492: in _record_observed_phases
+    direction,
+    ^^^^^^^^^
+E   UnboundLocalError: cannot access local variable 'direction' where it is not associated with a value
+---------------------------- Captured stdout call -----------------------------
+2026-10-01 20:58:35 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | H1 | 20 bougies
+2026-10-01 20:58:35 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | M5 | 1 bougies
+2026-10-01 20:58:35 | DEBUG    | arty_trading.system | Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:35 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:35 | INFO     | arty_trading.system | Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:35 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:35 | INFO     | arty_trading.system | [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+2026-10-01 20:58:35 | INFO     | arty_trading.system | [TREND] H1=bullish structure=N/A
+2026-10-01 20:58:35 | INFO     | arty_trading.system | [LEVEL] premium=None discount=None
+2026-10-01 20:58:35 | INFO     | arty_trading.system | [15M] setup_tf=M15 trend=neutral detections=0
+2026-10-01 20:58:35 | INFO     | arty_trading.system | [5M] LTF detections=1
+2026-10-01 20:58:35 | INFO     | arty_trading.system | [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+------------------------------ Captured log call ------------------------------
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | H1 | 20 bougies
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | M5 | 1 bougies
+DEBUG    arty_trading.system:candle_synchronizer.py:87 Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:592 ========================================================
+INFO     arty_trading.system:trading_engine.py:593 Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:599 ========================================================
+INFO     arty_trading.system:trading_engine.py:1050 [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+INFO     arty_trading.system:trading_engine.py:1051 [TREND] H1=bullish structure=N/A
+INFO     arty_trading.system:trading_engine.py:1056 [LEVEL] premium=None discount=None
+INFO     arty_trading.system:trading_engine.py:1057 [15M] setup_tf=M15 trend=neutral detections=0
+INFO     arty_trading.system:trading_engine.py:1060 [5M] LTF detections=1
+INFO     arty_trading.system:trading_engine.py:1061 [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+________ TestCallOrder.test_generate_called_with_candles_and_smc_data _________
+tests\test_trading_engine.py:380: in test_generate_called_with_candles_and_smc_data
+    await engine.analyze_symbol("XAUUSD")
+src\arty_trading\application\trading_engine.py:657: in analyze_symbol
+    self._update_setups(symbol, market_context)
+src\arty_trading\application\trading_engine.py:1085: in _update_setups
+    update_setups_from_market_context(
+src\arty_trading\application\setup_service.py:94: in update_setups_from_market_context
+    _record_observed_phases(
+src\arty_trading\application\setup_service.py:492: in _record_observed_phases
+    direction,
+    ^^^^^^^^^
+E   UnboundLocalError: cannot access local variable 'direction' where it is not associated with a value
+---------------------------- Captured stdout call -----------------------------
+2026-10-01 20:58:36 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | H1 | 20 bougies
+2026-10-01 20:58:36 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | M5 | 1 bougies
+2026-10-01 20:58:36 | DEBUG    | arty_trading.system | Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:36 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:36 | INFO     | arty_trading.system | Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:36 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [TREND] H1=bullish structure=N/A
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [LEVEL] premium=None discount=None
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [15M] setup_tf=M15 trend=neutral detections=0
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [5M] LTF detections=1
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+------------------------------ Captured log call ------------------------------
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | H1 | 20 bougies
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | M5 | 1 bougies
+DEBUG    arty_trading.system:candle_synchronizer.py:87 Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:592 ========================================================
+INFO     arty_trading.system:trading_engine.py:593 Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:599 ========================================================
+INFO     arty_trading.system:trading_engine.py:1050 [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+INFO     arty_trading.system:trading_engine.py:1051 [TREND] H1=bullish structure=N/A
+INFO     arty_trading.system:trading_engine.py:1056 [LEVEL] premium=None discount=None
+INFO     arty_trading.system:trading_engine.py:1057 [15M] setup_tf=M15 trend=neutral detections=0
+INFO     arty_trading.system:trading_engine.py:1060 [5M] LTF detections=1
+INFO     arty_trading.system:trading_engine.py:1061 [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+_ TestNoOrderOnValidationFailure.test_no_open_order_when_validate_signal_false _
+tests\test_trading_engine.py:399: in test_no_open_order_when_validate_signal_false
+    await engine.analyze_symbol("XAUUSD")
+src\arty_trading\application\trading_engine.py:657: in analyze_symbol
+    self._update_setups(symbol, market_context)
+src\arty_trading\application\trading_engine.py:1085: in _update_setups
+    update_setups_from_market_context(
+src\arty_trading\application\setup_service.py:94: in update_setups_from_market_context
+    _record_observed_phases(
+src\arty_trading\application\setup_service.py:492: in _record_observed_phases
+    direction,
+    ^^^^^^^^^
+E   UnboundLocalError: cannot access local variable 'direction' where it is not associated with a value
+---------------------------- Captured stdout call -----------------------------
+2026-10-01 20:58:36 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | H1 | 20 bougies
+2026-10-01 20:58:36 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | M5 | 1 bougies
+2026-10-01 20:58:36 | DEBUG    | arty_trading.system | Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:36 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:36 | INFO     | arty_trading.system | Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:36 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [TREND] H1=bullish structure=N/A
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [LEVEL] premium=None discount=None
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [15M] setup_tf=M15 trend=neutral detections=0
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [5M] LTF detections=1
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+------------------------------ Captured log call ------------------------------
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | H1 | 20 bougies
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | M5 | 1 bougies
+DEBUG    arty_trading.system:candle_synchronizer.py:87 Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:592 ========================================================
+INFO     arty_trading.system:trading_engine.py:593 Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:599 ========================================================
+INFO     arty_trading.system:trading_engine.py:1050 [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+INFO     arty_trading.system:trading_engine.py:1051 [TREND] H1=bullish structure=N/A
+INFO     arty_trading.system:trading_engine.py:1056 [LEVEL] premium=None discount=None
+INFO     arty_trading.system:trading_engine.py:1057 [15M] setup_tf=M15 trend=neutral detections=0
+INFO     arty_trading.system:trading_engine.py:1060 [5M] LTF detections=1
+INFO     arty_trading.system:trading_engine.py:1061 [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+_ TestNoOrderOnValidationFailure.test_no_open_order_when_can_open_trade_false _
+tests\test_trading_engine.py:422: in test_no_open_order_when_can_open_trade_false
+    await engine.analyze_symbol("XAUUSD")
+src\arty_trading\application\trading_engine.py:657: in analyze_symbol
+    self._update_setups(symbol, market_context)
+src\arty_trading\application\trading_engine.py:1085: in _update_setups
+    update_setups_from_market_context(
+src\arty_trading\application\setup_service.py:94: in update_setups_from_market_context
+    _record_observed_phases(
+src\arty_trading\application\setup_service.py:492: in _record_observed_phases
+    direction,
+    ^^^^^^^^^
+E   UnboundLocalError: cannot access local variable 'direction' where it is not associated with a value
+---------------------------- Captured stdout call -----------------------------
+2026-10-01 20:58:36 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | H1 | 20 bougies
+2026-10-01 20:58:36 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | M5 | 1 bougies
+2026-10-01 20:58:36 | DEBUG    | arty_trading.system | Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:36 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:36 | INFO     | arty_trading.system | Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:36 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [TREND] H1=bullish structure=N/A
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [LEVEL] premium=None discount=None
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [15M] setup_tf=M15 trend=neutral detections=0
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [5M] LTF detections=1
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+------------------------------ Captured log call ------------------------------
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | H1 | 20 bougies
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | M5 | 1 bougies
+DEBUG    arty_trading.system:candle_synchronizer.py:87 Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:592 ========================================================
+INFO     arty_trading.system:trading_engine.py:593 Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:599 ========================================================
+INFO     arty_trading.system:trading_engine.py:1050 [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+INFO     arty_trading.system:trading_engine.py:1051 [TREND] H1=bullish structure=N/A
+INFO     arty_trading.system:trading_engine.py:1056 [LEVEL] premium=None discount=None
+INFO     arty_trading.system:trading_engine.py:1057 [15M] setup_tf=M15 trend=neutral detections=0
+INFO     arty_trading.system:trading_engine.py:1060 [5M] LTF detections=1
+INFO     arty_trading.system:trading_engine.py:1061 [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+______ TestNoOrderOnValidationFailure.test_no_open_order_when_no_signal _______
+tests\test_trading_engine.py:443: in test_no_open_order_when_no_signal
+    await engine.analyze_symbol("XAUUSD")
+src\arty_trading\application\trading_engine.py:657: in analyze_symbol
+    self._update_setups(symbol, market_context)
+src\arty_trading\application\trading_engine.py:1085: in _update_setups
+    update_setups_from_market_context(
+src\arty_trading\application\setup_service.py:94: in update_setups_from_market_context
+    _record_observed_phases(
+src\arty_trading\application\setup_service.py:492: in _record_observed_phases
+    direction,
+    ^^^^^^^^^
+E   UnboundLocalError: cannot access local variable 'direction' where it is not associated with a value
+---------------------------- Captured stdout call -----------------------------
+2026-10-01 20:58:36 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | H1 | 20 bougies
+2026-10-01 20:58:36 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | M5 | 1 bougies
+2026-10-01 20:58:36 | DEBUG    | arty_trading.system | Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:36 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:36 | INFO     | arty_trading.system | Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:36 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [TREND] H1=bullish structure=N/A
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [LEVEL] premium=None discount=None
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [15M] setup_tf=M15 trend=neutral detections=0
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [5M] LTF detections=1
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+------------------------------ Captured log call ------------------------------
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | H1 | 20 bougies
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | M5 | 1 bougies
+DEBUG    arty_trading.system:candle_synchronizer.py:87 Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:592 ========================================================
+INFO     arty_trading.system:trading_engine.py:593 Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:599 ========================================================
+INFO     arty_trading.system:trading_engine.py:1050 [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+INFO     arty_trading.system:trading_engine.py:1051 [TREND] H1=bullish structure=N/A
+INFO     arty_trading.system:trading_engine.py:1056 [LEVEL] premium=None discount=None
+INFO     arty_trading.system:trading_engine.py:1057 [15M] setup_tf=M15 trend=neutral detections=0
+INFO     arty_trading.system:trading_engine.py:1060 [5M] LTF detections=1
+INFO     arty_trading.system:trading_engine.py:1061 [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+____________ TestNewBarDetection.test_no_reanalysis_on_same_candle ____________
+tests\test_trading_engine.py:494: in test_no_reanalysis_on_same_candle
+    await engine.analyze_symbol("XAUUSD")
+src\arty_trading\application\trading_engine.py:657: in analyze_symbol
+    self._update_setups(symbol, market_context)
+src\arty_trading\application\trading_engine.py:1085: in _update_setups
+    update_setups_from_market_context(
+src\arty_trading\application\setup_service.py:94: in update_setups_from_market_context
+    _record_observed_phases(
+src\arty_trading\application\setup_service.py:492: in _record_observed_phases
+    direction,
+    ^^^^^^^^^
+E   UnboundLocalError: cannot access local variable 'direction' where it is not associated with a value
+---------------------------- Captured stdout call -----------------------------
+2026-10-01 20:58:36 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | H1 | 20 bougies
+2026-10-01 20:58:36 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | M5 | 1 bougies
+2026-10-01 20:58:36 | DEBUG    | arty_trading.system | Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:36 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:36 | INFO     | arty_trading.system | Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:36 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [TREND] H1=bullish structure=N/A
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [LEVEL] premium=None discount=None
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [15M] setup_tf=M15 trend=neutral detections=0
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [5M] LTF detections=1
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+------------------------------ Captured log call ------------------------------
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | H1 | 20 bougies
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | M5 | 1 bougies
+DEBUG    arty_trading.system:candle_synchronizer.py:87 Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:592 ========================================================
+INFO     arty_trading.system:trading_engine.py:593 Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:599 ========================================================
+INFO     arty_trading.system:trading_engine.py:1050 [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+INFO     arty_trading.system:trading_engine.py:1051 [TREND] H1=bullish structure=N/A
+INFO     arty_trading.system:trading_engine.py:1056 [LEVEL] premium=None discount=None
+INFO     arty_trading.system:trading_engine.py:1057 [15M] setup_tf=M15 trend=neutral detections=0
+INFO     arty_trading.system:trading_engine.py:1060 [5M] LTF detections=1
+INFO     arty_trading.system:trading_engine.py:1061 [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+______________ TestNewBarDetection.test_reanalysis_on_new_candle ______________
+tests\test_trading_engine.py:517: in test_reanalysis_on_new_candle
+    await engine.analyze_symbol("XAUUSD")
+src\arty_trading\application\trading_engine.py:657: in analyze_symbol
+    self._update_setups(symbol, market_context)
+src\arty_trading\application\trading_engine.py:1085: in _update_setups
+    update_setups_from_market_context(
+src\arty_trading\application\setup_service.py:94: in update_setups_from_market_context
+    _record_observed_phases(
+src\arty_trading\application\setup_service.py:492: in _record_observed_phases
+    direction,
+    ^^^^^^^^^
+E   UnboundLocalError: cannot access local variable 'direction' where it is not associated with a value
+---------------------------- Captured stdout call -----------------------------
+2026-10-01 20:58:36 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | H1 | 20 bougies
+2026-10-01 20:58:36 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | M5 | 1 bougies
+2026-10-01 20:58:36 | DEBUG    | arty_trading.system | Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:36 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:36 | INFO     | arty_trading.system | Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:36 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [TREND] H1=bullish structure=N/A
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [LEVEL] premium=None discount=None
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [15M] setup_tf=M15 trend=neutral detections=0
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [5M] LTF detections=1
+2026-10-01 20:58:36 | INFO     | arty_trading.system | [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+------------------------------ Captured log call ------------------------------
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | H1 | 20 bougies
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | M5 | 1 bougies
+DEBUG    arty_trading.system:candle_synchronizer.py:87 Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:592 ========================================================
+INFO     arty_trading.system:trading_engine.py:593 Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:599 ========================================================
+INFO     arty_trading.system:trading_engine.py:1050 [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+INFO     arty_trading.system:trading_engine.py:1051 [TREND] H1=bullish structure=N/A
+INFO     arty_trading.system:trading_engine.py:1056 [LEVEL] premium=None discount=None
+INFO     arty_trading.system:trading_engine.py:1057 [15M] setup_tf=M15 trend=neutral detections=0
+INFO     arty_trading.system:trading_engine.py:1060 [5M] LTF detections=1
+INFO     arty_trading.system:trading_engine.py:1061 [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+_______________ TestEngineStatus.test_get_status_after_analysis _______________
+tests\test_trading_engine.py:553: in test_get_status_after_analysis
+    await engine.analyze_symbol("XAUUSD")
+src\arty_trading\application\trading_engine.py:657: in analyze_symbol
+    self._update_setups(symbol, market_context)
+src\arty_trading\application\trading_engine.py:1085: in _update_setups
+    update_setups_from_market_context(
+src\arty_trading\application\setup_service.py:94: in update_setups_from_market_context
+    _record_observed_phases(
+src\arty_trading\application\setup_service.py:492: in _record_observed_phases
+    direction,
+    ^^^^^^^^^
+E   UnboundLocalError: cannot access local variable 'direction' where it is not associated with a value
+---------------------------- Captured stdout call -----------------------------
+2026-10-01 20:58:37 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | H1 | 20 bougies
+2026-10-01 20:58:37 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | M5 | 1 bougies
+2026-10-01 20:58:37 | DEBUG    | arty_trading.system | Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:37 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:37 | INFO     | arty_trading.system | Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:37 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:37 | INFO     | arty_trading.system | [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+2026-10-01 20:58:37 | INFO     | arty_trading.system | [TREND] H1=bullish structure=N/A
+2026-10-01 20:58:37 | INFO     | arty_trading.system | [LEVEL] premium=None discount=None
+2026-10-01 20:58:37 | INFO     | arty_trading.system | [15M] setup_tf=M15 trend=neutral detections=0
+2026-10-01 20:58:37 | INFO     | arty_trading.system | [5M] LTF detections=1
+2026-10-01 20:58:37 | INFO     | arty_trading.system | [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+------------------------------ Captured log call ------------------------------
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | H1 | 20 bougies
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | M5 | 1 bougies
+DEBUG    arty_trading.system:candle_synchronizer.py:87 Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:592 ========================================================
+INFO     arty_trading.system:trading_engine.py:593 Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:599 ========================================================
+INFO     arty_trading.system:trading_engine.py:1050 [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+INFO     arty_trading.system:trading_engine.py:1051 [TREND] H1=bullish structure=N/A
+INFO     arty_trading.system:trading_engine.py:1056 [LEVEL] premium=None discount=None
+INFO     arty_trading.system:trading_engine.py:1057 [15M] setup_tf=M15 trend=neutral detections=0
+INFO     arty_trading.system:trading_engine.py:1060 [5M] LTF detections=1
+INFO     arty_trading.system:trading_engine.py:1061 [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+_________________ TestEngineStatus.test_get_status_no_signal __________________
+tests\test_trading_engine.py:572: in test_get_status_no_signal
+    await engine.analyze_symbol("XAUUSD")
+src\arty_trading\application\trading_engine.py:657: in analyze_symbol
+    self._update_setups(symbol, market_context)
+src\arty_trading\application\trading_engine.py:1085: in _update_setups
+    update_setups_from_market_context(
+src\arty_trading\application\setup_service.py:94: in update_setups_from_market_context
+    _record_observed_phases(
+src\arty_trading\application\setup_service.py:492: in _record_observed_phases
+    direction,
+    ^^^^^^^^^
+E   UnboundLocalError: cannot access local variable 'direction' where it is not associated with a value
+---------------------------- Captured stdout call -----------------------------
+2026-10-01 20:58:37 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | H1 | 20 bougies
+2026-10-01 20:58:37 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | M5 | 1 bougies
+2026-10-01 20:58:37 | DEBUG    | arty_trading.system | Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:37 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:37 | INFO     | arty_trading.system | Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:37 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:37 | INFO     | arty_trading.system | [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+2026-10-01 20:58:37 | INFO     | arty_trading.system | [TREND] H1=bullish structure=N/A
+2026-10-01 20:58:37 | INFO     | arty_trading.system | [LEVEL] premium=None discount=None
+2026-10-01 20:58:37 | INFO     | arty_trading.system | [15M] setup_tf=M15 trend=neutral detections=0
+2026-10-01 20:58:37 | INFO     | arty_trading.system | [5M] LTF detections=1
+2026-10-01 20:58:37 | INFO     | arty_trading.system | [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+------------------------------ Captured log call ------------------------------
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | H1 | 20 bougies
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | M5 | 1 bougies
+DEBUG    arty_trading.system:candle_synchronizer.py:87 Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:592 ========================================================
+INFO     arty_trading.system:trading_engine.py:593 Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:599 ========================================================
+INFO     arty_trading.system:trading_engine.py:1050 [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+INFO     arty_trading.system:trading_engine.py:1051 [TREND] H1=bullish structure=N/A
+INFO     arty_trading.system:trading_engine.py:1056 [LEVEL] premium=None discount=None
+INFO     arty_trading.system:trading_engine.py:1057 [15M] setup_tf=M15 trend=neutral detections=0
+INFO     arty_trading.system:trading_engine.py:1060 [5M] LTF detections=1
+INFO     arty_trading.system:trading_engine.py:1061 [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+_ TestCandleSynchronizerIntegration.test_initialize_allows_analysis_on_new_candle _
+tests\test_trading_engine.py:720: in test_initialize_allows_analysis_on_new_candle
+    await engine.analyze_symbol("XAUUSD")
+src\arty_trading\application\trading_engine.py:657: in analyze_symbol
+    self._update_setups(symbol, market_context)
+src\arty_trading\application\trading_engine.py:1085: in _update_setups
+    update_setups_from_market_context(
+src\arty_trading\application\setup_service.py:94: in update_setups_from_market_context
+    _record_observed_phases(
+src\arty_trading\application\setup_service.py:492: in _record_observed_phases
+    direction,
+    ^^^^^^^^^
+E   UnboundLocalError: cannot access local variable 'direction' where it is not associated with a value
+---------------------------- Captured stdout call -----------------------------
+2026-10-01 20:58:37 | INFO     | arty_trading.system | Phase d'initialisation | enregistrement des bougies actuelles pour 1 symbole(s)
+2026-10-01 20:58:37 | INFO     | arty_trading.system | Symbole initialisé | XAUUSD | dernière bougie=2024-01-01T12:00:00+00:00 | en attente de la prochaine
+2026-10-01 20:58:37 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | H1 | 20 bougies
+2026-10-01 20:58:37 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | M5 | 1 bougies
+2026-10-01 20:58:37 | DEBUG    | arty_trading.system | Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:05:00+00:00
+2026-10-01 20:58:37 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:37 | INFO     | arty_trading.system | Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:05:00+00:00
+2026-10-01 20:58:37 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:37 | INFO     | arty_trading.system | [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+2026-10-01 20:58:37 | INFO     | arty_trading.system | [TREND] H1=bullish structure=N/A
+2026-10-01 20:58:37 | INFO     | arty_trading.system | [LEVEL] premium=None discount=None
+2026-10-01 20:58:37 | INFO     | arty_trading.system | [15M] setup_tf=M15 trend=neutral detections=0
+2026-10-01 20:58:37 | INFO     | arty_trading.system | [5M] LTF detections=1
+2026-10-01 20:58:37 | INFO     | arty_trading.system | [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+------------------------------ Captured log call ------------------------------
+INFO     arty_trading.system:trading_engine.py:1365 Phase d'initialisation | enregistrement des bougies actuelles pour 1 symbole(s)
+INFO     arty_trading.system:candle_synchronizer.py:110 Symbole initialisé | XAUUSD | dernière bougie=2024-01-01T12:00:00+00:00 | en attente de la prochaine
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | H1 | 20 bougies
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | M5 | 1 bougies
+DEBUG    arty_trading.system:candle_synchronizer.py:87 Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:05:00+00:00
+INFO     arty_trading.system:trading_engine.py:592 ========================================================
+INFO     arty_trading.system:trading_engine.py:593 Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:05:00+00:00
+INFO     arty_trading.system:trading_engine.py:599 ========================================================
+INFO     arty_trading.system:trading_engine.py:1050 [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+INFO     arty_trading.system:trading_engine.py:1051 [TREND] H1=bullish structure=N/A
+INFO     arty_trading.system:trading_engine.py:1056 [LEVEL] premium=None discount=None
+INFO     arty_trading.system:trading_engine.py:1057 [15M] setup_tf=M15 trend=neutral detections=0
+INFO     arty_trading.system:trading_engine.py:1060 [5M] LTF detections=1
+INFO     arty_trading.system:trading_engine.py:1061 [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+___________ TestTradingModes.test_analysis_mode_stops_after_signal ____________
+tests\test_trading_engine.py:873: in test_analysis_mode_stops_after_signal
+    await engine.analyze_symbol("XAUUSD")
+src\arty_trading\application\trading_engine.py:657: in analyze_symbol
+    self._update_setups(symbol, market_context)
+src\arty_trading\application\trading_engine.py:1085: in _update_setups
+    update_setups_from_market_context(
+src\arty_trading\application\setup_service.py:94: in update_setups_from_market_context
+    _record_observed_phases(
+src\arty_trading\application\setup_service.py:492: in _record_observed_phases
+    direction,
+    ^^^^^^^^^
+E   UnboundLocalError: cannot access local variable 'direction' where it is not associated with a value
+---------------------------- Captured stdout call -----------------------------
+2026-10-01 20:58:38 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | H1 | 20 bougies
+2026-10-01 20:58:38 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | M5 | 1 bougies
+2026-10-01 20:58:38 | DEBUG    | arty_trading.system | Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:38 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:38 | INFO     | arty_trading.system | Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:38 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [TREND] H1=bullish structure=N/A
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [LEVEL] premium=None discount=None
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [15M] setup_tf=M15 trend=neutral detections=0
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [5M] LTF detections=1
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+------------------------------ Captured log call ------------------------------
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | H1 | 20 bougies
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | M5 | 1 bougies
+DEBUG    arty_trading.system:candle_synchronizer.py:87 Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:592 ========================================================
+INFO     arty_trading.system:trading_engine.py:593 Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:599 ========================================================
+INFO     arty_trading.system:trading_engine.py:1050 [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+INFO     arty_trading.system:trading_engine.py:1051 [TREND] H1=bullish structure=N/A
+INFO     arty_trading.system:trading_engine.py:1056 [LEVEL] premium=None discount=None
+INFO     arty_trading.system:trading_engine.py:1057 [15M] setup_tf=M15 trend=neutral detections=0
+INFO     arty_trading.system:trading_engine.py:1060 [5M] LTF detections=1
+INFO     arty_trading.system:trading_engine.py:1061 [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+_______________ TestTradingModes.test_paper_mode_full_pipeline ________________
+tests\test_trading_engine.py:892: in test_paper_mode_full_pipeline
+    await engine.analyze_symbol("XAUUSD")
+src\arty_trading\application\trading_engine.py:657: in analyze_symbol
+    self._update_setups(symbol, market_context)
+src\arty_trading\application\trading_engine.py:1085: in _update_setups
+    update_setups_from_market_context(
+src\arty_trading\application\setup_service.py:94: in update_setups_from_market_context
+    _record_observed_phases(
+src\arty_trading\application\setup_service.py:492: in _record_observed_phases
+    direction,
+    ^^^^^^^^^
+E   UnboundLocalError: cannot access local variable 'direction' where it is not associated with a value
+---------------------------- Captured stdout call -----------------------------
+2026-10-01 20:58:38 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | H1 | 20 bougies
+2026-10-01 20:58:38 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | M5 | 1 bougies
+2026-10-01 20:58:38 | DEBUG    | arty_trading.system | Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:38 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:38 | INFO     | arty_trading.system | Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:38 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [TREND] H1=bullish structure=N/A
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [LEVEL] premium=None discount=None
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [15M] setup_tf=M15 trend=neutral detections=0
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [5M] LTF detections=1
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+------------------------------ Captured log call ------------------------------
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | H1 | 20 bougies
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | M5 | 1 bougies
+DEBUG    arty_trading.system:candle_synchronizer.py:87 Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:592 ========================================================
+INFO     arty_trading.system:trading_engine.py:593 Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:599 ========================================================
+INFO     arty_trading.system:trading_engine.py:1050 [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+INFO     arty_trading.system:trading_engine.py:1051 [TREND] H1=bullish structure=N/A
+INFO     arty_trading.system:trading_engine.py:1056 [LEVEL] premium=None discount=None
+INFO     arty_trading.system:trading_engine.py:1057 [15M] setup_tf=M15 trend=neutral detections=0
+INFO     arty_trading.system:trading_engine.py:1060 [5M] LTF detections=1
+INFO     arty_trading.system:trading_engine.py:1061 [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+________________ TestTradingModes.test_live_mode_full_pipeline ________________
+tests\test_trading_engine.py:913: in test_live_mode_full_pipeline
+    await engine.analyze_symbol("XAUUSD")
+src\arty_trading\application\trading_engine.py:657: in analyze_symbol
+    self._update_setups(symbol, market_context)
+src\arty_trading\application\trading_engine.py:1085: in _update_setups
+    update_setups_from_market_context(
+src\arty_trading\application\setup_service.py:94: in update_setups_from_market_context
+    _record_observed_phases(
+src\arty_trading\application\setup_service.py:492: in _record_observed_phases
+    direction,
+    ^^^^^^^^^
+E   UnboundLocalError: cannot access local variable 'direction' where it is not associated with a value
+---------------------------- Captured stdout call -----------------------------
+2026-10-01 20:58:38 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | H1 | 20 bougies
+2026-10-01 20:58:38 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | M5 | 1 bougies
+2026-10-01 20:58:38 | DEBUG    | arty_trading.system | Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:38 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:38 | INFO     | arty_trading.system | Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:38 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [TREND] H1=bullish structure=N/A
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [LEVEL] premium=None discount=None
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [15M] setup_tf=M15 trend=neutral detections=0
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [5M] LTF detections=1
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+------------------------------ Captured log call ------------------------------
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | H1 | 20 bougies
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | M5 | 1 bougies
+DEBUG    arty_trading.system:candle_synchronizer.py:87 Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:592 ========================================================
+INFO     arty_trading.system:trading_engine.py:593 Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:599 ========================================================
+INFO     arty_trading.system:trading_engine.py:1050 [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+INFO     arty_trading.system:trading_engine.py:1051 [TREND] H1=bullish structure=N/A
+INFO     arty_trading.system:trading_engine.py:1056 [LEVEL] premium=None discount=None
+INFO     arty_trading.system:trading_engine.py:1057 [15M] setup_tf=M15 trend=neutral detections=0
+INFO     arty_trading.system:trading_engine.py:1060 [5M] LTF detections=1
+INFO     arty_trading.system:trading_engine.py:1061 [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+_______ TestTradingModes.test_analysis_mode_no_open_order_on_no_signal ________
+tests\test_trading_engine.py:938: in test_analysis_mode_no_open_order_on_no_signal
+    await engine.analyze_symbol("XAUUSD")
+src\arty_trading\application\trading_engine.py:657: in analyze_symbol
+    self._update_setups(symbol, market_context)
+src\arty_trading\application\trading_engine.py:1085: in _update_setups
+    update_setups_from_market_context(
+src\arty_trading\application\setup_service.py:94: in update_setups_from_market_context
+    _record_observed_phases(
+src\arty_trading\application\setup_service.py:492: in _record_observed_phases
+    direction,
+    ^^^^^^^^^
+E   UnboundLocalError: cannot access local variable 'direction' where it is not associated with a value
+---------------------------- Captured stdout call -----------------------------
+2026-10-01 20:58:38 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | H1 | 20 bougies
+2026-10-01 20:58:38 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | M5 | 1 bougies
+2026-10-01 20:58:38 | DEBUG    | arty_trading.system | Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:38 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:38 | INFO     | arty_trading.system | Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:38 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [TREND] H1=bullish structure=N/A
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [LEVEL] premium=None discount=None
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [15M] setup_tf=M15 trend=neutral detections=0
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [5M] LTF detections=1
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+------------------------------ Captured log call ------------------------------
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | H1 | 20 bougies
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | M5 | 1 bougies
+DEBUG    arty_trading.system:candle_synchronizer.py:87 Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:592 ========================================================
+INFO     arty_trading.system:trading_engine.py:593 Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:599 ========================================================
+INFO     arty_trading.system:trading_engine.py:1050 [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+INFO     arty_trading.system:trading_engine.py:1051 [TREND] H1=bullish structure=N/A
+INFO     arty_trading.system:trading_engine.py:1056 [LEVEL] premium=None discount=None
+INFO     arty_trading.system:trading_engine.py:1057 [15M] setup_tf=M15 trend=neutral detections=0
+INFO     arty_trading.system:trading_engine.py:1060 [5M] LTF detections=1
+INFO     arty_trading.system:trading_engine.py:1061 [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+________ TestStatistics.test_analysis_mode_records_analysis_and_signal ________
+tests\test_trading_engine.py:985: in test_analysis_mode_records_analysis_and_signal
+    await engine.analyze_symbol("XAUUSD")
+src\arty_trading\application\trading_engine.py:657: in analyze_symbol
+    self._update_setups(symbol, market_context)
+src\arty_trading\application\trading_engine.py:1085: in _update_setups
+    update_setups_from_market_context(
+src\arty_trading\application\setup_service.py:94: in update_setups_from_market_context
+    _record_observed_phases(
+src\arty_trading\application\setup_service.py:492: in _record_observed_phases
+    direction,
+    ^^^^^^^^^
+E   UnboundLocalError: cannot access local variable 'direction' where it is not associated with a value
+---------------------------- Captured stdout call -----------------------------
+2026-10-01 20:58:38 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | H1 | 20 bougies
+2026-10-01 20:58:38 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | M5 | 1 bougies
+2026-10-01 20:58:38 | DEBUG    | arty_trading.system | Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:38 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:38 | INFO     | arty_trading.system | Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:38 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [TREND] H1=bullish structure=N/A
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [LEVEL] premium=None discount=None
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [15M] setup_tf=M15 trend=neutral detections=0
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [5M] LTF detections=1
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+------------------------------ Captured log call ------------------------------
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | H1 | 20 bougies
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | M5 | 1 bougies
+DEBUG    arty_trading.system:candle_synchronizer.py:87 Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:592 ========================================================
+INFO     arty_trading.system:trading_engine.py:593 Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:599 ========================================================
+INFO     arty_trading.system:trading_engine.py:1050 [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+INFO     arty_trading.system:trading_engine.py:1051 [TREND] H1=bullish structure=N/A
+INFO     arty_trading.system:trading_engine.py:1056 [LEVEL] premium=None discount=None
+INFO     arty_trading.system:trading_engine.py:1057 [15M] setup_tf=M15 trend=neutral detections=0
+INFO     arty_trading.system:trading_engine.py:1060 [5M] LTF detections=1
+INFO     arty_trading.system:trading_engine.py:1061 [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+________________ TestStatistics.test_paper_mode_records_trade _________________
+tests\test_trading_engine.py:999: in test_paper_mode_records_trade
+    await engine.analyze_symbol("XAUUSD")
+src\arty_trading\application\trading_engine.py:657: in analyze_symbol
+    self._update_setups(symbol, market_context)
+src\arty_trading\application\trading_engine.py:1085: in _update_setups
+    update_setups_from_market_context(
+src\arty_trading\application\setup_service.py:94: in update_setups_from_market_context
+    _record_observed_phases(
+src\arty_trading\application\setup_service.py:492: in _record_observed_phases
+    direction,
+    ^^^^^^^^^
+E   UnboundLocalError: cannot access local variable 'direction' where it is not associated with a value
+---------------------------- Captured stdout call -----------------------------
+2026-10-01 20:58:38 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | H1 | 20 bougies
+2026-10-01 20:58:38 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | M5 | 1 bougies
+2026-10-01 20:58:38 | DEBUG    | arty_trading.system | Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:38 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:38 | INFO     | arty_trading.system | Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:38 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [TREND] H1=bullish structure=N/A
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [LEVEL] premium=None discount=None
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [15M] setup_tf=M15 trend=neutral detections=0
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [5M] LTF detections=1
+2026-10-01 20:58:38 | INFO     | arty_trading.system | [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+------------------------------ Captured log call ------------------------------
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | H1 | 20 bougies
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | M5 | 1 bougies
+DEBUG    arty_trading.system:candle_synchronizer.py:87 Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:592 ========================================================
+INFO     arty_trading.system:trading_engine.py:593 Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:599 ========================================================
+INFO     arty_trading.system:trading_engine.py:1050 [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+INFO     arty_trading.system:trading_engine.py:1051 [TREND] H1=bullish structure=N/A
+INFO     arty_trading.system:trading_engine.py:1056 [LEVEL] premium=None discount=None
+INFO     arty_trading.system:trading_engine.py:1057 [15M] setup_tf=M15 trend=neutral detections=0
+INFO     arty_trading.system:trading_engine.py:1060 [5M] LTF detections=1
+INFO     arty_trading.system:trading_engine.py:1061 [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+_________________ TestStatistics.test_live_mode_records_trade _________________
+tests\test_trading_engine.py:1012: in test_live_mode_records_trade
+    await engine.analyze_symbol("XAUUSD")
+src\arty_trading\application\trading_engine.py:657: in analyze_symbol
+    self._update_setups(symbol, market_context)
+src\arty_trading\application\trading_engine.py:1085: in _update_setups
+    update_setups_from_market_context(
+src\arty_trading\application\setup_service.py:94: in update_setups_from_market_context
+    _record_observed_phases(
+src\arty_trading\application\setup_service.py:492: in _record_observed_phases
+    direction,
+    ^^^^^^^^^
+E   UnboundLocalError: cannot access local variable 'direction' where it is not associated with a value
+---------------------------- Captured stdout call -----------------------------
+2026-10-01 20:58:39 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | H1 | 20 bougies
+2026-10-01 20:58:39 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | M5 | 1 bougies
+2026-10-01 20:58:39 | DEBUG    | arty_trading.system | Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:39 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:39 | INFO     | arty_trading.system | Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:39 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:39 | INFO     | arty_trading.system | [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+2026-10-01 20:58:39 | INFO     | arty_trading.system | [TREND] H1=bullish structure=N/A
+2026-10-01 20:58:39 | INFO     | arty_trading.system | [LEVEL] premium=None discount=None
+2026-10-01 20:58:39 | INFO     | arty_trading.system | [15M] setup_tf=M15 trend=neutral detections=0
+2026-10-01 20:58:39 | INFO     | arty_trading.system | [5M] LTF detections=1
+2026-10-01 20:58:39 | INFO     | arty_trading.system | [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+------------------------------ Captured log call ------------------------------
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | H1 | 20 bougies
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | M5 | 1 bougies
+DEBUG    arty_trading.system:candle_synchronizer.py:87 Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:592 ========================================================
+INFO     arty_trading.system:trading_engine.py:593 Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:599 ========================================================
+INFO     arty_trading.system:trading_engine.py:1050 [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+INFO     arty_trading.system:trading_engine.py:1051 [TREND] H1=bullish structure=N/A
+INFO     arty_trading.system:trading_engine.py:1056 [LEVEL] premium=None discount=None
+INFO     arty_trading.system:trading_engine.py:1057 [15M] setup_tf=M15 trend=neutral detections=0
+INFO     arty_trading.system:trading_engine.py:1060 [5M] LTF detections=1
+INFO     arty_trading.system:trading_engine.py:1061 [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+_______________ TestStatistics.test_no_signal_no_trade_recorded _______________
+tests\test_trading_engine.py:1025: in test_no_signal_no_trade_recorded
+    await engine.analyze_symbol("XAUUSD")
+src\arty_trading\application\trading_engine.py:657: in analyze_symbol
+    self._update_setups(symbol, market_context)
+src\arty_trading\application\trading_engine.py:1085: in _update_setups
+    update_setups_from_market_context(
+src\arty_trading\application\setup_service.py:94: in update_setups_from_market_context
+    _record_observed_phases(
+src\arty_trading\application\setup_service.py:492: in _record_observed_phases
+    direction,
+    ^^^^^^^^^
+E   UnboundLocalError: cannot access local variable 'direction' where it is not associated with a value
+---------------------------- Captured stdout call -----------------------------
+2026-10-01 20:58:39 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | H1 | 20 bougies
+2026-10-01 20:58:39 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | M5 | 1 bougies
+2026-10-01 20:58:39 | DEBUG    | arty_trading.system | Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:39 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:39 | INFO     | arty_trading.system | Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:39 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:39 | INFO     | arty_trading.system | [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+2026-10-01 20:58:39 | INFO     | arty_trading.system | [TREND] H1=bullish structure=N/A
+2026-10-01 20:58:39 | INFO     | arty_trading.system | [LEVEL] premium=None discount=None
+2026-10-01 20:58:39 | INFO     | arty_trading.system | [15M] setup_tf=M15 trend=neutral detections=0
+2026-10-01 20:58:39 | INFO     | arty_trading.system | [5M] LTF detections=1
+2026-10-01 20:58:39 | INFO     | arty_trading.system | [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+------------------------------ Captured log call ------------------------------
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | H1 | 20 bougies
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | M5 | 1 bougies
+DEBUG    arty_trading.system:candle_synchronizer.py:87 Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:592 ========================================================
+INFO     arty_trading.system:trading_engine.py:593 Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:599 ========================================================
+INFO     arty_trading.system:trading_engine.py:1050 [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+INFO     arty_trading.system:trading_engine.py:1051 [TREND] H1=bullish structure=N/A
+INFO     arty_trading.system:trading_engine.py:1056 [LEVEL] premium=None discount=None
+INFO     arty_trading.system:trading_engine.py:1057 [15M] setup_tf=M15 trend=neutral detections=0
+INFO     arty_trading.system:trading_engine.py:1060 [5M] LTF detections=1
+INFO     arty_trading.system:trading_engine.py:1061 [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+__________________ TestStatistics.test_statistics_in_status ___________________
+tests\test_trading_engine.py:1037: in test_statistics_in_status
+    await engine.analyze_symbol("XAUUSD")
+src\arty_trading\application\trading_engine.py:657: in analyze_symbol
+    self._update_setups(symbol, market_context)
+src\arty_trading\application\trading_engine.py:1085: in _update_setups
+    update_setups_from_market_context(
+src\arty_trading\application\setup_service.py:94: in update_setups_from_market_context
+    _record_observed_phases(
+src\arty_trading\application\setup_service.py:492: in _record_observed_phases
+    direction,
+    ^^^^^^^^^
+E   UnboundLocalError: cannot access local variable 'direction' where it is not associated with a value
+---------------------------- Captured stdout call -----------------------------
+2026-10-01 20:58:39 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | H1 | 20 bougies
+2026-10-01 20:58:39 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | M5 | 1 bougies
+2026-10-01 20:58:39 | DEBUG    | arty_trading.system | Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:39 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:39 | INFO     | arty_trading.system | Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:39 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:39 | INFO     | arty_trading.system | [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+2026-10-01 20:58:39 | INFO     | arty_trading.system | [TREND] H1=bullish structure=N/A
+2026-10-01 20:58:39 | INFO     | arty_trading.system | [LEVEL] premium=None discount=None
+2026-10-01 20:58:39 | INFO     | arty_trading.system | [15M] setup_tf=M15 trend=neutral detections=0
+2026-10-01 20:58:39 | INFO     | arty_trading.system | [5M] LTF detections=1
+2026-10-01 20:58:39 | INFO     | arty_trading.system | [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+------------------------------ Captured log call ------------------------------
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | H1 | 20 bougies
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | M5 | 1 bougies
+DEBUG    arty_trading.system:candle_synchronizer.py:87 Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:592 ========================================================
+INFO     arty_trading.system:trading_engine.py:593 Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:599 ========================================================
+INFO     arty_trading.system:trading_engine.py:1050 [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+INFO     arty_trading.system:trading_engine.py:1051 [TREND] H1=bullish structure=N/A
+INFO     arty_trading.system:trading_engine.py:1056 [LEVEL] premium=None discount=None
+INFO     arty_trading.system:trading_engine.py:1057 [15M] setup_tf=M15 trend=neutral detections=0
+INFO     arty_trading.system:trading_engine.py:1060 [5M] LTF detections=1
+INFO     arty_trading.system:trading_engine.py:1061 [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+______________ TestStatistics.test_multiple_analyses_accumulate _______________
+tests\test_trading_engine.py:1055: in test_multiple_analyses_accumulate
+    await engine.analyze_symbol("XAUUSD")
+src\arty_trading\application\trading_engine.py:657: in analyze_symbol
+    self._update_setups(symbol, market_context)
+src\arty_trading\application\trading_engine.py:1085: in _update_setups
+    update_setups_from_market_context(
+src\arty_trading\application\setup_service.py:94: in update_setups_from_market_context
+    _record_observed_phases(
+src\arty_trading\application\setup_service.py:492: in _record_observed_phases
+    direction,
+    ^^^^^^^^^
+E   UnboundLocalError: cannot access local variable 'direction' where it is not associated with a value
+---------------------------- Captured stdout call -----------------------------
+2026-10-01 20:58:39 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | H1 | 20 bougies
+2026-10-01 20:58:39 | INFO     | arty_trading.market_data | Bougies récupérées | XAUUSD | M5 | 1 bougies
+2026-10-01 20:58:39 | DEBUG    | arty_trading.system | Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:39 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:39 | INFO     | arty_trading.system | Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+2026-10-01 20:58:39 | INFO     | arty_trading.system | ========================================================
+2026-10-01 20:58:39 | INFO     | arty_trading.system | [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+2026-10-01 20:58:39 | INFO     | arty_trading.system | [TREND] H1=bullish structure=N/A
+2026-10-01 20:58:39 | INFO     | arty_trading.system | [LEVEL] premium=None discount=None
+2026-10-01 20:58:39 | INFO     | arty_trading.system | [15M] setup_tf=M15 trend=neutral detections=0
+2026-10-01 20:58:39 | INFO     | arty_trading.system | [5M] LTF detections=1
+2026-10-01 20:58:39 | INFO     | arty_trading.system | [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+------------------------------ Captured log call ------------------------------
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | H1 | 20 bougies
+INFO     arty_trading.market_data:trading_engine.py:1003 Bougies récupérées | XAUUSD | M5 | 1 bougies
+DEBUG    arty_trading.system:candle_synchronizer.py:87 Bougie marquée comme traitée | XAUUSD | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:592 ========================================================
+INFO     arty_trading.system:trading_engine.py:593 Nouvelle bougie détectée | XAUUSD | M5 | time=2024-01-01T12:00:00+00:00
+INFO     arty_trading.system:trading_engine.py:599 ========================================================
+INFO     arty_trading.system:trading_engine.py:1050 [MARKET] symbol=XAUUSD HTF=H1 LTF=M5
+INFO     arty_trading.system:trading_engine.py:1051 [TREND] H1=bullish structure=N/A
+INFO     arty_trading.system:trading_engine.py:1056 [LEVEL] premium=None discount=None
+INFO     arty_trading.system:trading_engine.py:1057 [15M] setup_tf=M15 trend=neutral detections=0
+INFO     arty_trading.system:trading_engine.py:1060 [5M] LTF detections=1
+INFO     arty_trading.system:trading_engine.py:1061 [DIRECTION GATE] master=bullish allows_buy=True allows_sell=False
+============================== warnings summary ===============================
+tests/test_api.py::test_health_check
+  D:\Arty\src\arty_trading\api\main.py:243: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "timestamp": datetime.utcnow().isoformat() + "Z",
+
+tests/test_api_routes.py: 2 warnings
+tests/test_backtesting.py: 84 warnings
+tests/test_confidence_policy.py: 6 warnings
+tests/test_core_entities.py: 3 warnings
+tests/test_decision_engine.py: 4 warnings
+tests/test_execution.py: 41 warnings
+tests/test_execution_guards.py: 12 warnings
+tests/test_master_trend.py: 7 warnings
+tests/test_modify_sltp.py: 8 warnings
+tests/test_news_and_journal.py: 1 warning
+tests/test_ob_quality_gate.py: 5 warnings
+tests/test_phase2_1_repro.py: 7 warnings
+tests/test_position_manager.py: 27 warnings
+tests/test_position_monitor.py: 5 warnings
+tests/test_position_reconciliation.py: 9 warnings
+tests/test_position_state_store.py: 1 warning
+tests/test_risk.py: 35 warnings
+tests/test_signal_validator.py: 52 warnings
+tests/test_smc_trend_ob_quality.py: 4 warnings
+tests/test_strategies.py: 18 warnings
+tests/test_trade_orchestrator.py: 9 warnings
+tests/test_trading_engine.py: 51 warnings
+  C:\Users\Toky\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py:263: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+
+tests/test_core_entities.py::TestCandle::test_bullish_candle
+  D:\Arty\tests\test_core_entities.py:17: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    time=datetime.utcnow(),
+
+tests/test_core_entities.py::TestCandle::test_bearish_candle
+  D:\Arty\tests\test_core_entities.py:30: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    time=datetime.utcnow(),
+
+tests/test_ob_quality_gate.py: 7 warnings
+tests/test_phase2_1_repro.py: 3 warnings
+tests/test_setup_tracker_armed.py: 13 warnings
+  <string>:26: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+
+tests/test_setup_tracker_armed.py::TestSetupTrackerEarlyDetection::test_setup_detected_becomes_armed_when_price_close
+tests/test_setup_tracker_armed.py::TestSetupTrackerEarlyDetection::test_setup_detected_becomes_watching_when_in_zone
+tests/test_setup_tracker_armed.py::TestSetupTrackerWatchingToReady::test_armed_to_ready_on_confirmed_rejection
+tests/test_setup_tracker_armed.py::TestSetupTrackerInvalidation::test_zone_too_far_invalidates_setup
+tests/test_setup_tracker_armed.py::TestSetupTrackerInvalidation::test_trend_reversal_invalidates_setup
+tests/test_setup_tracker_armed.py::TestSetupTrackerInvalidation::test_opposite_bos_invalidates_setup
+tests/test_setup_tracker_armed.py::TestSetupTrackerExpiration::test_old_zone_expires
+tests/test_setup_tracker_armed.py::TestSetupTrackerStatePersistence::test_state_persists_between_evaluations
+tests/test_setup_tracker_armed.py::TestSetupTrackerStatePersistence::test_state_persists_between_evaluations
+  D:\Arty\src\arty_trading\modules\smc\setup_tracker.py:268: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    setup.updated_at = datetime.utcnow()
+
+tests/test_setup_tracker_armed.py::TestSetupTrackerEarlyDetection::test_setup_detected_becomes_armed_when_price_close
+tests/test_setup_tracker_armed.py::TestSetupTrackerEarlyDetection::test_setup_detected_becomes_watching_when_in_zone
+tests/test_setup_tracker_armed.py::TestSetupTrackerWatchingToReady::test_armed_to_ready_on_confirmed_rejection
+tests/test_setup_tracker_armed.py::TestSetupTrackerInvalidation::test_zone_too_far_invalidates_setup
+tests/test_setup_tracker_armed.py::TestSetupTrackerInvalidation::test_trend_reversal_invalidates_setup
+tests/test_setup_tracker_armed.py::TestSetupTrackerInvalidation::test_opposite_bos_invalidates_setup
+tests/test_setup_tracker_armed.py::TestSetupTrackerExpiration::test_old_zone_expires
+tests/test_setup_tracker_armed.py::TestSetupTrackerStatePersistence::test_state_persists_between_evaluations
+tests/test_setup_tracker_armed.py::TestSetupTrackerStatePersistence::test_state_persists_between_evaluations
+  <string>:6: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+
+tests/test_trade_decision_diagnostic.py: 26 warnings
+tests/test_trading_engine.py: 24 warnings
+  <string>:4: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_api.py::test_health_check - AssertionError: assert 'degrade...
+FAILED tests/test_backtest_mtf.py::test_mtf_views_use_only_closed_candles - a...
+FAILED tests/test_backtest_mtf.py::test_h1_bearish_blocks_bullish_m15_setup
+FAILED tests/test_backtest_mtf.py::test_h1_bullish_allows_bullish_m15_setup
+FAILED tests/test_backtest_mtf.py::test_m15_setup_without_m5_confirmation_no_trade
+FAILED tests/test_backtest_mtf.py::test_legacy_dataset_reproducible - Attribu...
+FAILED tests/test_ob_quality_gate.py::TestSetupServiceFiltering::test_disabled_by_default_creates_ob_setup
+FAILED tests/test_ob_quality_gate.py::TestSetupServiceFiltering::test_low_grade_ob_creates_no_setup
+FAILED tests/test_ob_quality_gate.py::TestSetupServiceFiltering::test_min_grade_a_rejects_grade_b_ob
+FAILED tests/test_ob_quality_gate.py::TestSetupServiceFiltering::test_high_grade_ob_created_with_metadata
+FAILED tests/test_ob_quality_gate.py::TestSetupServiceFiltering::test_m5_confirmation_propagated
+FAILED tests/test_ob_quality_gate.py::TestSetupServiceFiltering::test_fvg_setups_are_not_graded
+FAILED tests/test_trading_engine.py::TestCallOrder::test_full_flow_call_order
+FAILED tests/test_trading_engine.py::TestCallOrder::test_detect_called_with_candles_and_symbol
+FAILED tests/test_trading_engine.py::TestCallOrder::test_generate_called_with_candles_and_smc_data
+FAILED tests/test_trading_engine.py::TestNoOrderOnValidationFailure::test_no_open_order_when_validate_signal_false
+FAILED tests/test_trading_engine.py::TestNoOrderOnValidationFailure::test_no_open_order_when_can_open_trade_false
+FAILED tests/test_trading_engine.py::TestNoOrderOnValidationFailure::test_no_open_order_when_no_signal
+FAILED tests/test_trading_engine.py::TestNewBarDetection::test_no_reanalysis_on_same_candle
+FAILED tests/test_trading_engine.py::TestNewBarDetection::test_reanalysis_on_new_candle
+FAILED tests/test_trading_engine.py::TestEngineStatus::test_get_status_after_analysis
+FAILED tests/test_trading_engine.py::TestEngineStatus::test_get_status_no_signal
+FAILED tests/test_trading_engine.py::TestCandleSynchronizerIntegration::test_initialize_allows_analysis_on_new_candle
+FAILED tests/test_trading_engine.py::TestTradingModes::test_analysis_mode_stops_after_signal
+FAILED tests/test_trading_engine.py::TestTradingModes::test_paper_mode_full_pipeline
+FAILED tests/test_trading_engine.py::TestTradingModes::test_live_mode_full_pipeline
+FAILED tests/test_trading_engine.py::TestTradingModes::test_analysis_mode_no_open_order_on_no_signal
+FAILED tests/test_trading_engine.py::TestStatistics::test_analysis_mode_records_analysis_and_signal
+FAILED tests/test_trading_engine.py::TestStatistics::test_paper_mode_records_trade
+FAILED tests/test_trading_engine.py::TestStatistics::test_live_mode_records_trade
+FAILED tests/test_trading_engine.py::TestStatistics::test_no_signal_no_trade_recorded
+FAILED tests/test_trading_engine.py::TestStatistics::test_statistics_in_status
+FAILED tests/test_trading_engine.py::TestStatistics::test_multiple_analyses_accumulate
+ERROR tests/test_market_restriction.py::TestDemoTestAdaptiveRestriction::test_scans_only_xauusd
+ERROR tests/test_market_restriction.py::TestDemoTestAdaptiveRestriction::test_symbol_blocked_eurusd
+ERROR tests/test_market_restriction.py::TestDemoTestAdaptiveRestriction::test_symbol_blocked_gbpusd
+ERROR tests/test_market_restriction.py::TestDemoTestAdaptiveRestriction::test_symbol_blocked_usdjpy
+ERROR tests/test_market_restriction.py::TestDemoTestAdaptiveRestriction::test_scan_once_asserts_on_unallowed_symbol
+ERROR tests/test_position_sizing_margin.py::TestVolumeCalculation::test_eurusd_buy
+ERROR tests/test_position_sizing_margin.py::TestVolumeCalculation::test_eurusd_sell
+ERROR tests/test_position_sizing_margin.py::TestVolumeCalculation::test_xauusd_buy
+ERROR tests/test_position_sizing_margin.py::TestVolumeCalculation::test_xauusd_sell
+ERROR tests/test_position_sizing_margin.py::TestMarginConstraint::test_volume_reduced_by_margin
+ERROR tests/test_position_sizing_margin.py::TestMarginConstraint::test_insufficient_margin_blocks_order
+ERROR tests/test_position_sizing_margin.py::TestMarginConstraint::test_margin_safety_factor_080
+ERROR tests/test_position_sizing_margin.py::TestMarginConstraint::test_margin_never_increases_volume
+ERROR tests/test_position_sizing_margin.py::TestMarginConstraint::test_margin_calculation_failure_blocks
+ERROR tests/test_position_sizing_margin.py::TestVolumeNormalization::test_volume_step_respected
+ERROR tests/test_position_sizing_margin.py::TestVolumeNormalization::test_volume_min_respected
+ERROR tests/test_position_sizing_margin.py::TestVolumeNormalization::test_volume_max_respected
+ERROR tests/test_position_sizing_margin.py::TestTradingRulesUnchanged::test_sl_and_tp_not_modified
+ERROR tests/test_position_sizing_margin.py::TestTradingRulesUnchanged::test_retcode_10019_logged
+ERROR tests/test_position_sizing_margin.py::TestTradingRulesUnchanged::test_no_retry_with_bigger_volume
+ERROR tests/test_position_sizing_margin.py::TestTradingRulesUnchanged::test_symbol_restriction_unchanged
+========== 33 failed, 911 passed, 485 warnings, 21 errors in 37.25s ===========

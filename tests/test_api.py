@@ -1,6 +1,7 @@
 """Tests de l'API FastAPI."""
 
 import os
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
@@ -34,6 +35,8 @@ def app():
 
 @pytest.mark.asyncio
 async def test_health_check(app):
+    app.state.startup_status = "ready"
+    app.state.trading_engine = SimpleNamespace(is_running=True)
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.get("/health")

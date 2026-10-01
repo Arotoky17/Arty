@@ -20,12 +20,66 @@ si le bot doit tourner en continu sans interruption.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from enum import Enum
 from typing import Any, Callable
 
-from arty_trading.core.enums import Direction, NoTradeReason
+from arty_trading.core.enums import Direction, TimeFrame
+
+
+class MarketPhaseType(str, Enum):
+    """Observed SMC market phases; these describe price action, not intent."""
+
+    RANGE_DETECTED = "range_detected"
+    LIQUIDITY_SWEEP = "liquidity_sweep"
+    DISPLACEMENT = "displacement"
+    STRUCTURE_SHIFT = "structure_shift"
+    RETRACEMENT = "retracement"
+    CONTINUATION = "continuation"
+    NO_VALID_SETUP = "no_valid_setup"
+
+
+class SetupType(str, Enum):
+    """Distinct, validated setup families supported by the SMC pipeline."""
+
+    SWEEP_REVERSAL = "SWEEP_REVERSAL"
+    BOS_RETEST_CONTINUATION = "BOS_RETEST_CONTINUATION"
+    CHOCH_REVERSAL = "CHOCH_REVERSAL"
+    NO_TRADE = "NO_TRADE"
+
+
+@dataclass(frozen=True)
+class MarketPhase:
+    """Timestamped market observation with explicit evidence and validity."""
+
+    phase_type: MarketPhaseType
+    timestamp: datetime
+    direction: Direction | None
+    timeframe: TimeFrame | str
+    levels: dict[str, float] = field(default_factory=dict)
+    evidence: tuple[str, ...] = ()
+    valid: bool = True
+    expires_at: datetime | None = None
+    invalid_reason: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize the phase observation for diagnostics and backtest logs."""
+        return {
+            "type": self.phase_type.value,
+            "timestamp": self.timestamp.isoformat(),
+            "direction": self.direction.value if self.direction else None,
+            "timeframe": (
+                self.timeframe.value
+                if isinstance(self.timeframe, TimeFrame)
+                else self.timeframe
+            ),
+            "levels": dict(self.levels),
+            "evidence": list(self.evidence),
+            "valid": self.valid,
+            "expires_at": self.expires_at.isoformat() if self.expires_at else None,
+            "invalid_reason": self.invalid_reason,
+        }
 
 
 class SetupState(str, Enum):
@@ -62,10 +116,19 @@ class Setup:
     setup_id: str
     symbol: str
     direction: Direction
+    setup_type: SetupType = SetupType.NO_TRADE
+    source_timeframe: TimeFrame | str | None = None
+    phase: MarketPhase | None = None
+    phases: list[MarketPhase] = field(default_factory=list)
     state: SetupState = SetupState.DETECTED
     zone_price: float | None = None
     zone_high: float | None = None
     zone_low: float | None = None
+    stop_loss: float | None = None
+    liquidity_targets: list[float] = field(default_factory=list)
+    risk_reward: float | None = None
+    confirmations: dict[str, Any] = field(default_factory=dict)
+    invalidation_price: float | None = None
     zone_concept: str | None = None
     zone_index: int = 0
     structure_event: dict | None = None
@@ -81,15 +144,48 @@ class Setup:
     confidence_estimate: float = 0.0
     metadata: dict[str, Any] = field(default_factory=dict)
 
+    @property
+    def entry_zone_low(self) -> float | None:
+        """Lower entry boundary (the existing SMC zone lower bound)."""
+        return self.zone_low
+
+    @property
+    def entry_zone_high(self) -> float | None:
+        """Upper entry boundary (the existing SMC zone upper bound)."""
+        return self.zone_high
+
+    @property
+    def status(self) -> str:
+        """Lifecycle status, preserving the existing state-machine authority."""
+        return self.state.value
+
+    @property
+    def reasons(self) -> list[str]:
+        """Human-readable reasons already tracked for no-trade decisions."""
+        return self.no_trade_reasons
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "setup_id": self.setup_id,
             "symbol": self.symbol,
             "direction": self.direction.value,
+            "setup_type": self.setup_type.value,
+            "source_timeframe": (
+                self.source_timeframe.value
+                if isinstance(self.source_timeframe, TimeFrame)
+                else self.source_timeframe
+            ),
+            "phase": self.phase.phase_type.value if self.phase else None,
+            "phases": [phase.to_dict() for phase in self.phases],
             "state": self.state.value,
             "zone_price": self.zone_price,
             "zone_high": self.zone_high,
             "zone_low": self.zone_low,
+            "stop_loss": self.stop_loss,
+            "liquidity_targets": list(self.liquidity_targets),
+            "risk_reward": self.risk_reward,
+            "confirmations": dict(self.confirmations),
+            "invalidation_price": self.invalidation_price,
             "zone_concept": self.zone_concept,
             "zone_index": self.zone_index,
             "structure_event": self.structure_event,
@@ -203,6 +299,7 @@ class SetupTracker:
 
     def __init__(self) -> None:
         self._setups: dict[str, list[Setup]] = {}
+        self._phases: dict[str, list[MarketPhase]] = {}
         self._machine = SetupStateMachine()
         self._counter: int = 0
         # Observateur d'événements (utilisé par le debugger de décision pour
@@ -225,6 +322,57 @@ class SetupTracker:
     def _symbol_key(self, symbol: str) -> str:
         return symbol.upper()
 
+    def record_phase(self, symbol: str, phase: MarketPhase) -> MarketPhase:
+        """Record an independent observation; no phase ordering is imposed."""
+        key = self._symbol_key(symbol)
+        phases = self._phases.setdefault(key, [])
+        for existing in phases:
+            if (
+                existing.phase_type == phase.phase_type
+                and existing.timestamp == phase.timestamp
+                and existing.timeframe == phase.timeframe
+                and existing.direction == phase.direction
+            ):
+                return existing
+        phases.append(phase)
+        return phase
+
+    def get_active_phases(
+        self, symbol: str, current_time: datetime | None = None
+    ) -> list[MarketPhase]:
+        """Return unexpired valid observations; an empty list is the neutral state."""
+        self.expire_phases(symbol, current_time)
+        return [phase for phase in self._phases.get(self._symbol_key(symbol), []) if phase.valid]
+
+    def invalidate_phase(
+        self, symbol: str, phase: MarketPhase, reason: str
+    ) -> bool:
+        """Invalidate one observation without constraining subsequent phases."""
+        key = self._symbol_key(symbol)
+        phases = self._phases.get(key, [])
+        for index, existing in enumerate(phases):
+            if existing is phase:
+                phases[index] = replace(existing, valid=False, invalid_reason=reason)
+                return True
+        return False
+
+    def expire_phases(
+        self, symbol: str, current_time: datetime | None = None
+    ) -> list[MarketPhase]:
+        """Expire observations at their own timestamp, independently of setup state."""
+        from datetime import UTC
+
+        now = current_time or datetime.now(UTC)
+        key = self._symbol_key(symbol)
+        phases = self._phases.get(key, [])
+        expired: list[MarketPhase] = []
+        for index, phase in enumerate(phases):
+            if phase.valid and phase.expires_at is not None and phase.expires_at <= now:
+                updated = replace(phase, valid=False, invalid_reason="expired")
+                phases[index] = updated
+                expired.append(updated)
+        return expired
+
     def _notify_transition(self, setup: Setup, new_state: SetupState, reason: str) -> None:
         if self._on_setup_transition is not None:
             self._on_setup_transition(setup, new_state, reason)
@@ -243,6 +391,8 @@ class SetupTracker:
         atr: float = 0.0,
         htf_trend: str = "neutral",
         confidence_estimate: float = 0.0,
+        source_timeframe: TimeFrame | str | None = None,
+        created_at: datetime | None = None,
     ) -> Setup:
         """
         Crée un nouveau setup en état DETECTED.
@@ -254,12 +404,20 @@ class SetupTracker:
         setup_id = f"{self._symbol_key(symbol)}_{direction.value}_{self._counter}"
 
         from datetime import timedelta, timezone
-        expires_at = datetime.now(timezone.utc) + timedelta(minutes=ttl_bars * 5)
+
+        setup_created_at = created_at or datetime.now(timezone.utc)
+        if setup_created_at.tzinfo is None:
+            setup_created_at = setup_created_at.replace(tzinfo=timezone.utc)
+        expires_at = setup_created_at + timedelta(
+            minutes=ttl_bars * _timeframe_minutes(source_timeframe)
+        )
 
         setup = Setup(
             setup_id=setup_id,
             symbol=self._symbol_key(symbol),
             direction=direction,
+            source_timeframe=source_timeframe,
+            created_at=setup_created_at,
             state=SetupState.DETECTED,
             zone_price=zone_price,
             zone_high=zone_high,
@@ -409,9 +567,6 @@ class SetupTracker:
         Returns:
             Liste des setups ayant eu une transition
         """
-        from arty_trading.utils.helpers import is_fresh_structure
-
-        key = self._symbol_key(symbol)
         active = self.get_active_setups(symbol)
         if not active:
             return []
@@ -424,7 +579,6 @@ class SetupTracker:
         max_distance = atr * max_distance_atr_mult if atr > 0 else 0.0
 
         # Détecter les événements structurels opposés
-        opposite_direction = None
         latest_opposite_event = None
         if htf_trend in ("bullish", "bearish"):
             opposite = "bearish" if htf_trend == "bullish" else "bullish"
@@ -434,7 +588,6 @@ class SetupTracker:
                     if concept in ("break_of_structure", "change_of_character", "market_structure_shift"):
                         if latest_opposite_event is None or detection.get("index", 0) > latest_opposite_event.get("index", 0):
                             latest_opposite_event = detection
-                            opposite_direction = opposite
 
         # Vérifier si la tendance H1 a changé depuis la détection
         trend_reversed = False
@@ -448,12 +601,42 @@ class SetupTracker:
 
         for setup in active:
             # --- EXPIRATION PAR ÂGE DE ZONE ---
-            zone_age = total_candles - 1 - setup.zone_index if total_candles > 0 and setup.zone_index >= 0 else 999
+            if candles and setup.source_timeframe is not None:
+                elapsed = (candles[-1].time - setup.created_at).total_seconds()
+                zone_age = max(
+                    0,
+                    int(elapsed // (_timeframe_minutes(setup.source_timeframe) * 60)),
+                )
+            else:
+                zone_age = (
+                    total_candles - 1 - setup.zone_index
+                    if total_candles > 0 and setup.zone_index >= 0
+                    else 999
+                )
             if setup.zone_index > 0 and zone_age > max_zone_age_bars:
                 if self._machine.expire(setup, "MAX_AGE"):
                     self._notify_transition(setup, SetupState.SETUP_EXPIRED, "MAX_AGE")
                     transitions.append(setup)
                 continue
+
+            # --- INVALIDATION STRUCTURELLE DE LA ZONE ---
+            if setup.invalidation_price is not None and price is not None:
+                invalidated = (
+                    price <= setup.invalidation_price
+                    if setup.direction == Direction.BUY
+                    else price >= setup.invalidation_price
+                )
+                if invalidated and self._machine.invalidate(
+                    setup, "STRUCTURAL_INVALIDATION"
+                ):
+                    setup.no_trade_reasons.append("structural_invalidation")
+                    self._notify_transition(
+                        setup,
+                        SetupState.INVALIDATED,
+                        "STRUCTURAL_INVALIDATION",
+                    )
+                    transitions.append(setup)
+                    continue
 
             # --- INVALIDATION PAR TENDANCE H1 REVERSEE ---
             if trend_reversed and setup.htf_trend_at_detection != htf_trend:
@@ -508,7 +691,9 @@ class SetupTracker:
                 # DETECTED → ARMED : prix proche de la zone mais pas dedans
                 if setup.state == SetupState.DETECTED and close_enough and not in_zone:
                     new_state = SetupState.ARMED
-                    if self._machine.transition(setup, new_state, f"ZONE_APPROACH:distance={distance:.6f}"):
+                    if self._machine.transition(
+                        setup, new_state, f"ZONE_APPROACH:distance={distance:.6f}"
+                    ):
                         self._notify_transition(setup, new_state, "ZONE_APPROACH")
                         transitions.append(setup)
                     continue
@@ -549,3 +734,16 @@ class SetupTracker:
             SetupState.WATCHING,
         }
         return [s for s in self.get_active_setups(symbol) if s.state in signal_states]
+
+
+def _timeframe_minutes(timeframe: TimeFrame | str | None) -> int:
+    value = timeframe.value if isinstance(timeframe, TimeFrame) else str(timeframe or "M5")
+    return {
+        "M1": 1,
+        "M5": 5,
+        "M15": 15,
+        "M30": 30,
+        "H1": 60,
+        "H4": 240,
+        "D1": 1440,
+    }.get(value.upper(), 5)

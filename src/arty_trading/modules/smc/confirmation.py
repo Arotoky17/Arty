@@ -264,12 +264,13 @@ class M5ConfirmationChecker:
         require_micro_bos: Exiger une cassure du dernier swing M5 (défaut True).
         require_choch: Exiger un CHoCH M5 (défaut False).
         require_rejection_candle: Exiger une bougie de rejet M5 (défaut True).
+        swing_window: Bougies de chaque côté requises pour valider un swing.
+        min_candles_after_ob: Nombre minimal de bougies M5 après l'OB (défaut 3).
 
     Note:
         Si aucun critère n'est requis, ``check()`` retourne ``confirmed=False``
         (invalidé par prudence : « au moins un critère requis » est vide).
-        ``swing_window`` et ``rejection_wick_body_ratio`` sont réglables sur
-        l'instance sans changer la signature du constructeur.
+        ``rejection_wick_body_ratio`` reste réglable sur l'instance.
     """
 
     #: Fenêtre fractale des swings M5 (réglable par instance).
@@ -283,10 +284,14 @@ class M5ConfirmationChecker:
         require_micro_bos: bool = True,
         require_choch: bool = False,
         require_rejection_candle: bool = True,
+        swing_window: int = SWING_WINDOW,
+        min_candles_after_ob: int = 3,
     ) -> None:
         self._require_micro_bos = require_micro_bos
         self._require_choch = require_choch
         self._require_rejection_candle = require_rejection_candle
+        self.swing_window = swing_window
+        self.min_candles_after_ob = min_candles_after_ob
 
     # ------------------------------------------------------------------
     # Diagnostic
@@ -364,6 +369,18 @@ class M5ConfirmationChecker:
             return self._reject(details, "missing_ohlc_columns")
         if not self.required_criteria:
             return self._reject(details, "no_required_criterion")
+
+        candle_count = len(m5_candles_after_ob)
+        if candle_count < self.min_candles_after_ob:
+            details["have"] = candle_count
+            details["need"] = self.min_candles_after_ob
+            return self._reject(details, "insufficient_candles")
+
+        swing_candle_count = 2 * self.swing_window + 1
+        if candle_count < swing_candle_count:
+            details["have"] = candle_count
+            details["need"] = swing_candle_count
+            return self._reject(details, "insufficient_candles_for_swing")
 
         frame = m5_candles_after_ob.reset_index(drop=True)
         contact_index = self._find_contact_index(frame, ob)

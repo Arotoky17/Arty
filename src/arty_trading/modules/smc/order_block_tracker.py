@@ -358,9 +358,6 @@ class OrderBlockTracker:
                 optionnel dans ``timestamp``/``time``/``date``).
         """
         self._updates += 1
-        low = _cell(new_m5_candle, "low")
-        high = _cell(new_m5_candle, "high")
-        candle_time = _candle_timestamp(new_m5_candle)
 
         for ob in self._obs.values():
             self._update_tracked_ob(ob, new_m5_candle)

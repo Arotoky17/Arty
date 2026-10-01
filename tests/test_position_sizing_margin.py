@@ -44,8 +44,11 @@ def demo(monkeypatch):
     fake = _fake_mt5()
     monkeypatch.setitem(sys.modules, "MetaTrader5", fake)
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    examples = os.path.join(root, "examples")
+    monkeypatch.syspath_prepend(examples)
     spec = importlib.util.spec_from_file_location(
-        "demo_test_adaptive_test", os.path.join(root, "demo_test_adaptive.py")
+        "demo_test_adaptive_test",
+        os.path.join(examples, "demo_test_adaptive.py"),
     )
     assert spec is not None and spec.loader is not None
     mod = importlib.util.module_from_spec(spec)

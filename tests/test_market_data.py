@@ -442,4 +442,5 @@ class TestMT5MarketDataProvider:
                 await provider.get_latest_candles("EURUSD", TimeFrame.H1, 5000)
                 # Vérifier que copy_rates_from_pos a été appelé avec count=1000
                 args = mock_mt5.copy_rates_from_pos.call_args
+                assert args[0][2] == 1  # La bougie en formation est exclue.
                 assert args[0][3] == 1000  # 4ème argument positionnel = count

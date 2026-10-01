@@ -20,7 +20,12 @@ from arty_trading.modules.smc.detector import SMCDetector
 from arty_trading.modules.smc.fair_value_gap import FairValueGapDetector
 from arty_trading.modules.smc.liquidity import LiquidityDetector
 from arty_trading.modules.smc.order_blocks import OrderBlockDetector
-from arty_trading.modules.smc.setup_classifier import SETUP_TYPES, classify_setup_type
+from arty_trading.modules.smc.setup_classifier import (
+    SETUP_TYPES,
+    classify_setup_type,
+    qualify_setup_type,
+)
+from arty_trading.modules.smc.setup_tracker import SetupType
 from arty_trading.utils.helpers import calculate_atr, is_displacement
 from arty_trading.config.settings import Settings
 
@@ -250,6 +255,89 @@ class TestSetupClassifier:
             "CONTINUATION", "REVERSAL", "LIQUIDITY_SWEEP_REVERSAL",
             "FVG_RETRACE", "ORDER_BLOCK_RETRACE",
         }
+
+
+class TestValidatedSetupFamilies:
+    def test_bos_retest_continuation_requires_h4_h1_alignment(self):
+        result = qualify_setup_type(
+            direction="bullish",
+            smc_data=[{"concept": "bos", "direction": "bullish", "index": 4}],
+            zone_index=7,
+            h4_trend="bullish",
+            h1_trend="bullish",
+            m5_confirmed=True,
+            m5_retested=True,
+        )
+        assert result.setup_type is SetupType.BOS_RETEST_CONTINUATION
+        assert "h4_h1_aligned" in result.evidence
+
+    def test_sweep_reversal_requires_reentry_and_follow_through(self):
+        result = qualify_setup_type(
+            direction="bullish",
+            smc_data=[
+                {
+                    "concept": "liquidity_sweep",
+                    "direction": "bullish",
+                    "index": 4,
+                    "details": {"swept_level": 2000.0, "rejection_ratio": 0.8},
+                },
+                {"concept": "choch", "direction": "bullish", "index": 5},
+            ],
+            zone_index=7,
+            h4_trend="bearish",
+            h1_trend="bullish",
+            m5_confirmed=True,
+            m5_retested=True,
+        )
+        assert result.setup_type is SetupType.SWEEP_REVERSAL
+
+    def test_choch_reversal_requires_prior_opposite_structure(self):
+        result = qualify_setup_type(
+            direction="bullish",
+            smc_data=[
+                {"concept": "bos", "direction": "bearish", "index": 2},
+                {"concept": "choch", "direction": "bullish", "index": 5},
+            ],
+            zone_index=7,
+            h4_trend="bearish",
+            h1_trend="bullish",
+            m5_confirmed=True,
+            m5_retested=True,
+        )
+        assert result.setup_type is SetupType.CHOCH_REVERSAL
+
+    @pytest.mark.parametrize(
+        ("m5_confirmed", "m5_retested", "reason"),
+        [
+            (False, True, "m5_confirmation_missing"),
+            (True, False, "zone_not_retested_after_creation"),
+        ],
+    )
+    def test_missing_m5_evidence_is_no_trade(self, m5_confirmed, m5_retested, reason):
+        result = qualify_setup_type(
+            direction="bullish",
+            smc_data=[{"concept": "bos", "direction": "bullish", "index": 4}],
+            zone_index=7,
+            h4_trend="bullish",
+            h1_trend="bullish",
+            m5_confirmed=m5_confirmed,
+            m5_retested=m5_retested,
+        )
+        assert result.setup_type is SetupType.NO_TRADE
+        assert result.reasons == (reason,)
+
+    def test_post_zone_structure_cannot_validate_setup(self):
+        result = qualify_setup_type(
+            direction="bullish",
+            smc_data=[{"concept": "bos", "direction": "bullish", "index": 8}],
+            zone_index=7,
+            h4_trend="bullish",
+            h1_trend="bullish",
+            m5_confirmed=True,
+            m5_retested=True,
+        )
+        assert result.setup_type is SetupType.NO_TRADE
+        assert result.reasons == ("no_coherent_structure_family",)
 
 
 class TestInstrumentProfileWiring:

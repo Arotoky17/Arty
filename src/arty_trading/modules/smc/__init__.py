@@ -66,10 +66,13 @@ from arty_trading.modules.smc.order_blocks import OrderBlockDetector
 from arty_trading.modules.smc.premium_discount import PremiumDiscountDetector
 from arty_trading.modules.smc.sessions import SessionDetector, SessionWindow
 from arty_trading.modules.smc.setup_tracker import (
+    MarketPhase,
+    MarketPhaseType,
     Setup,
     SetupState,
     SetupStateMachine,
     SetupTracker,
+    SetupType,
 )
 from arty_trading.modules.smc.structure import StructureDetector
 
@@ -86,6 +89,9 @@ __all__ = [
     "SessionDetector",
     "SessionWindow",
     "Setup",
+    "SetupType",
+    "MarketPhase",
+    "MarketPhaseType",
     "SetupState",
     "SetupStateMachine",
     "SetupTracker",

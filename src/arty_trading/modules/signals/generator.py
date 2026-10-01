@@ -39,7 +39,7 @@ from arty_trading.modules.smc.confirmation import M5ConfirmationChecker
 from arty_trading.modules.smc.ob_quality import OBGateDecision, evaluate_setup_ob_gate
 from arty_trading.modules.smc.order_block_quality import OrderBlockQualityScorer
 from arty_trading.modules.smc.order_block_tracker import OrderBlockTracker
-from arty_trading.modules.smc.setup_tracker import SetupTracker
+from arty_trading.modules.smc.setup_tracker import SetupTracker, SetupType
 from arty_trading.modules.strategies.base import BaseStrategy
 from arty_trading.modules.strategies.strategies import (
     BreakoutStrategy,
@@ -367,7 +367,38 @@ class SignalGenerator:
         # -----------------------------------------------------------------
         if self._setup_tracker is not None and candles:
             symbol = candles[0].symbol
-            ready_setups = self._setup_tracker.get_ready_setups(symbol)
+            all_ready_setups = self._setup_tracker.get_ready_setups(symbol)
+            ready_setups = [
+                setup
+                for setup in all_ready_setups
+                if not setup.metadata.get("setup_qualification_required")
+                or (
+                    setup.setup_type != SetupType.NO_TRADE
+                    and bool(
+                        setup.confirmations.get("m5", {}).get("ob_m5_confirmed")
+                    )
+                )
+            ]
+            strict_unqualified = [
+                setup
+                for setup in all_ready_setups
+                if setup.metadata.get("setup_qualification_required")
+                and setup not in ready_setups
+            ]
+            if strict_unqualified and not ready_setups:
+                pending = max(
+                    strict_unqualified,
+                    key=lambda setup: setup.updated_at,
+                )
+                reasons = pending.no_trade_reasons or ["setup_not_qualified"]
+                self._last_rejection_stage = "setup_qualification"
+                self._last_rejection_reason = reasons[0]
+                self._last_rejection_details = {
+                    "setup_id": pending.setup_id,
+                    "setup_type": pending.setup_type.value,
+                    "reasons": list(reasons),
+                    "confirmations": dict(pending.confirmations),
+                }
             if ready_setups:
                 setup = max(ready_setups, key=lambda s: s.confidence_estimate)
                 logger.info(
@@ -927,6 +958,16 @@ class SignalGenerator:
         zone_low = setup.zone_low
         if zone_high is None or zone_low is None:
             return None
+        strict_qualification = bool(
+            getattr(setup, "metadata", {}).get("setup_qualification_required")
+        )
+        setup_type = getattr(setup, "setup_type", SetupType.NO_TRADE)
+        if strict_qualification:
+            if setup_type == SetupType.NO_TRADE:
+                return None
+            m5_confirmation = getattr(setup, "confirmations", {}).get("m5", {})
+            if not m5_confirmation.get("ob_m5_confirmed"):
+                return None
 
         entry_price = Decimal(str(setup.zone_price or (zone_high + zone_low) / 2.0))
         current_price = Decimal(str(float(candles[-1].close))) if candles else entry_price
@@ -937,17 +978,39 @@ class SignalGenerator:
             atr = calculate_atr(candles)
 
         sl_buffer = atr * Decimal("0.5")
-        if direction == Direction.BUY:
+        if setup.invalidation_price is not None:
+            stop_loss = Decimal(str(setup.invalidation_price))
+        elif direction == Direction.BUY:
             stop_loss = min(Decimal(str(zone_low)), current_price) - sl_buffer
-            risk = entry_price - stop_loss
-            take_profit = entry_price + risk * Decimal("2.0")
         else:
             stop_loss = max(Decimal(str(zone_high)), current_price) + sl_buffer
+
+        if direction == Direction.BUY:
+            risk = entry_price - stop_loss
+        else:
             risk = stop_loss - entry_price
-            take_profit = entry_price - risk * Decimal("2.0")
 
         if risk <= 0:
             return None
+
+        fallback_target = (
+            entry_price + risk * Decimal("2.0")
+            if direction == Direction.BUY
+            else entry_price - risk * Decimal("2.0")
+        )
+        valid_targets = [
+            Decimal(str(target))
+            for target in getattr(setup, "liquidity_targets", [])
+            if (Decimal(str(target)) > entry_price if direction == Direction.BUY
+                else Decimal(str(target)) < entry_price)
+        ]
+        take_profit = (
+            min(valid_targets, key=lambda target: abs(target - entry_price))
+            if valid_targets
+            else fallback_target
+        )
+        setup.stop_loss = float(stop_loss)
+        setup.risk_reward = float(abs(take_profit - entry_price) / risk)
 
         confidence = max(setup.confidence_estimate, 0.5)
         concepts = [setup.zone_concept] if setup.zone_concept else []
@@ -970,6 +1033,11 @@ class SignalGenerator:
             justification=justification,
             metadata={
                 "setup_id": setup.setup_id,
+                "setup_type": (
+                    setup_type.value
+                    if isinstance(setup_type, SetupType)
+                    else getattr(setup, "metadata", {}).get("setup_type", "UNKNOWN")
+                ),
                 "setup_state": setup.state.value,
                 "zone_concept": setup.zone_concept,
                 "zone_index": setup.zone_index,
@@ -982,5 +1050,9 @@ class SignalGenerator:
                 "setup_tf_trend": getattr(setup, "metadata", {}).get(
                     "setup_tf_trend", "neutral"
                 ),
+                "phase": setup.phase.phase_type.value if setup.phase else None,
+                "confirmations": dict(setup.confirmations),
+                "invalidation_price": setup.invalidation_price,
+                "reasons": list(setup.no_trade_reasons),
             },
         )

@@ -7,7 +7,7 @@ le comportement. Cette classe encapsule :
 1. La détection de la tendance maître (H1) via ``MasterTrendAnalyzer`` ;
 2. Le cache H1 (structure recalculée une seule fois par bougie H1 fermée) ;
 3. La détection SMC sur le timeframe d'entrée (M5) et sur le H1 ;
-4. Le contexte macro H4 (informatif seulement, loggé, jamais utilisé pour gater) ;
+4. Le contexte supérieur H4 (tendance et structure) ;
 5. La construction du ``MarketContext`` centralisé.
 
 Elle dépend de deux injectables : un détecteur SMC (``smc_detector``) et un
@@ -32,7 +32,7 @@ DownloadData = Callable[[str, TimeFrame], Awaitable[list[Candle] | None]]
 
 
 class MarketContextBuilder:
-    """Construit le ``MarketContext`` MTF (H4 informatif, H1 gate, M5 entrée)."""
+    """Construit le ``MarketContext`` MTF (H4 contexte, H1 biais, M5 entrée)."""
 
     def __init__(
         self,
@@ -50,6 +50,7 @@ class MarketContextBuilder:
         # Cache H1 : la structure H1 est recalculée une seule fois par bougie H1
         # fermée. Le cache est invalidé uniquement sur nouvelle bougie H1.
         self._htf_cache: dict[str, Any] = {}
+        self._h4_cache: dict[str, Any] = {}
 
     async def build(
         self,
@@ -116,18 +117,32 @@ class MarketContextBuilder:
         except Exception as exc:
             logger.error("Erreur analyse SMC M5 | %s | %s", symbol, exc)
 
-        # H4 : contexte macro informatif seulement — loggé, jamais pour gater.
+        # H4 : contexte supérieur, calculé une seule fois par bougie clôturée.
         h4_trend = "unknown"
+        h4_candles: list[Candle] = []
+        h4_smc_data: list[dict] = []
         try:
-            h4_candles = await self._download_data(symbol, TimeFrame.H4)  # type: ignore[arg-type]
+            h4_candles = await self._download_data(symbol, TimeFrame.H4) or []
             if h4_candles and len(h4_candles) >= 5:
-                h4_trend = trend_analyzer.get_master_trend(h4_candles)
+                latest_h4 = h4_candles[-1]
+                cached_h4 = self._h4_cache.get(f"{symbol}_H4")
+                if cached_h4 and cached_h4.get("time") == latest_h4.time:
+                    h4_trend = cached_h4["h4_trend"]
+                    h4_smc_data = cached_h4["h4_smc_data"]
+                else:
+                    h4_trend = trend_analyzer.get_master_trend(h4_candles)
+                    h4_smc_data = await self._smc_detector.detect(h4_candles, symbol)
+                    self._h4_cache[f"{symbol}_H4"] = {
+                        "time": latest_h4.time,
+                        "h4_trend": h4_trend,
+                        "h4_smc_data": h4_smc_data,
+                    }
                 logger.info(
-                    "[H4 CONTEXTE MACRO] %s | H4=%s | informatif seulement",
-                    symbol, h4_trend,
+                    "[H4 CONTEXTE] %s | H4=%s | detections=%d",
+                    symbol, h4_trend, len(h4_smc_data),
                 )
         except Exception as exc:
-            logger.warning("Erreur analyse H4 (informatif) | %s | %s", symbol, exc)
+            logger.warning("Erreur analyse H4 | %s | %s", symbol, exc)
 
         market_context = trend_analyzer.build_market_context(
             symbol=symbol,
@@ -153,6 +168,10 @@ class MarketContextBuilder:
 
         market_context.setup_smc_data = setup_smc_data
         market_context.setup_trend = setup_trend
+        market_context.setup_candles = setup_tf_candles or []
+        market_context.h4_trend = h4_trend
+        market_context.h4_candles = h4_candles
+        market_context.h4_smc_data = h4_smc_data
         if setup_tf_candles:
             market_context.setup_tf = setup_tf_candles[-1].timeframe
 

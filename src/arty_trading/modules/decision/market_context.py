@@ -30,6 +30,9 @@ class MarketContext:
     timestamp: datetime
     htf: TimeFrame = TimeFrame.H1
     ltf: TimeFrame = TimeFrame.M5
+    h4_trend: str = "unknown"
+    h4_candles: list[Candle] = field(default_factory=list)
+    h4_smc_data: list[dict] = field(default_factory=list)
     master_trend: str = "neutral"
     trend_confidence: float = 0.0
     hh: Decimal | None = None
@@ -56,6 +59,7 @@ class MarketContext:
     ltf_smc_data: list[dict] = field(default_factory=list)
     # Phase 3 : timeframe intermédiaire de setup (M15 par défaut).
     setup_tf: TimeFrame = TimeFrame.M15
+    setup_candles: list[Candle] = field(default_factory=list)
     setup_smc_data: list[dict] = field(default_factory=list)
     setup_trend: str = "neutral"
     metadata: dict[str, Any] = field(default_factory=dict)
@@ -100,6 +104,7 @@ class MarketContext:
             "timestamp": self.timestamp.isoformat(),
             "htf": self.htf.value,
             "ltf": self.ltf.value,
+            "h4_trend": self.h4_trend,
             "master_trend": self.master_trend,
             "trend_confidence": self.trend_confidence,
             "regime": self.regime,
@@ -119,6 +124,7 @@ class MarketContext:
             "atr": float(self.atr),
             "entry_confirmation": self.entry_confirmation,
             "setup_tf": self.setup_tf.value,
+            "setup_candles_count": len(self.setup_candles),
             "setup_trend": self.setup_trend,
             "setup_smc_data_count": len(self.setup_smc_data),
             "structure_valid": self.structure_valid,

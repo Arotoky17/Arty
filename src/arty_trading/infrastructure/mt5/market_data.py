@@ -234,9 +234,9 @@ class MT5MarketDataProvider(IMarketDataProvider):
         mt5_tf = self._get_mt5_timeframe(timeframe)
 
         try:
-            # start_pos=0 → les plus récentes en premier
+            # start_pos=1 exclut la bougie 0 encore en formation.
             rates = await asyncio.to_thread(
-                mt5.copy_rates_from_pos, symbol, mt5_tf, 0, count
+                mt5.copy_rates_from_pos, symbol, mt5_tf, 1, count
             )
         except Exception as exc:
             logger.error("copy_rates_from_pos échoué | %s | %s | %s", symbol, timeframe.value, exc)

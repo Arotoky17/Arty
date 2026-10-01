@@ -53,7 +53,15 @@ def test_micro_bos_confirmation() -> None:
 
 
 def test_choch_confirmation() -> None:
-    candles = frame([(99.5, 100.2, 98.9, 99.2), (99.2, 99.8, 99.1, 99.6)])
+    candles = frame(
+        [
+            (99.5, 100.2, 98.9, 99.2),
+            (99.2, 99.8, 99.1, 99.6),
+            (100.3, 100.7, 100.2, 100.5),
+            (100.5, 100.8, 100.3, 100.6),
+            (100.6, 100.9, 100.4, 100.7),
+        ]
+    )
     checker = M5ConfirmationChecker(
         require_micro_bos=False,
         require_choch=True,
@@ -71,7 +79,15 @@ def test_choch_confirmation() -> None:
 
 
 def test_rejection_candle_confirmation() -> None:
-    candles = frame([(99.5, 100.2, 98.9, 99.2), (99.4, 99.9, 98.8, 99.7)])
+    candles = frame(
+        [
+            (99.5, 100.2, 98.9, 99.2),
+            (100.3, 100.7, 100.2, 100.5),
+            (100.5, 100.8, 100.3, 100.6),
+            (100.6, 100.9, 100.4, 100.7),
+            (99.4, 99.9, 98.8, 99.7),
+        ]
+    )
     checker = M5ConfirmationChecker(
         require_micro_bos=False,
         require_choch=False,
@@ -85,7 +101,15 @@ def test_rejection_candle_confirmation() -> None:
 
 
 def test_contact_candle_can_confirm_rejection() -> None:
-    candles = frame([(99.4, 99.9, 98.8, 99.7)])
+    candles = frame(
+        [
+            (100.3, 100.7, 100.2, 100.5),
+            (100.5, 100.8, 100.3, 100.6),
+            (100.6, 100.9, 100.4, 100.7),
+            (100.7, 101.0, 100.5, 100.8),
+            (99.4, 99.9, 98.8, 99.7),
+        ]
+    )
     checker = M5ConfirmationChecker(
         require_micro_bos=False,
         require_choch=False,
@@ -105,3 +129,23 @@ def test_no_confirmation_returns_false() -> None:
 
     assert result.confirmed is False
     assert result.type is None
+
+
+def test_rejects_when_minimum_candle_count_is_not_met() -> None:
+    candles = frame([(100.3, 100.7, 100.2, 100.5)] * 2)
+
+    result = M5ConfirmationChecker().check(make_ob(), candles, {})
+
+    assert result.details["reason"] == "insufficient_candles"
+    assert result.details["have"] == 2
+    assert result.details["need"] == 3
+
+
+def test_rejects_when_swing_warmup_is_not_met() -> None:
+    candles = frame([(100.3, 100.7, 100.2, 100.5)] * 3)
+
+    result = M5ConfirmationChecker().check(make_ob(), candles, {})
+
+    assert result.details["reason"] == "insufficient_candles_for_swing"
+    assert result.details["have"] == 3
+    assert result.details["need"] == 5

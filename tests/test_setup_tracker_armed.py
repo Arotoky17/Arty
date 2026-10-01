@@ -4,11 +4,9 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-import pytest
-
 from arty_trading.core.entities import Candle
 from arty_trading.core.enums import Direction, TimeFrame
-from arty_trading.modules.smc.setup_tracker import SetupTracker, SetupState
+from arty_trading.modules.smc.setup_tracker import SetupState, SetupTracker
 
 
 def _make_candle(idx: int, close: float, bullish: bool = True) -> Candle:
@@ -257,7 +255,7 @@ class TestSetupTrackerNoDuplicates:
 
     def test_duplicate_prevention(self):
         tracker = SetupTracker()
-        s1 = tracker.create_setup(
+        tracker.create_setup(
             symbol="EURUSD",
             direction=Direction.BUY,
             zone_concept="fair_value_gap",

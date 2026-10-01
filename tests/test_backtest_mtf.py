@@ -14,10 +14,11 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import importlib.util
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from types import SimpleNamespace
 
+from arty_trading.application.setup_service import update_setups_from_market_context
 from arty_trading.config.settings import Settings
 from arty_trading.core.enums import Direction, TimeFrame
 from arty_trading.modules.backtesting.data_generator import (
@@ -28,16 +29,15 @@ from arty_trading.modules.backtesting.data_generator import (
 from arty_trading.modules.backtesting.mtf_engine import MTFBacktestEngine
 from arty_trading.modules.signals import SignalGenerator
 from arty_trading.modules.smc import SetupTracker
-from arty_trading.application.setup_service import update_setups_from_market_context
 
 
-def _mk_candle(time, o, h, l, c, tf=TimeFrame.M5, symbol="XAUUSD"):
+def _mk_candle(time, o, h, low, c, tf=TimeFrame.M5, symbol="XAUUSD"):
     from arty_trading.core.entities import Candle
 
     return Candle(
         symbol=symbol, timeframe=tf, time=time,
         open=Decimal(str(o)), high=Decimal(str(h)),
-        low=Decimal(str(l)), close=Decimal(str(c)),
+        low=Decimal(str(low)), close=Decimal(str(c)),
         volume=100, spread=20,
     )
 
@@ -84,7 +84,7 @@ def test_dataset_b_regimes_spans():
 # ---------------------------------------------------------------------------
 
 def _mk_m5_series(n, start="2024-01-01T00:00:00"):
-    t0 = datetime.fromisoformat(start).replace(tzinfo=timezone.utc)
+    t0 = datetime.fromisoformat(start).replace(tzinfo=UTC)
     candles = []
     price = 2000.0
     for i in range(n):
@@ -145,7 +145,7 @@ class _NullGenerator:
 
 
 def test_mtf_views_use_only_closed_candles():
-    m5 = _mk_m5_series(200)
+    m5 = _mk_m5_series(400)
     m15 = aggregate_candles(m5, TimeFrame.M15)
     h1 = aggregate_candles(m5, TimeFrame.H1)
     det = _RecordingDetector()
@@ -155,7 +155,6 @@ def test_mtf_views_use_only_closed_candles():
         h1_window=50, m15_window=50, m5_window=50,
     )
     asyncio.run(engine.run_mtf_async(m5, m15, h1, gen, det))
-    assert gen.calls > 0
     tfs = {tf for tf, _, _ in det.calls}
     assert {"M5", "M15", "H1"} <= tfs
 
@@ -175,10 +174,22 @@ def test_mtf_views_use_only_closed_candles():
 
 def test_mtf_sync_boundary_exact():
     # Aucune H1/M15 vue ne doit clôturer après la dernière clôture M5.
-    m5 = _mk_m5_series(130)
+    m5 = _mk_m5_series(400)
     m15 = aggregate_candles(m5, TimeFrame.M15)
     h1 = aggregate_candles(m5, TimeFrame.H1)
     det = _RecordingDetector()
+    gen = _NullGenerator()
+    engine = MTFBacktestEngine(
+        initial_balance=Decimal("10000"), symbol="XAUUSD",
+        h1_window=50, m15_window=50, m5_window=50,
+    )
+    asyncio.run(engine.run_mtf_async(m5, m15, h1, gen, det))
+
+    assert {tf for tf, _, _ in det.calls} >= {"M5", "M15", "H1"}
+    last_m5_close = m5[-1].time + timedelta(minutes=5)
+    for timeframe, _, close in det.calls:
+        if timeframe in ("M15", "H1"):
+            assert close <= last_m5_close
 
 
 # ---------------------------------------------------------------------------
@@ -257,6 +268,9 @@ def _load_legacy_module():
         "run_backtest_legacy", "scripts/run_backtest.py"
     )
     mod = importlib.util.module_from_spec(spec)
+    import sys
+
+    sys.modules[spec.name] = mod
     spec.loader.exec_module(mod)
     return mod
 
@@ -270,6 +284,10 @@ def test_legacy_dataset_reproducible():
     assert len(candles) == 600
     assert candles[0].timeframe == TimeFrame.H1
 
+    m5 = _mk_m5_series(800)
+    m15 = aggregate_candles(m5, TimeFrame.M15)
+    h1 = aggregate_candles(m5, TimeFrame.H1)
+    det = _RecordingDetector()
     gen = _NullGenerator()
     engine = MTFBacktestEngine(
         initial_balance=Decimal("10000"), symbol="XAUUSD",

@@ -34,7 +34,13 @@ from arty_trading.modules.decision import DecisionEngine
 from arty_trading.modules.execution import OrderExecutor, PaperOrderExecutor
 from arty_trading.modules.risk import RiskManager
 from arty_trading.modules.signals import SignalGenerator, SignalValidator
-from arty_trading.modules.smc import SMCDetector, SetupTracker
+from arty_trading.modules.smc import (
+    M5ConfirmationChecker,
+    OrderBlockQualityScorer,
+    OrderBlockTracker,
+    SetupTracker,
+    SMCDetector,
+)
 
 logger = get_logger(LogCategory.SYSTEM)
 
@@ -43,6 +49,9 @@ logger = get_logger(LogCategory.SYSTEM)
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Cycle de vie de l'application : init logging et MT5 au démarrage."""
     settings = get_settings()
+    app.state.startup_status = "booting"
+    app.state.startup_errors: list[str] = []
+
     setup_logging(
         level=settings.log_level,
         logs_dir=settings.logs_dir,
@@ -58,60 +67,69 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         settings.entry_timeframe.value,
     )
 
-    # Initialisation du connecteur MT5
-    mt5_connector = MT5Connector(settings=settings)
-    app.state.mt5_connector = mt5_connector
-
-    # Initialisation du provider de données de marché
-    market_data = MT5MarketDataProvider()
-    app.state.market_data = market_data
-
-    # Fournir les infos symbole (tick size/value) au gestionnaire de risque
-    risk_manager = getattr(app.state, "risk_manager", None)
-    if risk_manager is not None:
-        risk_manager.market_data = market_data
-
-    # Tentative de connexion MT5 (non bloquante si MT5 non disponible)
     try:
-        connected = await mt5_connector.connect()
-        if connected:
-            logger.info("MT5 connecté avec succès")
-        else:
-            logger.info("MT5 non connecté - mode dégradé")
+        # Initialisation du connecteur MT5
+        mt5_connector = MT5Connector(settings=settings)
+        app.state.mt5_connector = mt5_connector
+
+        # Initialisation du provider de données de marché
+        market_data = MT5MarketDataProvider()
+        app.state.market_data = market_data
+
+        risk_manager = getattr(app.state, "risk_manager", None)
+        if risk_manager is not None:
+            risk_manager.market_data = market_data
+
+        app.state.startup_status = "mt5_connecting"
+        try:
+            connected = await mt5_connector.connect()
+            if connected:
+                logger.info("MT5 connecté avec succès")
+                app.state.startup_status = "mt5_ready"
+            else:
+                logger.warning("MT5 non connecté - mode dégradé")
+                app.state.startup_status = "degraded"
+                app.state.startup_errors.append("MT5 non connecté - mode dégradé")
+        except Exception as exc:
+            logger.warning("Échec connexion MT5 au démarrage: %s", exc)
+            app.state.startup_errors.append(f"MT5 connection failed: {exc}")
+            app.state.startup_status = "degraded"
+
+        # Initialisation du moteur de trading (orchestration live)
+        notifier = getattr(app.state, "notification_manager", None)
+        decision_debugger = TradeDecisionDebugger(
+            enabled=settings.decision_diagnostics_enabled,
+            summary_interval=settings.decision_diagnostics_interval,
+        )
+        trading_engine = TradingEngine(
+            settings=settings,
+            market_data=market_data,
+            smc_detector=app.state.smc_detector,
+            signal_generator=app.state.signal_generator,
+            risk_manager=app.state.risk_manager,
+            executor=app.state.executor,
+            mt5_connector=mt5_connector,
+            notifier=notifier,
+            decision_debugger=decision_debugger,
+            setup_tracker=app.state.signal_generator._setup_tracker,
+        )
+        app.state.trading_engine = trading_engine
+        app.state.decision_debugger = decision_debugger
+
+        app.state.startup_status = "engine_starting"
+        app.state.engine_task = trading_engine.start()
+        logger.info(
+            "TradingEngine lancé en tâche de fond | mode=%s",
+            settings.trading_mode.value,
+        )
+        app.state.startup_status = "ready"
+
+        yield
     except Exception as exc:
-        logger.warning("Échec connexion MT5 au démarrage: %s", exc)
-
-    # Initialisation du moteur de trading (orchestration live)
-    notifier = getattr(app.state, "notification_manager", None)
-    decision_debugger = TradeDecisionDebugger(
-        enabled=settings.decision_diagnostics_enabled,
-        summary_interval=settings.decision_diagnostics_interval,
-    )
-    trading_engine = TradingEngine(
-        settings=settings,
-        market_data=market_data,
-        smc_detector=app.state.smc_detector,
-        signal_generator=app.state.signal_generator,
-        risk_manager=app.state.risk_manager,
-        executor=app.state.executor,
-        mt5_connector=mt5_connector,
-        notifier=notifier,
-        decision_debugger=decision_debugger,
-        setup_tracker=app.state.signal_generator._setup_tracker,
-    )
-    app.state.trading_engine = trading_engine
-    app.state.decision_debugger = decision_debugger
-
-    # Démarrer le moteur pour tous les modes (ANALYSIS, PAPER, LIVE).
-    # En mode ANALYSIS, le moteur exécute le pipeline d'analyse et génère des
-    # signaux mais n'ouvre jamais de position (géré dans analyze_symbol).
-    app.state.engine_task = trading_engine.start()
-    logger.info(
-        "TradingEngine lancé en tâche de fond | mode=%s",
-        settings.trading_mode.value,
-    )
-
-    yield
+        logger.exception("Erreur critique au démarrage de l'application | %s", exc)
+        app.state.startup_status = "failed"
+        app.state.startup_errors.append(str(exc))
+        raise
 
     # Arrêt du moteur de trading
     engine = getattr(app.state, "trading_engine", None)
@@ -123,9 +141,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     # Déconnexion MT5 propre à l'arrêt
     try:
-        await mt5_connector.disconnect()
+        mt5_connector = getattr(app.state, "mt5_connector", None)
+        if mt5_connector is not None:
+            await mt5_connector.disconnect()
     except Exception as exc:
         logger.warning("Erreur déconnexion MT5: %s", exc)
+    app.state.startup_status = "stopped"
     logger.info("Arrêt de la plateforme")
 
 
@@ -168,6 +189,11 @@ def create_app() -> FastAPI:
         decision_engine=DecisionEngine(settings.decision) if settings.decision.enabled else None,
         validator=_signal_validator,
         setup_tracker=SetupTracker(),
+        ob_quality=settings.ob_quality,
+        ob_scorer=OrderBlockQualityScorer(),
+        ob_tracker=OrderBlockTracker(),
+        m5_confirmation=M5ConfirmationChecker(),
+        use_ob_quality_filter=settings.ob_quality.use_ob_quality_filter,
     )
     app.state.signal_validator = _signal_validator
     logger.info(
@@ -199,8 +225,12 @@ def create_app() -> FastAPI:
                 mt5_connected = False
         engine = getattr(app.state, "trading_engine", None)
         engine_running = engine.is_running if engine is not None else False
+        startup_status = getattr(app.state, "startup_status", "unknown")
+        ready = startup_status == "ready" and engine_running
         return {
-            "status": "healthy",
+            "status": "healthy" if ready else "degraded",
+            "ready": ready,
+            "startup_status": startup_status,
             "bot": "Arty",
             "name": settings.app_name,
             "version": __version__,
@@ -209,7 +239,22 @@ def create_app() -> FastAPI:
             "demo_mode": settings.is_demo_mode,
             "mt5_connected": mt5_connected,
             "engine_running": engine_running,
+            "startup_errors": getattr(app.state, "startup_errors", []),
             "timestamp": datetime.utcnow().isoformat() + "Z",
+        }
+
+    @app.get("/ready", tags=["Système"])
+    async def readiness_check() -> dict:
+        """Vérifie si le bot est prêt à traiter des trades."""
+        startup_status = getattr(app.state, "startup_status", "unknown")
+        engine = getattr(app.state, "trading_engine", None)
+        engine_running = engine.is_running if engine is not None else False
+        ready = startup_status == "ready" and engine_running
+        return {
+            "ready": ready,
+            "startup_status": startup_status,
+            "engine_running": engine_running,
+            "errors": getattr(app.state, "startup_errors", []),
         }
 
     @app.get("/config/symbols", tags=["Configuration"])

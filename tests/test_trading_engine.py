@@ -10,6 +10,7 @@ Et qu'aucun open_order n'est appelé si validate_signal retourne False.
 
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
@@ -624,6 +625,22 @@ class TestEngineStartStop:
         assert task1 is task2
 
         await engine.stop()
+
+    @pytest.mark.asyncio
+    async def test_start_stops_on_runtime_error(self) -> None:
+        """Le moteur doit arrêter son état interne lorsqu'une erreur critique survient."""
+        engine = build_engine([])
+
+        async def fail_startup() -> None:
+            raise RuntimeError("runtime failure")
+
+        engine._initialize_symbols = fail_startup
+
+        task = engine.start()
+        await asyncio.sleep(0.05)
+
+        assert task.done()
+        assert engine.is_running is False
 
 
 # =============================================================================

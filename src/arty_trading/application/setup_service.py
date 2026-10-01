@@ -3,17 +3,31 @@
 Extrait de ``application/trading_engine._update_setups`` sans changer le
 comportement, afin que le backtest multi-timeframe utilise EXACTEMENT la même
 logique de création/évaluation des setups que le chemin live.
+
+Phase 12 : quand ``OB_QUALITY_ENABLED=true``, chaque Order Block est noté
+(Grade A/B/C/D) avant création du setup — seuls les grades >= ``OB_MIN_GRADE``
+deviennent des setups — et la confirmation M5 est recalculée à chaque cycle
+pour les setups OB actifs (``ob_m5_confirmed`` dans les métadonnées).
 """
 
 from __future__ import annotations
 
+from datetime import UTC
 from typing import Any
 
-from arty_trading.config.settings import Settings
+from arty_trading.config.settings import OBQualitySettings, Settings
 from arty_trading.core.entities import Candle
-from arty_trading.core.enums import LogCategory
+from arty_trading.core.enums import Direction, LogCategory
 from arty_trading.logging.logger import get_logger
-from arty_trading.modules.smc import SetupState, SetupTracker
+from arty_trading.modules.smc import Setup, SetupState, SetupTracker
+from arty_trading.modules.smc.m5_confirmation import (
+    M5ConfirmationResult,
+    evaluate_m5_confirmation,
+)
+from arty_trading.modules.smc.ob_quality import (
+    assess_order_block_quality,
+    grade_meets_min,
+)
 from arty_trading.modules.smc.setup_classifier import classify_setup_type
 
 logger = get_logger(LogCategory.SYSTEM)
@@ -41,10 +55,10 @@ def update_setups_from_market_context(
     if ref_time is not None:
         tracker.expire_old_setups(symbol, current_time=ref_time)
     else:
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         tracker.expire_old_setups(
-            symbol, current_time=datetime.now(timezone.utc)
+            symbol, current_time=datetime.now(UTC)
         )
 
     # --- Récupérer les paramètres de marché ---
@@ -63,6 +77,12 @@ def update_setups_from_market_context(
     max_distance_atr_mult = profile.retest_atr_mult if profile else 1.0
     max_zone_age_bars = profile.max_zone_age_bars if profile else 20
     current_price = float(ltf_candles[-1].close) if ltf_candles else None
+
+    # Phase 12 : notation de qualité des Order Blocks (désactivée par défaut).
+    ob_settings: OBQualitySettings | None = getattr(settings, "ob_quality", None)
+    ob_grading_enabled = bool(ob_settings is not None and ob_settings.enabled)
+    graded_setups = 0
+    rejected_by_grade = 0
 
     # --- Créer des setups à partir des zones SMC détectées ---
     # Phase 3 : itération sur les détections du timeframe de setup (M15).
@@ -96,9 +116,32 @@ def update_setups_from_market_context(
         if zone_top is None or zone_bottom is None:
             continue
 
-        from arty_trading.core.enums import Direction as DirEnum
+        # Phase 12 : un OB doit être de Grade A/B pour devenir un setup.
+        quality = None
+        if concept == "order_block" and ob_grading_enabled and ob_settings is not None:
+            quality = assess_order_block_quality(
+                detection,
+                atr=atr,
+                htf_trend=htf_trend,
+                smc_data=setup_smc_data,
+                zone_index=int(zone_index),
+                bars_since_zone=(
+                    max(0, len(ltf_candles) - 1 - int(zone_index)) if ltf_candles else None
+                ),
+                settings=ob_settings,
+            )
+            if not grade_meets_min(quality.grade, ob_settings.min_grade):
+                rejected_by_grade += 1
+                logger.info(
+                    "[OB REJECTED] %s | %s | grade=%s score=%d < min=%s | "
+                    "zone=%.5f-%.5f idx=%d | %s",
+                    symbol, direction_str, quality.grade.value, quality.score,
+                    ob_settings.min_grade, float(zone_bottom), float(zone_top),
+                    int(zone_index), " | ".join(quality.reasons),
+                )
+                continue
 
-        direction_enum = DirEnum.BUY if direction_str == "bullish" else DirEnum.SELL
+        direction_enum = Direction.BUY if direction_str == "bullish" else Direction.SELL
         zone_price = (float(zone_top) + float(zone_bottom)) / 2.0
 
         # Éviter les doublons
@@ -127,10 +170,20 @@ def update_setups_from_market_context(
             )
             setup.metadata["setup_type"] = setup_type
             setup.metadata["setup_tf_trend"] = setup_trend
+            grade_label = "-"
+            if quality is not None:
+                setup.metadata.update(quality.to_dict())
+                # Confirmation M5 évaluée dès la création (rafraîchie à chaque cycle).
+                m5 = _m5_confirmation_for_setup(setup, ltf_candles, atr, ob_settings)
+                setup.metadata.update(m5.to_dict())
+                grade_label = f"{quality.grade.value}({quality.score})"
+                graded_setups += 1
             logger.info(
-                "[SETUP DETECTED] %s | %s | zone=%.5f-%.5f | concept=%s idx=%d id=%s | type=%s | trend=%s atr=%.6f",
+                "[SETUP DETECTED] %s | %s | zone=%.5f-%.5f | concept=%s idx=%d id=%s | "
+                "type=%s | grade=%s | trend=%s atr=%.6f",
                 symbol, direction_str, float(zone_bottom), float(zone_top),
-                concept, zone_index, setup.setup_id, setup_type, htf_trend, atr,
+                concept, zone_index, setup.setup_id, setup_type, grade_label,
+                htf_trend, atr,
             )
 
     # --- Évaluer les setups actifs (transitions de state machine) ---
@@ -151,6 +204,10 @@ def update_setups_from_market_context(
                 symbol, t.setup_id, t.state.value, t.state.value, "",
             )
 
+    # Phase 12 : rafraîchir la confirmation M5 des setups OB actifs.
+    if ob_settings is not None and ob_settings.enabled and ltf_candles:
+        _refresh_ob_m5_confirmation(tracker, symbol, ltf_candles, atr, ob_settings)
+
     active = tracker.get_active_setups(symbol)
     logger.info(
         "SETUPS | %s | actifs=%d | expirés/récemment traités=%d",
@@ -159,3 +216,67 @@ def update_setups_from_market_context(
         sum(1 for s in tracker._setups.get(symbol.upper(), [])
             if s.state in (SetupState.CONSUMED, SetupState.SETUP_EXPIRED, SetupState.INVALIDATED)),
     )
+
+    if ob_settings is not None and ob_settings.enabled:
+        logger.info(
+            "OB QUALITY | %s | ob_notés=%d | rejetés(grade<%s)=%d",
+            symbol,
+            graded_setups,
+            ob_settings.min_grade,
+            rejected_by_grade,
+        )
+
+
+def _m5_confirmation_for_setup(
+    setup: Setup,
+    candles: list[Candle],
+    atr: float,
+    settings: OBQualitySettings | None,
+) -> M5ConfirmationResult:
+    """Évalue la confirmation M5 d'un setup dont la zone est un Order Block.
+
+    Args:
+        setup: Setup suivi (zone OB).
+        candles: Bougies M5 clôturées.
+        atr: ATR courant du M5.
+        settings: Paramètres de qualité OB (``None`` → valeurs par défaut).
+
+    Returns:
+        ``M5ConfirmationResult`` — non confirmé si la zone est incomplète.
+    """
+    config = settings or OBQualitySettings()
+    if setup.zone_high is None or setup.zone_low is None:
+        return M5ConfirmationResult(
+            False, "invalid_zone", False, None, 0.0, 0.0, ("missing_zone_bounds",)
+        )
+    direction = "bullish" if setup.direction == Direction.BUY else "bearish"
+    return evaluate_m5_confirmation(
+        candles,
+        direction,
+        float(setup.zone_high),
+        float(setup.zone_low),
+        atr=atr,
+        lookback_bars=config.m5_confirmation_lookback_bars,
+        min_rejection_ratio=config.m5_min_rejection_ratio,
+        require_displacement=config.m5_require_displacement,
+        displacement_atr_mult=config.m5_displacement_atr_mult,
+    )
+
+
+def _refresh_ob_m5_confirmation(
+    tracker: SetupTracker,
+    symbol: str,
+    candles: list[Candle],
+    atr: float,
+    settings: OBQualitySettings,
+) -> None:
+    """Met à jour ``ob_m5_confirmed`` pour chaque setup OB noté (Grade A/B).
+
+    N'affecte pas la state machine du tracker : la décision finale reste prise
+    par le ``SignalGenerator`` via ``evaluate_setup_ob_gate``.
+    """
+    for setup in tracker.get_active_setups(symbol):
+        if setup.zone_concept != "order_block" or "ob_grade" not in setup.metadata:
+            continue
+        result = _m5_confirmation_for_setup(setup, candles, atr, settings)
+        setup.metadata.update(result.to_dict())

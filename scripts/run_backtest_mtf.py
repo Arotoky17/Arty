@@ -71,6 +71,7 @@ async def run(seed: int, n_m5: int, min_confidence: float) -> MTFBacktestEngine:
         validator=validator,
         decision_engine=decision_engine,
         setup_tracker=tracker,
+        ob_quality=settings.ob_quality,
     )
 
     engine = MTFBacktestEngine(

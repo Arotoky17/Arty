@@ -372,6 +372,155 @@ class PositionSettings(BaseSettings):
         return sorted(self._parse_levels(self.partial_profit_levels))
 
 
+# Grades de qualité d'un Order Block (Phase 12) — du meilleur au moins bon.
+OB_QUALITY_GRADES: tuple[str, ...] = ("A", "B", "C", "D")
+
+
+class OBQualitySettings(BaseSettings):
+    """Notation de qualité des Order Blocks (Grade A/B/C/D) — Phase 12.
+
+    Le bot ne trade plus « tous les Order Blocks » : quand ``enabled`` est vrai,
+    chaque OB détecté sur le timeframe de setup est noté sur 100 puis classé en
+    Grade A/B/C/D. Seuls les OB dont le grade est >= ``min_grade`` sont
+    transformés en setups, et la confirmation M5 (``require_m5_confirmation``)
+    est exigée avant qu'un signal puisse être produit.
+
+    Le gate historique de création de setups reste désactivé par défaut via
+    ``OB_QUALITY_ENABLED``. Le filtre de la stratégie active est contrôlé
+    séparément par ``USE_OB_QUALITY_FILTER`` (activé par défaut).
+    """
+
+    model_config = SettingsConfigDict(env_prefix="", populate_by_name=True)
+
+    enabled: bool = Field(
+        default=False,
+        alias="OB_QUALITY_ENABLED",
+        description="Active la notation de qualité des Order Blocks (Grade A/B/C/D)",
+    )
+    use_ob_quality_filter: bool = Field(
+        default=True,
+        alias="USE_OB_QUALITY_FILTER",
+        description="Active le filtre Grade A/B + confirmation M5 de la stratégie SMC",
+    )
+    min_score: float = Field(
+        default=0.55,
+        alias="OB_MIN_SCORE",
+        ge=0.0,
+        le=1.0,
+        description="Score minimal (0-1) pour accepter un OB Grade A/B",
+    )
+    require_fresh: bool = Field(
+        default=True,
+        alias="OB_REQUIRE_FRESH",
+        description="Exige que le scorer confirme qu'aucune bougie postérieure n'a mitigé l'OB",
+    )
+    require_htf_confluence: bool = Field(
+        default=False,
+        alias="OB_REQUIRE_HTF_CONFLUENCE",
+        description="Exige une confluence de zone avec un OB ou FVG HTF",
+    )
+    require_liquidity_sweep: bool = Field(
+        default=False,
+        alias="OB_REQUIRE_LIQUIDITY_SWEEP",
+        description="Exige un sweep de liquidité avant l'OB",
+    )
+    rr_min_grade_a: float = Field(
+        default=2.5,
+        alias="OB_RR_MIN_GRADE_A",
+        gt=0.0,
+        description="R/R minimal d'un signal basé sur un OB Grade A",
+    )
+    rr_min_grade_b: float = Field(
+        default=2.0,
+        alias="OB_RR_MIN_GRADE_B",
+        gt=0.0,
+        description="R/R minimal d'un signal basé sur un OB Grade B",
+    )
+    min_grade: str = Field(
+        default="B",
+        alias="OB_MIN_GRADE",
+        description="Grade minimum accepté pour créer un setup OB (A, B, C ou D)",
+    )
+    require_m5_confirmation: bool = Field(
+        default=True,
+        alias="OB_REQUIRE_M5_CONFIRMATION",
+        description="Exige une confirmation M5 (retest + rejet) avant tout signal OB",
+    )
+
+    # --- Seuils de grade (score 0-100) --------------------------------------
+    grade_a_threshold: int = Field(default=85, alias="OB_GRADE_A_THRESHOLD", ge=0, le=100)
+    grade_b_threshold: int = Field(default=70, alias="OB_GRADE_B_THRESHOLD", ge=0, le=100)
+    grade_c_threshold: int = Field(default=50, alias="OB_GRADE_C_THRESHOLD", ge=0, le=100)
+
+    # --- Pondérations (normalisées : la somme n'a pas besoin de valoir 100) ---
+    weight_displacement: float = Field(default=25.0, alias="OB_WEIGHT_DISPLACEMENT", ge=0.0)
+    weight_zone_height: float = Field(default=10.0, alias="OB_WEIGHT_ZONE_HEIGHT", ge=0.0)
+    weight_mitigation: float = Field(default=10.0, alias="OB_WEIGHT_MITIGATION", ge=0.0)
+    weight_freshness: float = Field(default=10.0, alias="OB_WEIGHT_FRESHNESS", ge=0.0)
+    weight_trend: float = Field(default=15.0, alias="OB_WEIGHT_TREND", ge=0.0)
+    weight_confluence: float = Field(default=20.0, alias="OB_WEIGHT_CONFLUENCE", ge=0.0)
+    weight_premium_discount: float = Field(
+        default=10.0, alias="OB_WEIGHT_PREMIUM_DISCOUNT", ge=0.0
+    )
+
+    # --- Paramètres de notation --------------------------------------------
+    displacement_reference_atr: float = Field(
+        default=1.2,
+        alias="OB_DISPLACEMENT_REFERENCE_ATR",
+        gt=0.0,
+        description="Multiple d'ATR du déplacement donnant 50 % du score displacement",
+    )
+    min_zone_height_atr: float = Field(default=0.15, alias="OB_MIN_ZONE_HEIGHT_ATR", ge=0.0)
+    max_zone_height_atr: float = Field(default=3.0, alias="OB_MAX_ZONE_HEIGHT_ATR", gt=0.0)
+    max_zone_age_bars: int = Field(default=25, alias="OB_MAX_ZONE_AGE_BARS", ge=1)
+    confluence_lookback_bars: int = Field(default=30, alias="OB_CONFLUENCE_LOOKBACK_BARS", ge=1)
+
+    # --- Confirmation M5 ----------------------------------------------------
+    m5_confirmation_lookback_bars: int = Field(
+        default=30, alias="OB_M5_LOOKBACK_BARS", ge=1
+    )
+    m5_min_rejection_ratio: float = Field(
+        default=0.5,
+        alias="OB_M5_MIN_REJECTION_RATIO",
+        ge=0.0,
+        description="Clôture minimale dans la zone (0-1) pour valider le rejet M5",
+    )
+    m5_require_displacement: bool = Field(
+        default=True,
+        alias="OB_M5_REQUIRE_DISPLACEMENT",
+        description="Exige un corps de bougie de rejet >= N x ATR sur M5",
+    )
+    m5_displacement_atr_mult: float = Field(
+        default=1.0, alias="OB_M5_DISPLACEMENT_ATR_MULT", ge=0.0
+    )
+
+    @field_validator("min_grade")
+    @classmethod
+    def validate_min_grade(cls, value: str) -> str:
+        grade = str(value).strip().upper()
+        if grade not in OB_QUALITY_GRADES:
+            raise ValueError(
+                f"OB_MIN_GRADE doit être l'un de {OB_QUALITY_GRADES} (reçu: {value!r})"
+            )
+        return grade
+
+    @model_validator(mode="after")
+    def validate_grade_thresholds(self) -> OBQualitySettings:
+        """Les seuils doivent décroître strictement : A > B > C."""
+        if not (
+            self.grade_a_threshold > self.grade_b_threshold > self.grade_c_threshold
+        ):
+            raise ValueError(
+                "Les seuils de grade doivent décroître strictement : "
+                "OB_GRADE_A_THRESHOLD > OB_GRADE_B_THRESHOLD > OB_GRADE_C_THRESHOLD"
+            )
+        if self.max_zone_height_atr <= self.min_zone_height_atr:
+            raise ValueError(
+                "OB_MAX_ZONE_HEIGHT_ATR doit être supérieur à OB_MIN_ZONE_HEIGHT_ATR"
+            )
+        return self
+
+
 class NewsSettings(BaseSettings):
     """Filtre de calendrier économique à impact élevé."""
 
@@ -553,6 +702,7 @@ class Settings(BaseSettings):
     validator: ValidatorSettings = Field(default_factory=ValidatorSettings)
     decision: DecisionSettings = Field(default_factory=DecisionSettings)
     position: PositionSettings = Field(default_factory=PositionSettings)
+    ob_quality: OBQualitySettings = Field(default_factory=OBQualitySettings)
     news: NewsSettings = Field(default_factory=NewsSettings)
     journal: JournalSettings = Field(default_factory=JournalSettings)
     sessions: SessionSettings = Field(default_factory=SessionSettings)

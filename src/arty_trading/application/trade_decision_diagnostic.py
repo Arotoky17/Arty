@@ -216,6 +216,7 @@ class TradeDecisionDiagnostic:
     # Diagnostics de retest et premium/discount (Phase 3A — instrumentation)
     retest_diagnostic: dict[str, Any] | None = None
     premium_discount_diagnostic: dict[str, Any] | None = None
+    ob_rejections: list[dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         """Sérialise le diagnostic en dictionnaire."""
@@ -292,6 +293,7 @@ class TradeDecisionDiagnostic:
             "metadata": dict(self.metadata),
             "retest_diagnostic": self.retest_diagnostic,
             "premium_discount_diagnostic": self.premium_discount_diagnostic,
+            "ob_rejections": [dict(item) for item in self.ob_rejections],
         }
 
     def to_log_summary(self) -> str:

@@ -48,6 +48,7 @@ from arty_trading.application.execution_guards import (
 from arty_trading.application.market_context_builder import MarketContextBuilder
 from arty_trading.application.position_monitor import PositionMonitor
 from arty_trading.application.position_state_store import PositionStateStore
+from arty_trading.application.setup_service import update_setups_from_market_context
 from arty_trading.application.statistics import TradingStatistics
 from arty_trading.application.trade_decision_debugger import TradeDecisionDebugger
 from arty_trading.application.trade_decision_diagnostic import (
@@ -56,7 +57,6 @@ from arty_trading.application.trade_decision_diagnostic import (
     TradeDecisionDiagnostic,
 )
 from arty_trading.application.trade_journal import TradeJournal
-from arty_trading.application.setup_service import update_setups_from_market_context
 from arty_trading.application.trade_orchestrator import TradeOrchestrator
 from arty_trading.config.settings import Settings
 from arty_trading.core.entities import Candle, Signal, Trade
@@ -79,11 +79,10 @@ from arty_trading.modules.execution.sl_guard import StructureContext
 from arty_trading.modules.risk import RiskManager
 from arty_trading.modules.signals import SignalGenerator
 from arty_trading.modules.signals.news import EconomicCalendar
-from arty_trading.modules.smc import SetupState, SetupTracker
+from arty_trading.modules.smc import SetupTracker
 from arty_trading.modules.smc.base import find_swing_points
-from arty_trading.utils.helpers import calculate_atr
 from arty_trading.modules.smc.premium_discount import premium_discount_diagnostic
-from arty_trading.utils.helpers import retest_still_valid_detailed
+from arty_trading.utils.helpers import calculate_atr, retest_still_valid_detailed
 
 logger = get_logger(LogCategory.SYSTEM)
 
@@ -238,7 +237,6 @@ class TradingEngine:
             structure_provider=self._build_structure_context,
             state_store=self._position_state_store,
         )
-        from arty_trading.modules.smc import SetupTracker
 
         self._setup_tracker = setup_tracker if setup_tracker is not None else SetupTracker()
         # Observabilité : le debugger est notifié à chaque création de setup
@@ -262,6 +260,9 @@ class TradingEngine:
         self._reconnect_attempts: int = 0
         # Dernière alerte de déconnexion envoyée (anti-spam).
         self._disconnected_notified: bool = False
+        # Verrou de démarrage pour éviter les doublons de tâche si le moteur est
+        # sollicitée simultanément depuis plusieurs points d'entrée.
+        self._start_lock = asyncio.Lock()
 
     # -------------------------------------------------------------------------
     # Propriétés
@@ -714,6 +715,21 @@ class TradingEngine:
                     diagnostic,
                     PipelineStep.DECISION_SCORE,
                     RejectionReason.LOW_SCORE,
+                )
+            elif rejection_stage == "ob_quality":
+                details = getattr(
+                    self._signal_generator, "last_rejection_details", None
+                ) or {}
+                rejection_reason = (
+                    self._signal_generator.last_rejection_reason or "unknown"
+                )
+                self._fail_step(
+                    diagnostic,
+                    PipelineStep.STRATEGY_EVALUATION,
+                    RejectionReason.ORDER_BLOCK_MISSING,
+                    message=(
+                        f"OB quality rejected | reason={rejection_reason} | details={details}"
+                    ),
                 )
             else:
                 self._fail_step(
@@ -1640,6 +1656,8 @@ class TradingEngine:
         La boucle s'arrête proprement si :
         - ``stop()`` est appelée (``_running`` mis à False)
         - La tâche est annulée (``asyncio.CancelledError``)
+        - Une erreur non gérée se produit : elle est loggée puis le moteur
+          marque son arrêt sans laisser un état incohérent.
         """
         self._running = True
         logger.info(
@@ -1689,6 +1707,16 @@ class TradingEngine:
             logger.info("TradingEngine arrêté (tâche annulée)")
             self._running = False
             raise
+        except Exception as exc:  # pragma: no cover - supervision directe du runtime
+            logger.exception("TradingEngine arrêté sur erreur critique | %s", exc)
+            self._running = False
+            await self._notify_critical(
+                "TradingEngine arrêté",
+                f"Erreur critique du moteur de trading: {exc}",
+            )
+        finally:
+            self._running = False
+            logger.info("TradingEngine terminé")
 
     def start(self) -> asyncio.Task[None]:
         """
@@ -1698,9 +1726,18 @@ class TradingEngine:
             La tâche asyncio créée.
         """
         if self._task is not None and not self._task.done():
+            logger.debug("TradingEngine déjà démarré | task_running=%s", self._task)
             return self._task
-        # Marquer comme actif avant de créer la tâche pour que is_running
-        # soit True immédiatement après l'appel à start().
+
+        # Si une ancienne tâche a fini avec une erreur, on la laisse terminer et
+        # on relance proprement un cycle frais. Cela évite de conserver un état
+        # "running" incohérent après une exception non récupérée.
+        if self._task is not None and self._task.done():
+            logger.warning(
+                "TradingEngine relancé après fin de tâche précédente | exception=%s",
+                self._task.exception(),
+            )
+
         self._running = True
         self._task = asyncio.create_task(self.run_forever())
         return self._task

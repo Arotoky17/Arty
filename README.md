@@ -39,6 +39,22 @@ Chaque détection est indépendante et peut être activée/désactivée dans la 
 - **Take Profit partiel** (50 %) à +2R
 - **Trailing stop** à partir de +3R (distance 1R)
 
+### Qualité des Order Blocks (Phase 12 — optionnel)
+
+Activé par `OB_QUALITY_ENABLED=true`, le bot ne trade plus « tous les Order
+Blocks » mais uniquement les OB de **haute qualité** :
+
+- chaque OB est noté sur 100 (displacement, hauteur de zone, mitigations,
+  fraîcheur, tendance H1, confluences Sweep/CHoCH/FVG, Premium/Discount) puis
+  classé **Grade A/B/C/D** (seuils 85 / 70 / 50) ;
+- seuls les OB dont le grade est >= `OB_MIN_GRADE` (défaut `B`) deviennent des
+  setups ;
+- un signal OB n'est produit qu'après **confirmation M5** : retest de la zone
+  puis bougie de rejet (avec displacement optionnel) ;
+- documentation complète : [`docs/phases/phase12-ob-quality.md`](docs/phases/phase12-ob-quality.md).
+
+Désactivé par défaut : le comportement des phases 1-11 reste inchangé.
+
 ### Autres fonctionnalités
 
 - **Backtesting** — simulation historique avec courbe de capital, Profit Factor, Win Rate, Drawdown, Sharpe Ratio, Expectancy
@@ -66,6 +82,7 @@ Chaque détection est indépendante et peut être activée/désactivée dans la 
 | 9 | API & Dashboard | ✅ Terminé |
 | 10 | IA Assistant | ✅ Terminé |
 | 11 | Notifications | ✅ Terminé |
+| 12 | Qualité des Order Blocks (Grade A/B) + confirmation M5 | ✅ Terminé |
 
 ---
 
@@ -87,7 +104,7 @@ copy .env.example .env
 # Lancer Arty
 arty serve
 # ou
-python -m arty_trading.cli serve
+python -m arty_trading serve
 ```
 
 Ouvrir http://localhost:8000/health
@@ -131,7 +148,7 @@ MT5_PATH=C:\Program Files\MetaTrader 5\terminal64.exe
 ```powershell
 .\run.ps1
 # ou
-python -m arty_trading.cli serve
+python -m arty_trading serve
 ```
 
 Vérifier l'état :
@@ -162,19 +179,53 @@ Le bot enverra alors :
 
 ```
 Arty/
-├── src/arty_trading/
-│   ├── core/              # Entités domaine, interfaces, enums
-│   ├── config/            # Configuration Pydantic
-│   ├── infrastructure/    # MT5, DB, cache, notifications
-│   ├── application/       # Cas d'usage, orchestration
-│   ├── modules/           # Modules métier (SMC, stratégies, etc.)
-│   └── api/               # FastAPI + WebSocket
-├── tests/
-├── docs/
-├── docker/
-├── run.ps1                # Script de lancement Windows
-├── pyproject.toml
-└── docker-compose.yml
+├── src/arty_trading/               # Code applicatif principal
+│   ├── api/                       # FastAPI + WebSocket
+│   ├── application/               # Cas d’usage et orchestration
+│   ├── cli.py                     # Point d’entrée CLI
+│   ├── config/                    # Config Pydantic / environnement
+│   ├── core/                      # Entités, enum, interfaces
+│   ├── infrastructure/            # MT5, persistance, notifications
+│   ├── logging/                   # Logging structuré
+│   ├── modules/                   # SMC, risque, exécution, IA, backtest
+│   ├── utils/                     # Helpers génériques
+│   └── __init__.py
+├── tests/                         # Tests par catégorie
+│   ├── unit/                     # Tests unitaires et de logique
+│   ├── integration/              # Tests de connexion / live / intégration
+│   ├── e2e/                      # Tests de bout en bout
+│   ├── fixtures/                 # Données et fixtures partagées
+│   ├── conftest.py               # Config pytest globale
+│   └── __init__.py
+├── scripts/                       # Scripts utilitaires par rôle
+│   ├── launch/                   # Démarrage bot et backtests
+│   ├── diagnostics/              # Diagnostic moteur et signaux
+│   ├── analysis/                 # Analyse de performance
+│   ├── maintenance/              # Nettoyage et maintenance
+│   └── calibrate_retest_filter.py
+├── docs/                          # Documentation fonctionnelle et technique
+│   ├── architecture.md
+│   ├── installation.md
+│   ├── troubleshooting/
+│   └── phases/
+├── examples/                      # Scripts de démonstration
+├── archive/                       # Fichiers historiques / debug
+│   └── diagnostics/
+├── data/                          # Données persistantes et état du bot
+│   ├── position_states/
+│   ├── backtests/
+│   └── logs/
+├── docker/                        # Fichiers Docker / runtime
+├── .github/                       # CI / intégration continue
+│   └── workflows/
+├── .env.example                   # Modèle de configuration
+├── docker-compose.yml             # Stack containerisée
+├── pyproject.toml                 # Packaging Python
+├── README.md                      # Documentation principale
+├── run.bat                        # Lancement Windows
+├── run.ps1                        # Lancement PowerShell
+├── .gitignore
+└── .pytest_cache/                 # Cache local pytest (à ignorer)
 ```
 
 ---

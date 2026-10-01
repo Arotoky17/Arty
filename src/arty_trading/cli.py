@@ -4,6 +4,7 @@ CLI - Interface en ligne de commande.
 
 import argparse
 import sys
+from collections.abc import Sequence
 
 import uvicorn
 
@@ -13,26 +14,31 @@ from arty_trading.logging import setup_logging, get_logger
 from arty_trading.core.enums import LogCategory
 
 
-def main() -> None:
-    """Point d'entrée CLI."""
+def main(argv: Sequence[str] | None = None) -> int:
+    """Point d'entrée CLI.
+
+    Accepte un tableau d'arguments optionnel pour faciliter les tests et le
+    lancement via ``python -m arty_trading``.
+    """
     parser = argparse.ArgumentParser(
         prog="arty",
         description="Arty - Plateforme de trading Forex (SMC/ICT + IA)",
     )
     subparsers = parser.add_subparsers(dest="command")
 
-    # Commande: serve
     serve_parser = subparsers.add_parser("serve", help="Démarrer l'API FastAPI")
     serve_parser.add_argument("--host", default=None)
     serve_parser.add_argument("--port", type=int, default=None)
 
-    # Commande: info
     subparsers.add_parser("info", help="Afficher la configuration")
-
-    # Commande: version
     subparsers.add_parser("version", help="Afficher la version")
 
-    args = parser.parse_args()
+    args = parser.parse_args(list(argv) if argv is not None else None)
+
+    if args.command is None:
+        parser.print_help()
+        return 1
+
     settings = get_settings()
     setup_logging(level=settings.log_level, logs_dir=settings.logs_dir, app_env=settings.app_env)
 
@@ -43,7 +49,9 @@ def main() -> None:
             port=args.port or settings.api.port,
             reload=settings.api.reload and settings.app_env == "development",
         )
-    elif args.command == "info":
+        return 0
+
+    if args.command == "info":
         logger = get_logger(LogCategory.SYSTEM)
         logger.info("=== Arty ===")
         logger.info("Version: %s", __version__)
@@ -57,12 +65,15 @@ def main() -> None:
         )
         logger.info("Live trading: %s", settings.is_live_trading_enabled)
         logger.info("Trading actif MT5 (demo/live): %s", settings.is_trading_active)
-    elif args.command == "version":
+        return 0
+
+    if args.command == "version":
         print(f"Arty {__version__}")
-    else:
-        parser.print_help()
-        sys.exit(1)
+        return 0
+
+    parser.print_help()
+    return 1
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

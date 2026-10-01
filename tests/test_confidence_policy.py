@@ -1,14 +1,14 @@
-﻿"""
+"""
 Tests de la politique adaptative confiance/RR (Phase Adaptive Confidence).
 
 Couvre les cas obligatoires :
-- confiance < 0.60 â†’ rejet low_confidence
-- 0.60â€“0.69 : acceptÃ© si RR >= 2.0, rejetÃ© si RR < 2.0
-- 0.70â€“0.79 : rejet si RR insuffisant
-- 0.85+ : comportement existant conservÃ©
-- BUY en bearish / SELL en bullish â†’ toujours rejetÃ©s (Master Direction Gate)
-- SL initial / risque par trade inchangÃ©s
-- Final Gate / Risk Manager toujours obligatoires (seuils inchangÃ©s)
+- confiance < 0.60 → rejet low_confidence
+- 0.60–0.69 : accepté si RR >= 2.0, rejeté si RR < 2.0
+- 0.70–0.79 : rejet si RR insuffisant
+- 0.85+ : comportement existant conservé
+- BUY en bearish / SELL en bullish → toujours rejetés (Master Direction Gate)
+- SL initial / risque par trade inchangés
+- Final Gate / Risk Manager toujours obligatoires (seuils inchangés)
 """
 
 from __future__ import annotations
@@ -37,9 +37,9 @@ from arty_trading.modules.strategies.base import BaseStrategy
 # ---------------------------------------------------------------------------
 
 class StubStrategy(BaseStrategy):
-    """StratÃ©gie factice produisant un signal de confiance/RR paramÃ©trÃ©s."""
+    """Stratégie factice produisant un signal de confiance/RR paramétrés."""
 
-    name = "SMC Trend Following"  # doit correspondre Ã  la stratÃ©gie active
+    name = "SMC Trend Following"  # doit correspondre à la stratégie active
 
     def __init__(self, confidence: float, rr: float, direction: Direction = Direction.BUY) -> None:
         super().__init__()
@@ -131,8 +131,8 @@ class TestConfidencePolicy:
 
     def test_085_existing_behavior_preserved(self) -> None:
         d = evaluate_confidence_policy(0.85, 1.0)
-        # Seuil historique franchi : autorisÃ© au niveau politique, les autres
-        # gates (validator, risk manager, final gate RR>=2.0) restent inchangÃ©s.
+        # Seuil historique franchi : autorisé au niveau politique, les autres
+        # gates (validator, risk manager, final gate RR>=2.0) restent inchangés.
         assert d.allowed is True
         assert d.required_rr is None
         assert d.security_level == "STANDARD"
@@ -142,7 +142,7 @@ class TestConfidencePolicy:
             assert evaluate_confidence_policy(conf, 1.0).allowed is False
 
     def test_legacy_threshold_below_085_unchanged(self) -> None:
-        # Seuil configurÃ© plus bas (tests/calibration) : comportement plat conservÃ©.
+        # Seuil configuré plus bas (tests/calibration) : comportement plat conservé.
         assert evaluate_confidence_policy(0.30, 1.0, base_threshold=0.30).allowed is True
         assert evaluate_confidence_policy(0.29, 3.0, base_threshold=0.30).allowed is False
 
@@ -209,7 +209,7 @@ class TestSignalGeneratorAdaptive:
         )
         signal = await gen.generate(make_candles(), [])
         assert signal is not None
-        # SL initial inchangÃ© (entry - 0.01), TP = 2R exactement.
+        # SL initial inchangé (entry - 0.01), TP = 2R exactement.
         assert signal.stop_loss == Decimal("1.0900")
         assert signal.take_profit == Decimal("1.1200")
         assert signal.risk_reward_ratio == pytest.approx(2.0)
@@ -220,7 +220,7 @@ class TestSignalGeneratorAdaptive:
             min_confidence=0.85,
             strategies=[StubStrategy(confidence=0.95, rr=3.0)],
         )
-        # Le stub Ã©met un BUY : bearish doit le rejeter mÃªme Ã  confiance >= 0.85.
+        # Le stub émet un BUY : bearish doit le rejeter même à confiance >= 0.85.
         signal = await gen.generate(make_candles(), [], master_trend="bearish")
         assert signal is None
         assert gen.last_rejection_stage == "master_gate"
@@ -237,13 +237,13 @@ class TestSignalGeneratorAdaptive:
 
 
 # ---------------------------------------------------------------------------
-# Invariants de sÃ©curitÃ© (aucune dÃ©gradation)
+# Invariants de sécurité (aucune dégradation)
 # ---------------------------------------------------------------------------
 
 
 class TestSecurityInvariants:
     def test_final_gate_min_rr_unchanged(self) -> None:
-        # Le Final Gate exige toujours RR >= 2.0 (profil instrument par dÃ©faut),
+        # Le Final Gate exige toujours RR >= 2.0 (profil instrument par défaut),
         # identique au RR requis par la politique adaptative.
         assert InstrumentProfile(symbol="EURUSD").min_risk_reward == 2.0
         assert ADAPTIVE_MIN_RR == 2.0
@@ -261,8 +261,8 @@ class TestSecurityInvariants:
         assert rm._min_rr == pytest.approx(1.0)
 
     def test_existing_position_protections_reused(self) -> None:
-        # Break-even Ã  +1R dÃ©jÃ  prÃ©sent dans le PositionManager existant :
-        # rÃ©utilisÃ© tel quel pour sÃ©curiser les trades 0.60-0.69.
+        # Break-even à +1R déjà présent dans le PositionManager existant :
+        # réutilisé tel quel pour sécuriser les trades 0.60-0.69.
         pos = PositionSettings()
         assert pos.enable_break_even is True
         assert pos.break_even_at_r == pytest.approx(1.0)

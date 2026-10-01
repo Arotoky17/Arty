@@ -67,6 +67,7 @@ class TradeDecisionDebugger:
         self._opportunity_counter: int = 0
         self._diagnostics: list[TradeDecisionDiagnostic] = []
         self._last_diagnostic_by_symbol: dict[str, TradeDecisionDiagnostic] = {}
+        self._active_diagnostic_by_symbol: dict[str, TradeDecisionDiagnostic] = {}
         self._finalized: set[str] = set()
 
         # Compteurs globaux
@@ -151,6 +152,7 @@ class TradeDecisionDebugger:
             direction_candidate=direction,
             candle_time=candle_time,
         )
+        self._active_diagnostic_by_symbol[diagnostic.symbol] = diagnostic
 
         if not self._enabled:
             return diagnostic
@@ -158,6 +160,14 @@ class TradeDecisionDebugger:
         self._opportunities_seen += 1
         self._symbol_stats[diagnostic.symbol]["opportunities_seen"] += 1
         return diagnostic
+
+    def log_ob_rejection(self, payload: dict[str, Any]) -> None:
+        """Journalise un OB rejeté et l'attache au diagnostic actif du symbole."""
+        symbol = str(payload.get("symbol", "")).upper()
+        diagnostic = self._active_diagnostic_by_symbol.get(symbol)
+        if diagnostic is not None and self._enabled:
+            diagnostic.ob_rejections.append(dict(payload))
+        logger.info("OB quality rejected | %s", payload)
 
     def record_step(
         self, diagnostic: TradeDecisionDiagnostic, step: PipelineStep | str
@@ -300,6 +310,8 @@ class TradeDecisionDebugger:
 
         self._diagnostics.append(diagnostic)
         self._last_diagnostic_by_symbol[diagnostic.symbol] = diagnostic
+        if self._active_diagnostic_by_symbol.get(diagnostic.symbol) is diagnostic:
+            del self._active_diagnostic_by_symbol[diagnostic.symbol]
 
         stats = self._symbol_stats[diagnostic.symbol]
 
@@ -474,6 +486,7 @@ class TradeDecisionDebugger:
         self._opportunity_counter = 0
         self._diagnostics.clear()
         self._last_diagnostic_by_symbol.clear()
+        self._active_diagnostic_by_symbol.clear()
         self._finalized.clear()
         self._opportunities_seen = 0
         self._opportunities_rejected = 0

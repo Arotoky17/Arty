@@ -25,6 +25,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from arty_trading.config.settings import OBQualitySettings
 from arty_trading.core.entities import Candle, Signal
 from arty_trading.core.enums import Direction, LogCategory
 from arty_trading.logging.logger import get_logger
@@ -34,6 +35,10 @@ from arty_trading.modules.signals.confidence_policy import (
     evaluate_confidence_policy,
 )
 from arty_trading.modules.signals.validator import SignalValidator, ValidationResult
+from arty_trading.modules.smc.confirmation import M5ConfirmationChecker
+from arty_trading.modules.smc.ob_quality import OBGateDecision, evaluate_setup_ob_gate
+from arty_trading.modules.smc.order_block_quality import OrderBlockQualityScorer
+from arty_trading.modules.smc.order_block_tracker import OrderBlockTracker
 from arty_trading.modules.smc.setup_tracker import SetupTracker
 from arty_trading.modules.strategies.base import BaseStrategy
 from arty_trading.modules.strategies.strategies import (
@@ -80,6 +85,11 @@ class SignalGenerator:
         validator: SignalValidator | None = None,
         decision_engine: DecisionEngine | None = None,
         setup_tracker: SetupTracker | None = None,
+        ob_quality: OBQualitySettings | None = None,
+        ob_scorer: OrderBlockQualityScorer | None = None,
+        ob_tracker: OrderBlockTracker | None = None,
+        m5_confirmation: M5ConfirmationChecker | None = None,
+        use_ob_quality_filter: bool = True,
     ) -> None:
         """
         Initialise le générateur de signaux.
@@ -98,6 +108,14 @@ class SignalGenerator:
             setup_tracker: Tracker de setups SMC (optionnel). Si fourni,
                 le générateur vérifie d'abord les setups prêts avant de
                 demander des signaux aux stratégies.
+            ob_quality: Paramètres de qualité des Order Blocks (Phase 12,
+                optionnel). Si fourni et activé, un setup OB de grade
+                insuffisant ou sans confirmation M5 est écarté.
+            ob_scorer: Scorer utilisé par la stratégie SMC active (optionnel).
+            ob_tracker: Tracker de fraîcheur partagé par la stratégie SMC.
+            m5_confirmation: Vérificateur de structure/rejet M5.
+            use_ob_quality_filter: Active le filtre moderne si ses dépendances
+                sont fournies; ``False`` conserve le parcours historique.
         """
         self._min_confidence = min_confidence
         self._active_strategy = active_strategy
@@ -105,9 +123,15 @@ class SignalGenerator:
         self._validator = validator
         self._decision_engine = decision_engine
         self._setup_tracker = setup_tracker
+        self._ob_quality = ob_quality
+        self._ob_scorer = ob_scorer
+        self._ob_tracker = ob_tracker
+        self._m5_confirmation = m5_confirmation
+        self._use_ob_quality_filter = use_ob_quality_filter
         self._last_validation: ValidationResult | None = None
         self._last_rejection_stage: str | None = None
         self._last_rejection_reason: str | None = None
+        self._last_rejection_details: dict[str, Any] | None = None
         self._last_confidence_policy: ConfidencePolicyDecision | None = None
 
         if strategies is None:
@@ -121,6 +145,15 @@ class SignalGenerator:
             ]
 
         for s in strategies:
+            if isinstance(s, SMCTrendStrategy) and any(
+                component is not None
+                for component in (ob_scorer, ob_tracker, m5_confirmation, ob_quality)
+            ):
+                s.ob_scorer = ob_scorer or s.ob_scorer
+                s.ob_tracker = ob_tracker or s.ob_tracker
+                s.m5_confirmation = m5_confirmation or s.m5_confirmation
+                s.ob_config = ob_quality or s.ob_config
+                s.use_ob_quality_filter = use_ob_quality_filter
             self._strategies[s.name] = s
 
         # Désactiver proprement toutes les stratégies sauf la stratégie active.
@@ -130,13 +163,15 @@ class SignalGenerator:
 
         logger.info(
             "SignalGenerator initialisé | stratégie active=%s | min_confidence=%.2f | "
-            "stratégies=%d | activées=%s | validateur=%s | setup_tracker=%s",
+            "stratégies=%d | activées=%s | validateur=%s | setup_tracker=%s | "
+            "ob_quality=%s",
             self._active_strategy,
             self._min_confidence,
             len(self._strategies),
             self.get_enabled_strategies(),
             "oui" if self._validator is not None else "non",
             "oui" if self._setup_tracker is not None else "non",
+            "actif" if (self._ob_quality is not None and self._ob_quality.enabled) else "inactif",
         )
 
     # -------------------------------------------------------------------------
@@ -173,6 +208,11 @@ class SignalGenerator:
         return self._validator
 
     @property
+    def ob_quality(self) -> OBQualitySettings | None:
+        """Paramètres de qualité des Order Blocks (Phase 12, None si absent)."""
+        return self._ob_quality
+
+    @property
     def last_validation(self) -> ValidationResult | None:
         """Résultat de la dernière validation (None si aucune)."""
         return self._last_validation
@@ -186,6 +226,11 @@ class SignalGenerator:
     def last_rejection_reason(self) -> str | None:
         """Dernière raison de rejet."""
         return self._last_rejection_reason
+
+    @property
+    def last_rejection_details(self) -> dict[str, Any] | None:
+        """Détails exploitables du dernier rejet, notamment grade et score OB."""
+        return self._last_rejection_details
 
     # -------------------------------------------------------------------------
     # Gestion des stratégies
@@ -303,6 +348,7 @@ class SignalGenerator:
 
         self._last_rejection_stage = None
         self._last_rejection_reason = None
+        self._last_rejection_details = None
 
         enabled = self.get_enabled_strategies()
         logger.debug(
@@ -332,9 +378,38 @@ class SignalGenerator:
                     setup.state.value,
                     setup.confidence_estimate,
                 )
-                signal = self._build_signal_from_setup(setup, candles, smc_data)
-                if signal is not None:
-                    signals.append(signal)
+                ob_rejection: OBGateDecision | None
+                if (
+                    self._ob_filter_is_configured()
+                    and getattr(setup, "zone_concept", None) == "order_block"
+                ):
+                    ob_rejection = OBGateDecision(
+                        allowed=False,
+                        reason="ob_setup_requires_strategy_m5_filter",
+                        grade=str(getattr(setup, "metadata", {}).get("ob_grade", "-")),
+                    )
+                else:
+                    ob_rejection = self._reject_setup_by_ob_quality(setup)
+                if ob_rejection is not None:
+                    logger.info(
+                        "[SETUP REJETÉ] qualité OB | %s | setup_id=%s | grade=%s | "
+                        "reason=%s | confiance_estimate=%.2f",
+                        symbol,
+                        setup.setup_id,
+                        ob_rejection.grade or "-",
+                        ob_rejection.reason,
+                        setup.confidence_estimate,
+                    )
+                    self._last_rejection_stage = "ob_quality"
+                    self._last_rejection_reason = ob_rejection.reason
+                    self._last_rejection_details = {
+                        "reason": ob_rejection.reason,
+                        "grade": ob_rejection.grade,
+                    }
+                else:
+                    signal = self._build_signal_from_setup(setup, candles, smc_data)
+                    if signal is not None:
+                        signals.append(signal)
 
         if not signals:
             signals = await self._run_strategies(
@@ -692,17 +767,32 @@ class SignalGenerator:
                 continue
 
             try:
-                signal = await strategy.analyze(
-                    candles,
-                    smc_data,
-                    htf_smc_data=htf_smc_data,
-                    htf_trend=htf_trend,
-                )
+                analyze_kwargs: dict[str, Any] = {
+                    "htf_smc_data": htf_smc_data,
+                    "htf_trend": htf_trend,
+                }
+                if isinstance(strategy, SMCTrendStrategy):
+                    analyze_kwargs["market_context"] = market_context
+                signal = await strategy.analyze(candles, smc_data, **analyze_kwargs)
             except Exception as exc:
                 logger.error("Erreur stratégie %s | %s", name, exc, exc_info=True)
                 continue
 
             if signal is None:
+                if (
+                    isinstance(strategy, SMCTrendStrategy)
+                    and strategy.last_ob_rejection is not None
+                ):
+                    self._last_rejection_stage = "ob_quality"
+                    self._last_rejection_reason = str(
+                        strategy.last_ob_rejection.get("reason", "ob_quality_rejected")
+                    )
+                    self._last_rejection_details = strategy.last_ob_rejection
+                    logger.info(
+                        "Signal REJETÉ (qualité OB) | reason=%s | details=%s",
+                        self._last_rejection_reason,
+                        self._last_rejection_details,
+                    )
                 logger.debug("Aucun signal produit | stratégie=%s", name)
                 continue
 
@@ -784,6 +874,40 @@ class SignalGenerator:
 
         return signals
 
+    def _reject_setup_by_ob_quality(self, setup: Any) -> OBGateDecision | None:
+        """Filtre qualité OB d'un setup prêt (Phase 12).
+
+        Args:
+            setup: Setup candidat (``Setup``).
+
+        Returns:
+            ``None`` si le setup est autorisé (filtre inactif, zone non-OB, ou
+            Grade A/B confirmé M5), sinon la décision de rejet.
+        """
+        settings = self._ob_quality
+        if settings is None or not settings.enabled:
+            return None
+        raw_metadata = getattr(setup, "metadata", None)
+        metadata: dict[str, Any] = raw_metadata if isinstance(raw_metadata, dict) else {}
+        decision = evaluate_setup_ob_gate(
+            metadata,
+            min_grade=settings.min_grade,
+            require_m5_confirmation=settings.require_m5_confirmation,
+        )
+        return None if decision.allowed else decision
+
+    def _ob_filter_is_configured(self) -> bool:
+        """Le filtre moderne est actif uniquement avec ses dépendances complètes."""
+        settings = self._ob_quality
+        return bool(
+            self._use_ob_quality_filter
+            and settings is not None
+            and settings.use_ob_quality_filter
+            and self._ob_scorer is not None
+            and self._ob_tracker is not None
+            and self._m5_confirmation is not None
+        )
+
     def _build_signal_from_setup(
         self,
         setup: Any,
@@ -792,6 +916,7 @@ class SignalGenerator:
     ) -> Signal | None:
         """Construit un signal à partir d'un setup prêt (READY/ENTRY_READY)."""
         from decimal import Decimal
+
         from arty_trading.core.enums import Direction, SignalType, TimeFrame
 
         direction = setup.direction

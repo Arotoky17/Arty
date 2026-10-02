@@ -47,6 +47,7 @@ from arty_trading.modules.smc.order_block_tracker import TrackedOB
 
 logger = get_logger(LogCategory.SMC)
 choch_logger = structlog.get_logger("arty_trading.smc")
+rejection_logger = structlog.get_logger("arty_trading.smc")
 
 #: Fenêtre fractale (bougies de chaque côté) pour valider un swing M5.
 SWING_WINDOW: int = 2
@@ -147,6 +148,19 @@ def _cell(frame: pd.DataFrame, index: int, key: str) -> float | None:
 def _has_ohlc(frame: pd.DataFrame) -> bool:
     """``True`` si le DataFrame contient les colonnes OHLC nécessaires."""
     return set(frame.columns) >= {"open", "high", "low", "close"}
+
+
+def _ob_zone(ob: TrackedOB) -> tuple[float, float] | None:
+    """Resolve the OB zone, falling back to its own open/close body."""
+    low = _to_float(getattr(ob, "low", None))
+    high = _to_float(getattr(ob, "high", None))
+    if low is None or high is None:
+        open_price = _to_float(getattr(ob, "open", None))
+        close = _to_float(getattr(ob, "close", None))
+        if open_price is None or close is None:
+            return None
+        low, high = min(open_price, close), max(open_price, close)
+    return (low, high) if low <= high else None
 
 
 def _frame_timestamps(frame: pd.DataFrame) -> pd.Series | None:
@@ -343,17 +357,20 @@ class M5ConfirmationChecker:
             reference_timestamp = pd.Timestamp(ob.created_at)
         reference = _timestamp(reference_timestamp)
         direction = _normalize_direction(ob.direction)
+        zone = _ob_zone(ob)
         details: dict[str, Any] = {
             "ob_id": ob.ob_id,
             "symbol": ob.symbol,
             "direction": ob.direction,
-            "zone_low": ob.low,
-            "zone_high": ob.high,
+            "zone_low": zone[0] if zone is not None else None,
+            "zone_high": zone[1] if zone is not None else None,
             "required": [criterion.value for criterion in self.required_criteria],
         }
 
         if direction is None:
             return self._reject(details, "invalid_direction")
+        if zone is None:
+            return self._reject(details, "invalid_ob_zone")
         if m5_candles_after_ob is None or m5_candles_after_ob.empty:
             return self._reject(details, "no_m5_candles")
         if not _has_ohlc(m5_candles_after_ob):
@@ -455,10 +472,14 @@ class M5ConfirmationChecker:
     @staticmethod
     def _find_contact_index(frame: pd.DataFrame, ob: TrackedOB) -> int | None:
         """Retourne la première bougie qui chevauche la zone de l'OB."""
+        zone = _ob_zone(ob)
+        if zone is None:
+            return None
+        ob_low, ob_high = zone
         for index in range(len(frame)):
             low = _cell(frame, index, "low")
             high = _cell(frame, index, "high")
-            if low is not None and high is not None and low <= ob.high and high >= ob.low:
+            if low is not None and high is not None and low <= ob_high and high >= ob_low:
                 return index
         return None
 
@@ -557,7 +578,6 @@ class M5ConfirmationChecker:
         contact_index: int,
     ) -> tuple[bool, dict[str, Any]]:
         """Vérifie que la dernière bougie rejette la zone contre l'entrée."""
-        del ob
         candle_index = len(frame) - 1
         if candle_index < contact_index:
             return False, {"reason": "no_candle_after_contact"}
@@ -571,6 +591,16 @@ class M5ConfirmationChecker:
 
         assert open_price is not None and high is not None
         assert low is not None and close is not None
+        zone = _ob_zone(ob)
+        if zone is None:
+            return False, {"reason": "invalid_ob_zone"}
+        ob_low, ob_high = zone
+        if low > ob_high or high < ob_low:
+            rejection_logger.debug(
+                "m5_rejection_ignored", reason="no_contact_with_ob", ob_id=ob.ob_id
+            )
+            return False, {"reason": "no_contact_with_ob"}
+
         body = abs(close - open_price)
         if direction == "bullish":
             wick = min(open_price, close) - low

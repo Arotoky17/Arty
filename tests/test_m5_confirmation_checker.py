@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from types import SimpleNamespace
+from typing import cast
 from unittest.mock import patch
 
 import pandas as pd
@@ -119,6 +121,106 @@ def test_rejection_candle_confirmation() -> None:
 
     assert result.confirmed is True
     assert result.type is M5ConfirmationType.REJECTION_CANDLE
+
+
+def rejection_check(
+    candidate: tuple[float, float, float, float],
+    ob: TrackedOB | None = None,
+) -> ConfirmationResult:
+    candles = frame([(99.5, 100.2, 98.9, 99.2)] * 4 + [candidate])
+    checker = M5ConfirmationChecker(False, False, True)
+    selected_ob = ob if ob is not None else make_ob()
+    return checker.check(
+        selected_ob,
+        candles,
+        {},
+        reference_timestamp=pd.Timestamp(selected_ob.created_at),
+    )
+
+
+@pytest.mark.parametrize(
+    ("direction", "candidate"),
+    [
+        ("bullish", (110.4, 110.9, 109.8, 110.7)),
+        ("bearish", (110.7, 111.4, 110.3, 110.4)),
+        ("bullish", (90.4, 90.9, 89.8, 90.7)),
+        ("bearish", (90.7, 91.4, 90.3, 90.4)),
+    ],
+)
+def test_rejection_rejects_candle_far_from_ob(
+    direction: str,
+    candidate: tuple[float, float, float, float],
+) -> None:
+    result = rejection_check(candidate, make_ob(direction))
+    assert not result.confirmed
+    assert result.details["rejection_candle"] == {"reason": "no_contact_with_ob"}
+
+
+@pytest.mark.parametrize("low", [98.8, 100.0])
+def test_rejection_accepts_candle_touching_ob_bullish(low: float) -> None:
+    result = rejection_check((100.6, 101.0, low, 100.9))
+    assert result.confirmed
+    assert result.type is M5ConfirmationType.REJECTION_CANDLE
+    assert result.details["rejection_candle"]["wick_body_ratio"] == pytest.approx(
+        (100.6 - low) / 0.3
+    )
+
+
+@pytest.mark.parametrize("high", [100.2, 99.0])
+def test_rejection_accepts_candle_touching_ob_bearish(high: float) -> None:
+    result = rejection_check((98.4, high, 98.0, 98.1), make_ob("bearish"))
+    assert result.confirmed
+    assert result.type is M5ConfirmationType.REJECTION_CANDLE
+    assert result.details["rejection_candle"]["wick_body_ratio"] == pytest.approx(
+        (high - 98.4) / 0.3
+    )
+
+
+def test_rejection_logs_debug_on_no_contact() -> None:
+    with patch("arty_trading.modules.smc.confirmation.rejection_logger") as logger:
+        result = rejection_check((110.4, 110.9, 109.8, 110.7))
+    assert not result.confirmed
+    logger.debug.assert_called_once_with(
+        "m5_rejection_ignored", reason="no_contact_with_ob", ob_id="ob-test"
+    )
+
+
+@pytest.mark.parametrize("missing_bounds", [{}, {"low": None, "high": None}, {"low": 99.0}])
+@pytest.mark.parametrize(("open_price", "close"), [(100.0, 99.0), (99.0, 100.0)])
+def test_rejection_falls_back_to_ob_body(
+    missing_bounds: dict[str, float | None],
+    open_price: float,
+    close: float,
+) -> None:
+    ob = cast(
+        TrackedOB,
+        SimpleNamespace(
+            ob_id="ob-body",
+            symbol="XAUUSD",
+            direction="bullish",
+            created_at=make_ob().created_at,
+            open=open_price,
+            close=close,
+            **missing_bounds,
+        ),
+    )
+    assert rejection_check((99.4, 99.9, 98.8, 99.7), ob).confirmed
+    assert not rejection_check((110.4, 110.9, 109.8, 110.7), ob).confirmed
+
+
+def test_rejection_rejects_ob_without_bounds_or_body() -> None:
+    ob = cast(
+        TrackedOB,
+        SimpleNamespace(
+            ob_id="ob-invalid",
+            symbol="XAUUSD",
+            direction="bullish",
+            created_at=make_ob().created_at,
+        ),
+    )
+    result = rejection_check((99.4, 99.9, 98.8, 99.7), ob)
+    assert not result.confirmed
+    assert result.details["reason"] == "invalid_ob_zone"
 
 
 def test_contact_candle_can_confirm_rejection() -> None:
@@ -317,10 +419,10 @@ def test_structure_detector_dates_all_events_at_break_candle() -> None:
             symbol="XAUUSD",
             timeframe=TimeFrame.M5,
             time=start + timedelta(minutes=5 * i),
-            open=100,
-            high=103,
-            low=97,
-            close=close,
+            open=Decimal("100"),
+            high=Decimal("103"),
+            low=Decimal("97"),
+            close=Decimal(close),
         )
         for i, close in enumerate([100, 100, 100, 102, 98, 100])
     ]

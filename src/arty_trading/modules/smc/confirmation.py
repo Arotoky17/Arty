@@ -265,7 +265,8 @@ class M5ConfirmationChecker:
         require_choch: Exiger un CHoCH M5 (défaut False).
         require_rejection_candle: Exiger une bougie de rejet M5 (défaut True).
         swing_window: Bougies de chaque côté requises pour valider un swing.
-        min_candles_after_ob: Nombre minimal de bougies M5 après l'OB (défaut 3).
+        min_candles_after_ob: Minimum de bougies M5 pour MICRO_BOS ou CHOCH
+            (défaut 3). Le rejet seul nécessite une seule bougie.
 
     Note:
         Si aucun critère n'est requis, ``check()`` retourne ``confirmed=False``
@@ -367,25 +368,26 @@ class M5ConfirmationChecker:
             "required": [criterion.value for criterion in self.required_criteria],
         }
 
+        if m5_candles_after_ob is None or m5_candles_after_ob.empty:
+            return self._reject(details, "no_candles")
         if direction is None:
             return self._reject(details, "invalid_direction")
         if zone is None:
             return self._reject(details, "invalid_ob_zone")
-        if m5_candles_after_ob is None or m5_candles_after_ob.empty:
-            return self._reject(details, "no_m5_candles")
         if not _has_ohlc(m5_candles_after_ob):
             return self._reject(details, "missing_ohlc_columns")
         if not self.required_criteria:
             return self._reject(details, "no_required_criterion")
 
         candle_count = len(m5_candles_after_ob)
-        if candle_count < self.min_candles_after_ob:
+        needs_swings = self._require_micro_bos or self._require_choch
+        if needs_swings and candle_count < self.min_candles_after_ob:
             details["have"] = candle_count
             details["need"] = self.min_candles_after_ob
             return self._reject(details, "insufficient_candles")
 
         swing_candle_count = 2 * self.swing_window + 1
-        if candle_count < swing_candle_count:
+        if needs_swings and candle_count < swing_candle_count:
             details["have"] = candle_count
             details["need"] = swing_candle_count
             return self._reject(details, "insufficient_candles_for_swing")
@@ -407,7 +409,9 @@ class M5ConfirmationChecker:
         if not frame.index.is_unique or not frame.index.is_monotonic_increasing:
             return self._reject(details, "unordered_or_duplicate_candle_timestamps")
         frame = frame.loc[frame.index > reference]
-        if len(frame) < max(self.min_candles_after_ob, swing_candle_count):
+        if frame.empty:
+            return self._reject(details, "no_candles")
+        if needs_swings and len(frame) < max(self.min_candles_after_ob, swing_candle_count):
             return self._reject(details, "insufficient_post_ob_candles")
         contact_index = self._find_contact_index(frame, ob)
         if contact_index is None:

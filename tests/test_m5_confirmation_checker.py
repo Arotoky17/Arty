@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from itertools import product
 from types import SimpleNamespace
 from typing import cast
 from unittest.mock import patch
@@ -272,6 +273,112 @@ def test_rejects_when_swing_warmup_is_not_met() -> None:
     assert result.details["reason"] == "insufficient_candles_for_swing"
     assert result.details["have"] == 3
     assert result.details["need"] == 5
+
+
+@pytest.mark.parametrize("count", [1, 2, 3, 4])
+def test_rejection_only_config_not_blocked_by_min_candles(count: int) -> None:
+    candles = frame([(99.4, 99.9, 98.8, 99.7)] * count)
+    checker = M5ConfirmationChecker(False, False, True, swing_window=10, min_candles_after_ob=20)
+    result = checker.check(
+        make_ob(), candles, {}, reference_timestamp=pd.Timestamp(make_ob().created_at)
+    )
+    assert result.confirmed
+    assert result.type is M5ConfirmationType.REJECTION_CANDLE
+
+
+@pytest.mark.parametrize(
+    ("count", "reason", "need"),
+    [(1, "insufficient_candles", 3), (3, "insufficient_candles_for_swing", 5)],
+)
+def test_micro_bos_config_still_blocked_if_insufficient(
+    count: int,
+    reason: str,
+    need: int,
+) -> None:
+    candles = frame([(99.4, 99.9, 98.8, 99.7)] * count)
+    result = M5ConfirmationChecker(True, False, True).check(
+        make_ob(), candles, {}, reference_timestamp=pd.Timestamp(make_ob().created_at)
+    )
+    assert not result.confirmed
+    assert result.details["reason"] == reason
+    assert result.details["have"] == count
+    assert result.details["need"] == need
+
+
+@pytest.mark.parametrize(
+    ("count", "reason", "need"),
+    [(1, "insufficient_candles", 3), (3, "insufficient_candles_for_swing", 5)],
+)
+def test_choch_config_still_blocked_if_insufficient(
+    count: int,
+    reason: str,
+    need: int,
+) -> None:
+    candles = frame([(99.4, 99.9, 98.8, 99.7)] * count)
+    result = M5ConfirmationChecker(False, True, True).check(
+        make_ob(), candles, {}, reference_timestamp=pd.Timestamp(make_ob().created_at)
+    )
+    assert not result.confirmed
+    assert result.details["reason"] == reason
+    assert result.details["have"] == count
+    assert result.details["need"] == need
+
+
+@pytest.mark.parametrize(
+    ("micro_bos", "choch", "rejection"), tuple(product([False, True], repeat=3))
+)
+def test_zero_candles_always_rejected(micro_bos: bool, choch: bool, rejection: bool) -> None:
+    result = M5ConfirmationChecker(micro_bos, choch, rejection).check(
+        make_ob(), frame([]), {}, reference_timestamp=pd.Timestamp(make_ob().created_at)
+    )
+    assert not result.confirmed
+    assert result.details["reason"] == "no_candles"
+
+
+@pytest.mark.parametrize(
+    ("direction", "candidate"),
+    [("bullish", (99.4, 99.9, 98.8, 99.7)), ("bearish", (99.7, 100.4, 99.3, 99.4))],
+)
+def test_one_candle_with_rejection_only_is_allowed(
+    direction: str,
+    candidate: tuple[float, float, float, float],
+) -> None:
+    result = M5ConfirmationChecker(False, False, True).check(
+        make_ob(direction),
+        frame([candidate]),
+        {},
+        reference_timestamp=pd.Timestamp(make_ob().created_at),
+    )
+    assert result.confirmed
+    assert result.type is M5ConfirmationType.REJECTION_CANDLE
+
+
+def test_rejection_only_counts_candles_after_timestamp_filtering() -> None:
+    candles = frame([(99.4, 99.9, 98.8, 99.7)] * 6)
+    result = M5ConfirmationChecker(False, False, True).check(
+        make_ob(), candles, {}, reference_timestamp=candles.index[-2]
+    )
+    assert result.confirmed
+
+
+@pytest.mark.parametrize(("micro_bos", "choch"), [(False, False), (True, False), (False, True)])
+def test_no_post_ob_candles_are_rejected(micro_bos: bool, choch: bool) -> None:
+    candles = frame([(99.4, 99.9, 98.8, 99.7)] * 6)
+    result = M5ConfirmationChecker(micro_bos, choch, True).check(
+        make_ob(), candles, {}, reference_timestamp=candles.index[-1]
+    )
+    assert not result.confirmed
+    assert result.details["reason"] == "no_candles"
+
+
+@pytest.mark.parametrize(("micro_bos", "choch"), [(True, False), (False, True)])
+def test_swing_guards_apply_after_timestamp_filtering(micro_bos: bool, choch: bool) -> None:
+    candles = frame([(99.4, 99.9, 98.8, 99.7)] * 6)
+    result = M5ConfirmationChecker(micro_bos, choch, True).check(
+        make_ob(), candles, {}, reference_timestamp=candles.index[-2]
+    )
+    assert not result.confirmed
+    assert result.details["reason"] == "insufficient_post_ob_candles"
 
 
 def choch_check(timestamp: object, *, include_timestamp: bool = True) -> ConfirmationResult:

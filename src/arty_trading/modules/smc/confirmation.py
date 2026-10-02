@@ -39,12 +39,14 @@ from enum import Enum
 from typing import Any
 
 import pandas as pd
+import structlog
 
 from arty_trading.core.enums import LogCategory
 from arty_trading.logging.logger import get_logger
 from arty_trading.modules.smc.order_block_tracker import TrackedOB
 
 logger = get_logger(LogCategory.SMC)
+choch_logger = structlog.get_logger("arty_trading.smc")
 
 #: Fenêtre fractale (bougies de chaque côté) pour valider un swing M5.
 SWING_WINDOW: int = 2
@@ -506,7 +508,6 @@ class M5ConfirmationChecker:
         structure: dict[str, Any],
     ) -> tuple[bool, dict[str, Any]]:
         """Accepte uniquement un CHoCH orienté comme le trade, après contact."""
-        del ob
         time_column = _frame_timestamps(frame)
         for event in _iter_structure_items(structure):
             concept = str(
@@ -518,6 +519,14 @@ class M5ConfirmationChecker:
                 event.get("direction", event.get("bias"))
             )
             event_index = _event_index(event, frame, time_column)
+            if event_index is not None and not 0 <= event_index < len(frame):
+                choch_logger.warning(
+                    "choch_index_out_of_bounds",
+                    index=event_index,
+                    available=len(frame),
+                    ob_id=event.get("ob_id") or ob.ob_id,
+                )
+                continue
             if (
                 event_direction != direction
                 or event_index is None

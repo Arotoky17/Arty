@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from unittest.mock import patch
 
 import pandas as pd
+import pytest
 
 from arty_trading.modules.smc.confirmation import (
+    ConfirmationResult,
     M5ConfirmationChecker,
     M5ConfirmationType,
 )
@@ -149,3 +152,63 @@ def test_rejects_when_swing_warmup_is_not_met() -> None:
     assert result.details["reason"] == "insufficient_candles_for_swing"
     assert result.details["have"] == 3
     assert result.details["need"] == 5
+
+
+def choch_check(indices: list[int]) -> ConfirmationResult:
+    checker = M5ConfirmationChecker(
+        require_micro_bos=False, require_choch=True, require_rejection_candle=False
+    )
+    candles = frame([(99.5, 100.2, 98.9, 99.2)] * 10)
+    return checker.check(
+        make_ob(), candles,
+        {"events": [{"concept": "choch", "direction": "bullish", "index": index}
+                    for index in indices]},
+    )
+
+
+@pytest.mark.parametrize("index", [10, 999])
+def test_choch_ignores_index_out_of_bounds(index: int) -> None:
+    result = choch_check([index])
+    assert not result.confirmed
+    assert result.type is None
+
+
+def test_choch_ignores_negative_index() -> None:
+    assert not choch_check([-1]).confirmed
+
+
+@pytest.mark.parametrize("index", [5, 9])
+def test_choch_accepts_valid_index(index: int) -> None:
+    with patch("arty_trading.modules.smc.confirmation.choch_logger") as logger:
+        result = choch_check([index])
+    assert result.confirmed
+    assert result.type is M5ConfirmationType.CHOCH
+    assert result.details["choch"]["event_index"] == index
+    logger.warning.assert_not_called()
+
+
+@pytest.mark.parametrize("index", [-1, 10, 999])
+def test_choch_logs_warning_on_out_of_bounds(index: int) -> None:
+    with patch("arty_trading.modules.smc.confirmation.choch_logger") as logger:
+        choch_check([index])
+    logger.warning.assert_called_once_with(
+        "choch_index_out_of_bounds", index=index, available=10, ob_id="ob-test"
+    )
+
+
+@pytest.mark.parametrize("index", [-1, 10, 999])
+def test_choch_continues_after_one_invalid_event(index: int) -> None:
+    result = choch_check([index, 5])
+    assert result.confirmed
+    assert result.details["choch"]["event_index"] == 5
+
+
+def test_choch_warning_uses_event_ob_id() -> None:
+    checker = M5ConfirmationChecker(
+        require_micro_bos=False, require_choch=True, require_rejection_candle=False
+    )
+    with patch("arty_trading.modules.smc.confirmation.choch_logger") as logger:
+        checker.check(make_ob(), frame([(99.5, 100.2, 98.9, 99.2)] * 10),
+                      {"events": [{"concept": "choch", "direction": "bullish",
+                                   "index": 999, "ob_id": "event-ob"}]})
+    assert logger.warning.call_args.kwargs["ob_id"] == "event-ob"

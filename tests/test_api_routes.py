@@ -1,14 +1,39 @@
 """Tests des routes API Phase 9 — SMC, Signaux, Risque, Exécution, Backtesting."""
 
+from decimal import Decimal
+from types import SimpleNamespace
+from unittest.mock import AsyncMock
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 
 from arty_trading.api.main import create_app
+from arty_trading.core.entities import Trade
+from arty_trading.core.enums import Direction
 
 
 @pytest.fixture
 def app():
-    return create_app()
+    application = create_app()
+    trade = Trade(
+        symbol="XAUUSD",
+        direction=Direction.BUY,
+        entry_price=Decimal("1.08"),
+        stop_loss=Decimal("1.078"),
+        take_profit=Decimal("1.084"),
+        volume=Decimal("0.1"),
+        ticket=12345,
+    )
+    application.state.executor = AsyncMock(
+        open_order=AsyncMock(return_value=trade),
+        get_open_positions=AsyncMock(return_value=[trade]),
+        close_order=AsyncMock(return_value=trade.model_copy(update={"is_open": False})),
+        modify_order=AsyncMock(return_value=trade),
+    )
+    application.state.market_data = SimpleNamespace(
+        get_tick=AsyncMock(return_value={"bid": 1.0799, "ask": 1.08})
+    )
+    return application
 
 
 @pytest.fixture
@@ -230,6 +255,7 @@ class TestExecutionRoutes:
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
+        assert data["ticket"] == 12345
 
     @pytest.mark.asyncio
     async def test_close_trade(self, client):

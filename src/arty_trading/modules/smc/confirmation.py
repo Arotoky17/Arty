@@ -41,6 +41,7 @@ from typing import Any
 import pandas as pd
 import structlog
 
+from arty_trading.config.operational import definitions
 from arty_trading.core.enums import LogCategory
 from arty_trading.logging.logger import get_logger
 from arty_trading.modules.smc.order_block_tracker import TrackedOB
@@ -50,10 +51,10 @@ choch_logger = structlog.get_logger("arty_trading.smc")
 rejection_logger = structlog.get_logger("arty_trading.smc")
 
 #: Fenêtre fractale (bougies de chaque côté) pour valider un swing M5.
-SWING_WINDOW: int = 2
+SWING_WINDOW: int = definitions()["swing"]["window"]
 
 #: Ratio mèche / corps minimal pour considérer une bougie comme un rejet.
-REJECTION_WICK_BODY_RATIO: float = 1.5
+REJECTION_WICK_BODY_RATIO: float = definitions()["confirmation"]["rejection_wick_body_ratio"]
 
 #: Clés de ``m5_structure`` dans lesquelles chercher des évènements de structure.
 STRUCTURE_KEYS: tuple[str, ...] = (

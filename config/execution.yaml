@@ -1,0 +1,27 @@
+cost:
+  # Illustrative values: calibrate on broker bid/ask before preregistration.
+  spread_pips: 1.0
+  hourly_spread_pips: {0: 2.0, 23: 2.0}
+  slippage_pips: 0.2
+  commission_per_lot_side: 3.5
+  session_hours_utc:
+    asia: [0, 1, 2, 3, 4, 5, 6]
+    london: [7, 8, 9, 10, 11]
+    overlap: [12, 13, 14, 15]
+    new_york: [16, 17, 18, 19, 20]
+    rollover: [21, 22, 23]
+  session_spread_pips: {asia: 1.3, london: 0.8, overlap: 0.7, new_york: 1.0, rollover: 2.5}
+  major_news_types: [NFP, FOMC, CPI]
+  news_spread_multiplier: 1.5
+  news_before_minutes: 15
+  news_after_minutes: 15
+  # Primary-source UTC release dates; future scheduled news is labelled in the CSV.
+  news_calendar_path: news_calendar.csv
+  news_events: []
+  sensitivity_multipliers: [1.0, 1.5, 2.0]
+fill:
+  mode: crossed
+  crossing_pips: 0.1
+  probability: 1.0
+  seed: 0
+  expiry_bars: 10

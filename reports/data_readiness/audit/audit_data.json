@@ -1,0 +1,512 @@
+{
+  "generated_at": "2026-10-02T18:29:35.325079+00:00",
+  "symbol": "XAUUSD",
+  "mode": "read_only_market_data_audit_no_pnl",
+  "config": {
+    "timestamp_unit": "ms",
+    "source_bar_minutes": 1,
+    "timeframes": {
+      "M5": 5,
+      "H1": 60,
+      "H4": 240
+    },
+    "max_return_fraction": 0.02,
+    "max_range_fraction": 0.02,
+    "spike_atr_multiple": 20.0,
+    "exclude_unchanged_flats_from_atr": true,
+    "lookahead_probes": 12,
+    "expected_start": "2020-01-01T00:00:00+00:00",
+    "expected_end": "2026-10-02T18:19:00+00:00",
+    "example_limit": 10,
+    "tick_rolling_window": 200,
+    "tick_spike_multiple": 20.0,
+    "tick_max_gap_seconds": 300
+  },
+  "provenance": {
+    "files": [
+      {
+        "path": "data\\historical\\xauusd\\bid\\m1\\xauusd_bid_m1_2024_01.csv",
+        "sha256": "7414d1cf6a02cf4fff5347e79602e9109549622cb73b152e5462188cc797135d"
+      },
+      {
+        "path": "data\\historical\\xauusd\\bid\\m1\\xauusd_bid_m1_2024_02.csv",
+        "sha256": "45060c59ccfc0ef3d5f78b49d793b7e3f97757a7659c604b887850068346621f"
+      },
+      {
+        "path": "data\\historical\\xauusd\\bid\\m1\\xauusd_bid_m1_2024_03.csv",
+        "sha256": "28c82e54e1bd7f586f5d22c0c39d9217618f62e8dfdd7eab94602c2c2bb81a14"
+      },
+      {
+        "path": "data\\historical\\xauusd\\bid\\m1\\xauusd_bid_m1_2024_04.csv",
+        "sha256": "ce55b0d9acdf20c694c37e3c53233455cc8b772269eb39f60357808abe37b9c9"
+      },
+      {
+        "path": "data\\historical\\xauusd\\bid\\m1\\xauusd_bid_m1_2024_05.csv",
+        "sha256": "18084ecf8e9d5cef352cc290a55de29f27f006653b5da24a6520f8a02488f4f6"
+      },
+      {
+        "path": "data\\historical\\xauusd\\bid\\m1\\xauusd_bid_m1_2024_06.csv",
+        "sha256": "f7cad6452e9666b37f6f7830bb69a61439095919bb1609daa80839fdb3a8fd39"
+      },
+      {
+        "path": "data\\historical\\xauusd\\ask\\m1\\xauusd_ask_m1_2024_01.csv",
+        "sha256": "a4ac5385c164b40a5760890279455228f64646180ea04bb6e45e633cafc024ae"
+      },
+      {
+        "path": "data\\historical\\xauusd\\ask\\m1\\xauusd_ask_m1_2024_02.csv",
+        "sha256": "40706a4ec8abb07c6fe13e4c4562f7d07485c104226e42d36c57e06d36c1c167"
+      },
+      {
+        "path": "data\\historical\\xauusd\\ask\\m1\\xauusd_ask_m1_2024_03.csv",
+        "sha256": "12ee5b98105d955b18b7a496120998f5f6647987cd16f706c94da6bd7541eb91"
+      },
+      {
+        "path": "data\\historical\\xauusd\\ask\\m1\\xauusd_ask_m1_2024_04.csv",
+        "sha256": "ef4001235ec800174d32459174e2235d7cdaf9f67662108c78a962d1d4cb43c6"
+      },
+      {
+        "path": "data\\historical\\xauusd\\ask\\m1\\xauusd_ask_m1_2024_05.csv",
+        "sha256": "54ffe9267ce4be51e68746c20eb0a3d5d77f46b0fc71c34af7eb8884d0af6588"
+      },
+      {
+        "path": "data\\historical\\xauusd\\ask\\m1\\xauusd_ask_m1_2024_06.csv",
+        "sha256": "ec13944e0fa902394e6a48baf8e142696c3b1486d229d50603f5464085073c56"
+      }
+    ],
+    "manifest_checks": [
+      {
+        "file": "xauusd_bid_m1_2024_01.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_bid_m1_2024_02.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_bid_m1_2024_03.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_bid_m1_2024_04.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_bid_m1_2024_05.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_bid_m1_2024_06.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_ask_m1_2024_01.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_ask_m1_2024_02.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_ask_m1_2024_03.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_ask_m1_2024_04.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_ask_m1_2024_05.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_ask_m1_2024_06.csv",
+        "matches": true
+      }
+    ],
+    "timestamp_provenance": "Unix milliseconds interpreted as UTC; source offset unverified"
+  },
+  "sides": {
+    "bid": {
+      "rows": 262080,
+      "invalid_timestamps": 0,
+      "non_numeric_timestamp_rows": 0,
+      "non_utc_offsets": 0,
+      "naive_datetime_strings": 0,
+      "timestamp_contract": "Unix milliseconds / UTC; source clock cannot be proven from epochs alone",
+      "tick_scope": "M1 OHLC proxies only; individual ticks are unavailable",
+      "months": {
+        "2024-01": {
+          "rows": 44640,
+          "duplicates": 0,
+          "unordered_rows": 0,
+          "invalid_ohlc": 0,
+          "missing_minutes": 0,
+          "missing_weekday_minutes": 0,
+          "missing_weekend_minutes": 0,
+          "weekend_rows": 11520,
+          "unchanged_flat_rows": 14379,
+          "weekend_flat_rows": 11280,
+          "outlier_m1_bars": 1,
+          "legacy_outlier_m1_bars": 22,
+          "padding_atr_false_positives": 21,
+          "outside_expected_dates": 0,
+          "outlier_examples": [
+            "2024-01-28T23:00:00+00:00"
+          ],
+          "gap_examples": [],
+          "interpretation": "Gaps/weekend quotes require exchange-calendar review; no raw corrections"
+        },
+        "2024-02": {
+          "rows": 41760,
+          "duplicates": 0,
+          "unordered_rows": 0,
+          "invalid_ohlc": 0,
+          "missing_minutes": 0,
+          "missing_weekday_minutes": 0,
+          "missing_weekend_minutes": 0,
+          "weekend_rows": 11520,
+          "unchanged_flat_rows": 12970,
+          "weekend_flat_rows": 11292,
+          "outlier_m1_bars": 1,
+          "legacy_outlier_m1_bars": 22,
+          "padding_atr_false_positives": 21,
+          "outside_expected_dates": 0,
+          "outlier_examples": [
+            "2024-02-13T13:30:00+00:00"
+          ],
+          "gap_examples": [],
+          "interpretation": "Gaps/weekend quotes require exchange-calendar review; no raw corrections"
+        },
+        "2024-03": {
+          "rows": 44640,
+          "duplicates": 0,
+          "unordered_rows": 0,
+          "invalid_ohlc": 0,
+          "missing_minutes": 0,
+          "missing_weekday_minutes": 0,
+          "missing_weekend_minutes": 0,
+          "weekend_rows": 14400,
+          "unchanged_flat_rows": 17006,
+          "weekend_flat_rows": 13860,
+          "outlier_m1_bars": 2,
+          "legacy_outlier_m1_bars": 23,
+          "padding_atr_false_positives": 21,
+          "outside_expected_dates": 0,
+          "outlier_examples": [
+            "2024-03-20T22:16:00+00:00",
+            "2024-03-28T20:49:00+00:00"
+          ],
+          "gap_examples": [],
+          "interpretation": "Gaps/weekend quotes require exchange-calendar review; no raw corrections"
+        },
+        "2024-04": {
+          "rows": 43200,
+          "duplicates": 0,
+          "unordered_rows": 0,
+          "invalid_ohlc": 0,
+          "missing_minutes": 0,
+          "missing_weekday_minutes": 0,
+          "missing_weekend_minutes": 0,
+          "weekend_rows": 11520,
+          "unchanged_flat_rows": 12841,
+          "weekend_flat_rows": 11040,
+          "outlier_m1_bars": 2,
+          "legacy_outlier_m1_bars": 23,
+          "padding_atr_false_positives": 21,
+          "outside_expected_dates": 0,
+          "outlier_examples": [
+            "2024-04-14T22:00:00+00:00",
+            "2024-04-17T20:50:00+00:00"
+          ],
+          "gap_examples": [],
+          "interpretation": "Gaps/weekend quotes require exchange-calendar review; no raw corrections"
+        },
+        "2024-05": {
+          "rows": 44640,
+          "duplicates": 0,
+          "unordered_rows": 0,
+          "invalid_ohlc": 0,
+          "missing_minutes": 0,
+          "missing_weekday_minutes": 0,
+          "missing_weekend_minutes": 0,
+          "weekend_rows": 11520,
+          "unchanged_flat_rows": 13178,
+          "weekend_flat_rows": 11040,
+          "outlier_m1_bars": 1,
+          "legacy_outlier_m1_bars": 24,
+          "padding_atr_false_positives": 23,
+          "outside_expected_dates": 0,
+          "outlier_examples": [
+            "2024-05-03T12:30:00+00:00"
+          ],
+          "gap_examples": [],
+          "interpretation": "Gaps/weekend quotes require exchange-calendar review; no raw corrections"
+        },
+        "2024-06": {
+          "rows": 43200,
+          "duplicates": 0,
+          "unordered_rows": 0,
+          "invalid_ohlc": 0,
+          "missing_minutes": 0,
+          "missing_weekday_minutes": 0,
+          "missing_weekend_minutes": 0,
+          "weekend_rows": 14400,
+          "unchanged_flat_rows": 15641,
+          "weekend_flat_rows": 13801,
+          "outlier_m1_bars": 0,
+          "legacy_outlier_m1_bars": 21,
+          "padding_atr_false_positives": 21,
+          "outside_expected_dates": 0,
+          "outlier_examples": [],
+          "gap_examples": [],
+          "interpretation": "Gaps/weekend quotes require exchange-calendar review; no raw corrections"
+        }
+      },
+      "resampling": {
+        "status": "passed",
+        "probes": 36,
+        "failures": [],
+        "contract": "open + timeframe <= decision_time",
+        "scope": "shared production resampler; sampled prefix invariance, unit boundary tests"
+      }
+    },
+    "ask": {
+      "rows": 262080,
+      "invalid_timestamps": 0,
+      "non_numeric_timestamp_rows": 0,
+      "non_utc_offsets": 0,
+      "naive_datetime_strings": 0,
+      "timestamp_contract": "Unix milliseconds / UTC; source clock cannot be proven from epochs alone",
+      "tick_scope": "M1 OHLC proxies only; individual ticks are unavailable",
+      "months": {
+        "2024-01": {
+          "rows": 44640,
+          "duplicates": 0,
+          "unordered_rows": 0,
+          "invalid_ohlc": 0,
+          "missing_minutes": 0,
+          "missing_weekday_minutes": 0,
+          "missing_weekend_minutes": 0,
+          "weekend_rows": 11520,
+          "unchanged_flat_rows": 14378,
+          "weekend_flat_rows": 11280,
+          "outlier_m1_bars": 1,
+          "legacy_outlier_m1_bars": 22,
+          "padding_atr_false_positives": 21,
+          "outside_expected_dates": 0,
+          "outlier_examples": [
+            "2024-01-28T23:00:00+00:00"
+          ],
+          "gap_examples": [],
+          "interpretation": "Gaps/weekend quotes require exchange-calendar review; no raw corrections"
+        },
+        "2024-02": {
+          "rows": 41760,
+          "duplicates": 0,
+          "unordered_rows": 0,
+          "invalid_ohlc": 0,
+          "missing_minutes": 0,
+          "missing_weekday_minutes": 0,
+          "missing_weekend_minutes": 0,
+          "weekend_rows": 11520,
+          "unchanged_flat_rows": 12970,
+          "weekend_flat_rows": 11292,
+          "outlier_m1_bars": 1,
+          "legacy_outlier_m1_bars": 22,
+          "padding_atr_false_positives": 21,
+          "outside_expected_dates": 0,
+          "outlier_examples": [
+            "2024-02-13T13:30:00+00:00"
+          ],
+          "gap_examples": [],
+          "interpretation": "Gaps/weekend quotes require exchange-calendar review; no raw corrections"
+        },
+        "2024-03": {
+          "rows": 44640,
+          "duplicates": 0,
+          "unordered_rows": 0,
+          "invalid_ohlc": 0,
+          "missing_minutes": 0,
+          "missing_weekday_minutes": 0,
+          "missing_weekend_minutes": 0,
+          "weekend_rows": 14400,
+          "unchanged_flat_rows": 17002,
+          "weekend_flat_rows": 13860,
+          "outlier_m1_bars": 2,
+          "legacy_outlier_m1_bars": 24,
+          "padding_atr_false_positives": 22,
+          "outside_expected_dates": 0,
+          "outlier_examples": [
+            "2024-03-20T22:16:00+00:00",
+            "2024-03-28T20:49:00+00:00"
+          ],
+          "gap_examples": [],
+          "interpretation": "Gaps/weekend quotes require exchange-calendar review; no raw corrections"
+        },
+        "2024-04": {
+          "rows": 43200,
+          "duplicates": 0,
+          "unordered_rows": 0,
+          "invalid_ohlc": 0,
+          "missing_minutes": 0,
+          "missing_weekday_minutes": 0,
+          "missing_weekend_minutes": 0,
+          "weekend_rows": 11520,
+          "unchanged_flat_rows": 12844,
+          "weekend_flat_rows": 11040,
+          "outlier_m1_bars": 2,
+          "legacy_outlier_m1_bars": 23,
+          "padding_atr_false_positives": 21,
+          "outside_expected_dates": 0,
+          "outlier_examples": [
+            "2024-04-14T22:00:00+00:00",
+            "2024-04-17T20:50:00+00:00"
+          ],
+          "gap_examples": [],
+          "interpretation": "Gaps/weekend quotes require exchange-calendar review; no raw corrections"
+        },
+        "2024-05": {
+          "rows": 44640,
+          "duplicates": 0,
+          "unordered_rows": 0,
+          "invalid_ohlc": 0,
+          "missing_minutes": 0,
+          "missing_weekday_minutes": 0,
+          "missing_weekend_minutes": 0,
+          "weekend_rows": 11520,
+          "unchanged_flat_rows": 13182,
+          "weekend_flat_rows": 11040,
+          "outlier_m1_bars": 1,
+          "legacy_outlier_m1_bars": 24,
+          "padding_atr_false_positives": 23,
+          "outside_expected_dates": 0,
+          "outlier_examples": [
+            "2024-05-03T12:30:00+00:00"
+          ],
+          "gap_examples": [],
+          "interpretation": "Gaps/weekend quotes require exchange-calendar review; no raw corrections"
+        },
+        "2024-06": {
+          "rows": 43200,
+          "duplicates": 0,
+          "unordered_rows": 0,
+          "invalid_ohlc": 0,
+          "missing_minutes": 0,
+          "missing_weekday_minutes": 0,
+          "missing_weekend_minutes": 0,
+          "weekend_rows": 14400,
+          "unchanged_flat_rows": 15644,
+          "weekend_flat_rows": 13800,
+          "outlier_m1_bars": 0,
+          "legacy_outlier_m1_bars": 21,
+          "padding_atr_false_positives": 21,
+          "outside_expected_dates": 0,
+          "outlier_examples": [],
+          "gap_examples": [],
+          "interpretation": "Gaps/weekend quotes require exchange-calendar review; no raw corrections"
+        }
+      },
+      "resampling": {
+        "status": "passed",
+        "probes": 36,
+        "failures": [],
+        "contract": "open + timeframe <= decision_time",
+        "scope": "shared production resampler; sampled prefix invariance, unit boundary tests"
+      }
+    }
+  },
+  "coverage_missing_months": [
+    "2020-01",
+    "2020-02",
+    "2020-03",
+    "2020-04",
+    "2020-05",
+    "2020-06",
+    "2020-07",
+    "2020-08",
+    "2020-09",
+    "2020-10",
+    "2020-11",
+    "2020-12",
+    "2021-01",
+    "2021-02",
+    "2021-03",
+    "2021-04",
+    "2021-05",
+    "2021-06",
+    "2021-07",
+    "2021-08",
+    "2021-09",
+    "2021-10",
+    "2021-11",
+    "2021-12",
+    "2022-01",
+    "2022-02",
+    "2022-03",
+    "2022-04",
+    "2022-05",
+    "2022-06",
+    "2022-07",
+    "2022-08",
+    "2022-09",
+    "2022-10",
+    "2022-11",
+    "2022-12",
+    "2023-01",
+    "2023-02",
+    "2023-03",
+    "2023-04",
+    "2023-05",
+    "2023-06",
+    "2023-07",
+    "2023-08",
+    "2023-09",
+    "2023-10",
+    "2023-11",
+    "2023-12",
+    "2024-07",
+    "2024-08",
+    "2024-09",
+    "2024-10",
+    "2024-11",
+    "2024-12",
+    "2025-01",
+    "2025-02",
+    "2025-03",
+    "2025-04",
+    "2025-05",
+    "2025-06",
+    "2025-07",
+    "2025-08",
+    "2025-09",
+    "2025-10",
+    "2025-11",
+    "2025-12",
+    "2026-01",
+    "2026-02",
+    "2026-03",
+    "2026-04",
+    "2026-05",
+    "2026-06",
+    "2026-07",
+    "2026-08",
+    "2026-09",
+    "2026-10"
+  ],
+  "bid_only_timestamps": 0,
+  "ask_only_timestamps": 0,
+  "negative_close_spread_by_month": {
+    "2024-01": 0,
+    "2024-02": 0,
+    "2024-03": 0,
+    "2024-04": 0,
+    "2024-05": 0,
+    "2024-06": 0
+  },
+  "source_timezone_verification": "unverified: manifest has no source-clock attestation",
+  "raw_data_modified": false,
+  "tick_audit": {
+    "status": "not_available",
+    "reason": "No tick files supplied; M1 proxies reported separately"
+  }
+}

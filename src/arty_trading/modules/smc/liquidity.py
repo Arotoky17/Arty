@@ -12,12 +12,12 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from arty_trading.config.operational import definitions, operational_atr
 from arty_trading.core.entities import Candle
 from arty_trading.core.enums import SMCConcept
 from arty_trading.modules.smc.base import (
     BaseDetector,
     SMCDetection,
-    SwingPoint,
     find_swing_highs,
     find_swing_lows,
     find_swing_points,
@@ -35,11 +35,11 @@ class LiquidityDetector(BaseDetector):
     def __init__(
         self,
         enabled: bool = True,
-        swing_window: int = 2,
-        tolerance_pips: float = 2.0,
+        swing_window: int | None = None,
+        tolerance_pips: float | None = None,
         pip_size: float = 0.0001,
-        min_rejection_ratio: float = 0.0,
-        displacement_atr_mult: float = 0.0,
+        min_rejection_ratio: float | None = None,
+        displacement_atr_mult: float | None = None,
     ) -> None:
         """
         Args:
@@ -56,10 +56,21 @@ class LiquidityDetector(BaseDetector):
                 displacement dans le sens du retournement.
         """
         super().__init__(enabled=enabled)
-        self._swing_window = swing_window
-        self._tolerance = Decimal(str(tolerance_pips * pip_size))
-        self._min_rejection_ratio = min_rejection_ratio
-        self._displacement_atr_mult = displacement_atr_mult
+        self._swing_window = (
+            definitions()["swing"]["window"] if swing_window is None else swing_window
+        )
+        self._tolerance_atr = tolerance_pips is None
+        self._tolerance = Decimal(str((tolerance_pips or 0) * pip_size))
+        self._min_rejection_ratio = (
+            definitions()["sweep"]["rejection_ratio"]
+            if min_rejection_ratio is None
+            else min_rejection_ratio
+        )
+        self._displacement_atr_mult = (
+            definitions()["sweep"]["displacement_atr"]
+            if displacement_atr_mult is None
+            else displacement_atr_mult
+        )
 
     @property
     def name(self) -> str:
@@ -105,38 +116,48 @@ class LiquidityDetector(BaseDetector):
         if len(swing_points) < 2:
             return detections
 
-        atr = Decimal("0")
-        if self._displacement_atr_mult > 0:
-            from arty_trading.utils.helpers import calculate_atr
-
-            atr = calculate_atr(candles, period=14)
-
         for sp in swing_points:
             # Chercher une bougie après le swing point qui dépasse le niveau
             # puis inverse
-            for i in range(sp.index + 1, min(sp.index + 20, len(candles))):
+            for i in range(
+                sp.index + self._swing_window + 1,
+                min(sp.index + definitions()["sweep"]["search_bars"], len(candles)),
+            ):
                 candle = candles[i]
+                breach = candle
+                local_atr = operational_atr(candles[: i + 1])
+                minimum = local_atr * Decimal(str(definitions()["sweep"]["penetration_atr"]))
 
+                deadline = min(i + definitions()["sweep"]["reintegration_bars"] + 1, len(candles))
+                reintegration = None
+                if sp.type == "low" and breach.low < sp.price - minimum:
+                    reintegration = next(
+                        (j for j in range(i, deadline) if candles[j].close > sp.price), None
+                    )
+                elif sp.type == "high" and breach.high > sp.price + minimum:
+                    reintegration = next(
+                        (j for j in range(i, deadline) if candles[j].close < sp.price), None
+                    )
+                else:
+                    continue
+                if reintegration is None:
+                    break
+                candle = candles[reintegration]
                 if sp.type == "low":
                     # Bullish sweep : prix descend sous le swing low puis remonte
-                    if candle.low < sp.price and candle.close > sp.price:
-                        penetration = sp.price - candle.low
+                    if breach.low < sp.price - minimum and candle.close > sp.price:
+                        penetration = sp.price - breach.low
                         rejection = candle.close - sp.price
-                        rejection_ratio = (
-                            float(rejection / penetration) if penetration > 0 else 0.0
-                        )
+                        rejection_ratio = float(rejection / penetration) if penetration > 0 else 0.0
                         displacement_confirmed = self._has_post_sweep_displacement(
-                            candles, i, atr, "bullish", sp.price
+                            candles, reintegration, local_atr, "bullish", sp.price
                         )
 
                         if self._min_rejection_ratio > 0 and (
                             rejection_ratio < self._min_rejection_ratio
                         ):
                             break  # Simple wick, pas un sweep -> swing épuisé
-                        if (
-                            self._displacement_atr_mult > 0
-                            and not displacement_confirmed
-                        ):
+                        if self._displacement_atr_mult > 0 and not displacement_confirmed:
                             # Pas encore de displacement : chercher une bougie
                             # ultérieure confirmant le rejet.
                             continue
@@ -147,11 +168,11 @@ class LiquidityDetector(BaseDetector):
                                 concept=SMCConcept.LIQUIDITY_SWEEP,
                                 direction="bullish",
                                 price=sp.price,
-                                index=i,
+                                index=reintegration,
                                 details={
                                     "swept_level": float(sp.price),
                                     "swept_index": sp.index,
-                                    "sweep_low": float(candle.low),
+                                    "sweep_low": float(breach.low),
                                     "type": "buy_side_liquidity_grab",
                                     "rejection_ratio": round(rejection_ratio, 3),
                                     "penetration": float(penetration),
@@ -164,24 +185,19 @@ class LiquidityDetector(BaseDetector):
 
                 elif sp.type == "high":
                     # Bearish sweep : prix monte au-dessus du swing high puis descend
-                    if candle.high > sp.price and candle.close < sp.price:
-                        penetration = candle.high - sp.price
+                    if breach.high > sp.price + minimum and candle.close < sp.price:
+                        penetration = breach.high - sp.price
                         rejection = sp.price - candle.close
-                        rejection_ratio = (
-                            float(rejection / penetration) if penetration > 0 else 0.0
-                        )
+                        rejection_ratio = float(rejection / penetration) if penetration > 0 else 0.0
                         displacement_confirmed = self._has_post_sweep_displacement(
-                            candles, i, atr, "bearish", sp.price
+                            candles, reintegration, local_atr, "bearish", sp.price
                         )
 
                         if self._min_rejection_ratio > 0 and (
                             rejection_ratio < self._min_rejection_ratio
                         ):
                             break  # Simple wick, pas un sweep -> swing épuisé
-                        if (
-                            self._displacement_atr_mult > 0
-                            and not displacement_confirmed
-                        ):
+                        if self._displacement_atr_mult > 0 and not displacement_confirmed:
                             continue
 
                         quality = "strong" if rejection_ratio >= 1.0 else "weak"
@@ -190,11 +206,11 @@ class LiquidityDetector(BaseDetector):
                                 concept=SMCConcept.LIQUIDITY_SWEEP,
                                 direction="bearish",
                                 price=sp.price,
-                                index=i,
+                                index=reintegration,
                                 details={
                                     "swept_level": float(sp.price),
                                     "swept_index": sp.index,
-                                    "sweep_high": float(candle.high),
+                                    "sweep_high": float(breach.high),
                                     "type": "sell_side_liquidity_grab",
                                     "rejection_ratio": round(rejection_ratio, 3),
                                     "penetration": float(penetration),
@@ -246,6 +262,7 @@ class LiquidityDetector(BaseDetector):
     def _detect_equal_levels(self, candles: list[Candle]) -> list[SMCDetection]:
         """Détecte les Equal Highs et Equal Lows."""
         detections: list[SMCDetection] = []
+        tolerances: dict[int, Decimal] = {}
 
         swing_highs = find_swing_highs(candles, self._swing_window)
         swing_lows = find_swing_lows(candles, self._swing_window)
@@ -253,6 +270,12 @@ class LiquidityDetector(BaseDetector):
         # Equal Highs
         for i in range(len(swing_highs)):
             for j in range(i + 1, len(swing_highs)):
+                if self._tolerance_atr:
+                    pivot_index = swing_highs[j].index
+                    if pivot_index not in tolerances:
+                        self._set_atr_tolerance(candles, pivot_index)
+                        tolerances[pivot_index] = self._tolerance
+                    self._tolerance = tolerances[pivot_index]
                 price_diff = abs(swing_highs[i].price - swing_highs[j].price)
                 if price_diff <= self._tolerance:
                     avg_price = (swing_highs[i].price + swing_highs[j].price) / 2
@@ -276,6 +299,12 @@ class LiquidityDetector(BaseDetector):
         # Equal Lows
         for i in range(len(swing_lows)):
             for j in range(i + 1, len(swing_lows)):
+                if self._tolerance_atr:
+                    pivot_index = swing_lows[j].index
+                    if pivot_index not in tolerances:
+                        self._set_atr_tolerance(candles, pivot_index)
+                        tolerances[pivot_index] = self._tolerance
+                    self._tolerance = tolerances[pivot_index]
                 price_diff = abs(swing_lows[i].price - swing_lows[j].price)
                 if price_diff <= self._tolerance:
                     avg_price = (swing_lows[i].price + swing_lows[j].price) / 2
@@ -297,3 +326,7 @@ class LiquidityDetector(BaseDetector):
                     )
 
         return detections
+
+    def _set_atr_tolerance(self, candles: list[Candle], index: int) -> None:
+        atr = operational_atr(candles[: index + self._swing_window + 1])
+        self._tolerance = atr * Decimal(str(definitions()["equal_levels"]["tolerance_atr"]))

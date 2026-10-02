@@ -1,0 +1,36 @@
+{
+  "backtest_run": false,
+  "raw_data_modified": false,
+  "bid_ask_anomalies": {
+    "bid": {
+      "legacy_count": 135,
+      "corrected_count": 7,
+      "padding_atr_false_positives": 128,
+      "absolute_return_flags": 0,
+      "absolute_range_flags": 0
+    },
+    "ask": {
+      "legacy_count": 136,
+      "corrected_count": 7,
+      "padding_atr_false_positives": 129,
+      "absolute_return_flags": 0,
+      "absolute_range_flags": 0
+    }
+  },
+  "regime_status": {
+    "development": "incomplete_data",
+    "holdout": "unavailable_until_import"
+  },
+  "download_status": "failed",
+  "download_error": "HTTP Error 503: Service Unavailable",
+  "holdout_end": null,
+  "news_events": 224,
+  "pending_user_validation": [
+    "corrected_ATR_audit_rule",
+    "seven_paired_price_candidates_against_ticks",
+    "cost_calibration",
+    "future_FOMC_time_convention",
+    "D1_UTC_weekdays_and_H4_structure",
+    "preregistration"
+  ]
+}

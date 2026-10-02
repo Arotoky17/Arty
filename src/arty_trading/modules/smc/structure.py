@@ -30,6 +30,9 @@ informations de marché.
 
 from __future__ import annotations
 
+from decimal import Decimal
+
+from arty_trading.config.operational import definitions, operational_atr
 from arty_trading.core.entities import Candle
 from arty_trading.core.enums import SMCConcept
 from arty_trading.modules.smc.base import (
@@ -52,9 +55,9 @@ class StructureDetector(BaseDetector):
     def __init__(
         self,
         enabled: bool = True,
-        swing_window: int = 2,
-        external_window: int = 5,
-        confirmation_bars: int = 1,
+        swing_window: int | None = None,
+        external_window: int | None = None,
+        confirmation_bars: int | None = None,
     ) -> None:
         """
         Args:
@@ -64,9 +67,19 @@ class StructureDetector(BaseDetector):
             confirmation_bars: Nombre de bougies de confirmation après la cassure
         """
         super().__init__(enabled=enabled)
-        self._swing_window = swing_window
-        self._external_window = external_window
-        self._confirmation_bars = confirmation_bars
+        self._swing_window = (
+            definitions()["swing"]["window"] if swing_window is None else swing_window
+        )
+        self._external_window = (
+            definitions()["swing"]["external_window"]
+            if external_window is None
+            else external_window
+        )
+        self._confirmation_bars = (
+            definitions()["swing"]["confirmation_bars"]
+            if confirmation_bars is None
+            else confirmation_bars
+        )
 
     @property
     def name(self) -> str:
@@ -103,7 +116,9 @@ class StructureDetector(BaseDetector):
 
         for i in range(len(candles)):
             # Mettre à jour les swing points disponibles jusqu'à i
-            while sp_idx < len(swing_points) and swing_points[sp_idx].index <= i:
+            while (
+                sp_idx < len(swing_points) and swing_points[sp_idx].index + self._swing_window <= i
+            ):
                 sp = swing_points[sp_idx]
                 if sp.type == "high":
                     if pending_high is None or sp.price > pending_high.price:
@@ -118,7 +133,11 @@ class StructureDetector(BaseDetector):
 
             # Vérifier la cassure du swing high (bullish)
             if candles[i].close > pending_high.price and i > pending_high.index:
-                strength = pending_high.strength
+                strength = (
+                    pending_high.strength
+                    if i >= pending_high.index + self._external_window
+                    else "internal"
+                )
                 if trend in ("bullish", "unknown"):
                     # BOS bullish — Internal ou External selon la force du swing
                     bos_concept = (
@@ -205,7 +224,11 @@ class StructureDetector(BaseDetector):
                 and candles[i].close < pending_low.price
                 and i > pending_low.index
             ):
-                strength = pending_low.strength
+                strength = (
+                    pending_low.strength
+                    if i >= pending_low.index + self._external_window
+                    else "internal"
+                )
                 if trend in ("bearish", "unknown"):
                     # BOS bearish — Internal ou External selon la force du swing
                     bos_concept = (
@@ -286,4 +309,12 @@ class StructureDetector(BaseDetector):
                 # Réinitialiser le swing low cassé
                 pending_low = None
 
+        for detection in detections:
+            bar = candles[detection.index]
+            atr = operational_atr(candles[: detection.index + 1])
+            detection.details["displacement"] = bool(
+                atr > 0
+                and abs(bar.close - bar.open)
+                > atr * Decimal(str(definitions()["displacement"]["body_atr"]))
+            )
         return detections

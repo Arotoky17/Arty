@@ -2,6 +2,15 @@
 
 Plateforme professionnelle de trading Forex (SMC/ICT + IA) — architecture modulaire, évolutive et maintenable.
 
+## Validation de recherche SMC
+
+L'infrastructure de l'étape 1 centralise les définitions dans
+[`config/definitions.yaml`](config/definitions.yaml), protège le split dev/hold-out
+et impose un registre SQLite ainsi que des modèles de coûts et de fill aux
+backtests. Voir [le guide de validation](docs/validation.md) pour lancer les tests,
+lire les métriques, consulter le registre et connaître les changements de
+comportement. Remplir [le préenregistrement](preregistration.md) avant chaque phase.
+
 ---
 
 ## 🤖 Qu'est-ce qu'Arty ?
@@ -233,3 +242,13 @@ Arty/
 ## Licence
 
 MIT
+
+
+## Contrôles avant la baseline Setup 1
+
+Les audits, la revue visuelle et le préenregistrement sont décrits dans
+[les contrôles pré-baseline](docs/prebaseline_controls.md).
+L’import append-only, le diagnostic bid/ask, le calendrier news et les régimes
+mensuels sont dans [le guide de préparation des données](docs/data_readiness.md).
+Les rapports actuels sont dans `reports/data_readiness/`. Le Setup 1 reste bloqué
+en attente des données complètes et de votre validation du [préenregistrement](preregistration.md).

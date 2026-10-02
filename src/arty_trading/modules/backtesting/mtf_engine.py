@@ -36,13 +36,12 @@ from arty_trading.core.entities import Candle
 from arty_trading.core.enums import LogCategory, TimeFrame
 from arty_trading.logging.logger import get_logger
 from arty_trading.modules.backtesting.engine import BacktestEngine
-from arty_trading.modules.backtesting.stats import calculate_stats
 
 logger = get_logger(LogCategory.BACKTEST)
 
-_MIN_H1 = 30   # bougies H1 minimales avant analyse
+_MIN_H1 = 30  # bougies H1 minimales avant analyse
 _MIN_M15 = 20  # bougies M15 minimales avant analyse
-_MIN_M5 = 20   # bougies M5 minimales avant analyse
+_MIN_M5 = 20  # bougies M5 minimales avant analyse
 
 
 class _CachedSMCDetector:
@@ -68,7 +67,9 @@ class _CachedSMCDetector:
             return await self._inner.detect(candles, symbol)
         key = (
             symbol,
-            candles[0].timeframe.value if hasattr(candles[0].timeframe, "value") else str(candles[0].timeframe),
+            candles[0].timeframe.value
+            if hasattr(candles[0].timeframe, "value")
+            else str(candles[0].timeframe),
             candles[0].time,
             candles[-1].time,
             len(candles),
@@ -151,8 +152,9 @@ class MTFBacktestEngine(BacktestEngine):
         """Balaie les bougies M5 avec le pipeline H1/M15/M5 complet."""
         from arty_trading.modules.smc import SetupTracker
 
+        self._begin_run(m5_candles, (m15_candles, h1_candles))
         if not m5_candles:
-            return calculate_stats([], self._equity_curve, self._initial_balance)
+            return self._finish_run()
 
         self._trade_journal = []
         self._journal_by_ticket = {}
@@ -180,6 +182,7 @@ class MTFBacktestEngine(BacktestEngine):
             # 1) Position management + SL/TP sur la bougie M5 courante
             #    (identique à BacktestEngine.run_async : gestion AVANT signal).
             self._apply_position_management(i, m5_candles)
+            self._process_pending(candle)
             self._check_open_trades(candle)
 
             # 2) Vues clôturées uniquement (anti look-ahead).
@@ -189,19 +192,15 @@ class MTFBacktestEngine(BacktestEngine):
             while m15_idx < len(m15_candles) and m15_close[m15_idx] <= close_time:
                 m15_idx += 1
 
-            h1_view = h1_candles[max(0, h1_idx - self._h1_window):h1_idx]
-            m15_view = m15_candles[max(0, m15_idx - self._m15_window):m15_idx]
-            m5_view = m5_candles[max(0, i + 1 - self._m5_window):i + 1]
+            h1_view = h1_candles[max(0, h1_idx - self._h1_window) : h1_idx]
+            m15_view = m15_candles[max(0, m15_idx - self._m15_window) : m15_idx]
+            m5_view = m5_candles[max(0, i + 1 - self._m5_window) : i + 1]
 
-            if (
-                len(h1_view) >= _MIN_H1
-                and len(m15_view) >= _MIN_M15
-                and len(m5_view) >= _MIN_M5
-            ):
+            if len(h1_view) >= _MIN_H1 and len(m15_view) >= _MIN_M15 and len(m5_view) >= _MIN_M5:
                 await self._process_m5_close(candle, i, h1_view, m15_view, m5_view)
 
             self._update_equity(candle)
-            self._equity_curve.append(self._equity)
+            self._append_equity()
 
         # Clôture finale des trades restants (comme le backtest legacy).
         if self._open_trades:
@@ -211,7 +210,7 @@ class MTFBacktestEngine(BacktestEngine):
                 if self._position_manager is not None:
                     self._position_manager.forget(trade)
 
-        return calculate_stats(self._trades, self._equity_curve, self._initial_balance)
+        return self._finish_run()
 
     async def _process_m5_close(
         self,
@@ -257,9 +256,7 @@ class MTFBacktestEngine(BacktestEngine):
             return
 
         # --- M15 setup : MÊME logique que le live (setup_service) ---
-        update_setups_from_market_context(
-            self._setup_tracker, symbol, context, self._settings
-        )
+        update_setups_from_market_context(self._setup_tracker, symbol, context, self._settings)
 
         # --- M5 confirmation → Validator → DecisionEngine (dans generate) ---
         try:
@@ -277,16 +274,16 @@ class MTFBacktestEngine(BacktestEngine):
         if signal is None:
             return
 
-        if self._one_trade_at_a_time and self._open_trades:
+        if self._one_trade_at_a_time and (self._open_trades or self._pending):
             return
 
         # --- Exécution simulée (sizing/SL/TP hérités de BacktestEngine) ---
-        self._open_trade_from_signal(signal, candle)
+        self._submit_limit(signal, candle)
 
         # Miroir du live (TradeOrchestrator) : consommer le setup exécuté.
-        setup_id = getattr(signal, "setup_id", None) or (
-            getattr(signal, "metadata", {}) or {}
-        ).get("setup_id")
+        setup_id = getattr(signal, "setup_id", None) or (getattr(signal, "metadata", {}) or {}).get(
+            "setup_id"
+        )
         if setup_id:
             setup = self._setup_tracker.get_setup_by_id(setup_id)
             if setup is not None:
@@ -318,8 +315,14 @@ class MTFBacktestEngine(BacktestEngine):
             key = str(entry.get(field) or "UNKNOWN")
             stats = breakdown.setdefault(
                 key,
-                {"trades": 0, "wins": 0, "total_profit": 0.0, "total_r": 0.0,
-                 "gross_profit": 0.0, "gross_loss": 0.0},
+                {
+                    "trades": 0,
+                    "wins": 0,
+                    "total_profit": 0.0,
+                    "total_r": 0.0,
+                    "gross_profit": 0.0,
+                    "gross_loss": 0.0,
+                },
             )
             stats["trades"] += 1
             profit = entry.get("profit", 0.0)

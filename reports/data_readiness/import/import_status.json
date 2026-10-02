@@ -1,0 +1,17 @@
+{
+  "cutoff_utc": "2026-10-02T18:19:00+00:00",
+  "start_utc": "2020-01-01T00:00:00+00:00",
+  "backtest_run": false,
+  "holdout_loaded_into_engine": false,
+  "failures": [
+    {
+      "date": "2020-01-01",
+      "side": "bid",
+      "status": "error",
+      "error": "HTTP Error 503: Service Unavailable",
+      "retrieved_at": "2026-10-02T18:19:42.970643+00:00"
+    }
+  ],
+  "status": "failed",
+  "manifest": "data\\raw\\import_manifest.jsonl"
+}

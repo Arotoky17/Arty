@@ -535,8 +535,8 @@ def test_structure_detector_dates_all_events_at_break_candle() -> None:
     ]
     swings = [
         SwingPoint(index=0, price=Decimal("101"), type="high", timestamp=candles[0].time),
-        SwingPoint(index=1, price=Decimal("99"), type="low", timestamp=candles[1].time),
-        SwingPoint(index=4, price=Decimal("103"), type="high", timestamp=candles[4].time),
+        SwingPoint(index=0, price=Decimal("99"), type="low", timestamp=candles[0].time),
+        SwingPoint(index=2, price=Decimal("103"), type="high", timestamp=candles[2].time),
     ]
     with patch("arty_trading.modules.smc.structure.find_swing_points", return_value=swings):
         events = StructureDetector().detect(candles)

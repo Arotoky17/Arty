@@ -9,10 +9,10 @@ Détecteur de Fair Value Gap (FVG) et Inverse FVG (IFVG).
 
 from __future__ import annotations
 
+from decimal import Decimal
 from typing import Any
 
-from decimal import Decimal
-
+from arty_trading.config.operational import definitions, operational_atr
 from arty_trading.core.entities import Candle
 from arty_trading.core.enums import SMCConcept
 from arty_trading.modules.smc.base import BaseDetector, SMCDetection
@@ -26,14 +26,14 @@ class FairValueGapDetector(BaseDetector):
     où le prix s'est déplacé trop rapidement pour que le marché l'absorbe.
     """
 
-    MAX_ZONE_AGE = 30
+    MAX_ZONE_AGE = definitions()["fvg"]["max_age_bars"]
 
     def __init__(
         self,
         enabled: bool = True,
-        min_gap_pips: float = 5.0,
+        min_gap_pips: float = 0.0,
         pip_size: float = 0.0001,
-        min_gap_atr: float = 0.0,
+        min_gap_atr: float | None = None,
     ) -> None:
         """
         Args:
@@ -48,7 +48,7 @@ class FairValueGapDetector(BaseDetector):
         super().__init__(enabled=enabled)
         self._min_gap = Decimal(str(min_gap_pips * pip_size))
         self._pip_size = pip_size
-        self._min_gap_atr = min_gap_atr
+        self._min_gap_atr = definitions()["fvg"]["gap_atr"] if min_gap_atr is None else min_gap_atr
 
     @property
     def name(self) -> str:
@@ -71,24 +71,16 @@ class FairValueGapDetector(BaseDetector):
         detections: list[SMCDetection] = []
         active_fvgs: list[dict[str, Any]] = []  # FVG non encore remplis
 
-        # Seuil effectif : max(seuil fixe, min_gap_atr × ATR)
-        atr = Decimal("0")
-        if self._min_gap_atr > 0:
-            from arty_trading.utils.helpers import calculate_atr
-
-            atr = calculate_atr(candles, period=14)
-        min_gap = self._min_gap
-        if self._min_gap_atr > 0 and atr > 0:
-            min_gap = max(min_gap, atr * Decimal(str(self._min_gap_atr)))
-
         for i in range(len(candles) - 2):
+            atr = operational_atr(candles[: i + 3])
+            min_gap = max(self._min_gap, atr * Decimal(str(self._min_gap_atr)))
             c0 = candles[i]
             c2 = candles[i + 2]
 
             # Bullish FVG : high[0] < low[2]
             if c0.high < c2.low:
                 gap_size = c2.low - c0.high
-                if gap_size >= min_gap:
+                if gap_size > min_gap:
                     fvg = SMCDetection(
                         concept=SMCConcept.FVG,
                         direction="bullish",
@@ -103,19 +95,21 @@ class FairValueGapDetector(BaseDetector):
                         },
                     )
                     detections.append(fvg)
-                    active_fvgs.append({
-                        "detection": fvg,
-                        "gap_top": c2.low,
-                        "gap_bottom": c0.high,
-                        "direction": "bullish",
-                        "filled": False,
-                        "start_index": i + 1,
-                    })
+                    active_fvgs.append(
+                        {
+                            "detection": fvg,
+                            "gap_top": c2.low,
+                            "gap_bottom": c0.high,
+                            "direction": "bullish",
+                            "filled": False,
+                            "start_index": i + 1,
+                        }
+                    )
 
             # Bearish FVG : low[0] > high[2]
             if c0.low > c2.high:
                 gap_size = c0.low - c2.high
-                if gap_size >= min_gap:
+                if gap_size > min_gap:
                     fvg = SMCDetection(
                         concept=SMCConcept.FVG,
                         direction="bearish",
@@ -130,14 +124,16 @@ class FairValueGapDetector(BaseDetector):
                         },
                     )
                     detections.append(fvg)
-                    active_fvgs.append({
-                        "detection": fvg,
-                        "gap_top": c0.low,
-                        "gap_bottom": c2.high,
-                        "direction": "bearish",
-                        "filled": False,
-                        "start_index": i + 1,
-                    })
+                    active_fvgs.append(
+                        {
+                            "detection": fvg,
+                            "gap_top": c0.low,
+                            "gap_bottom": c2.high,
+                            "direction": "bearish",
+                            "filled": False,
+                            "start_index": i + 1,
+                        }
+                    )
 
             # Vérifier si un FVG actif est rempli ou inversé
             for active_fvg in active_fvgs:
@@ -184,9 +180,6 @@ class FairValueGapDetector(BaseDetector):
                             )
                         )
 
-        detections = [
-            d for d in detections
-            if (len(candles) - 1 - d.index) <= self.MAX_ZONE_AGE
-        ]
+        detections = [d for d in detections if (len(candles) - 1 - d.index) <= self.MAX_ZONE_AGE]
 
         return detections

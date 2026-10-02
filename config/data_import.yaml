@@ -1,0 +1,21 @@
+version: 1
+symbol: XAUUSD
+start: '2020-01-01T00:00:00+00:00'
+endpoint: https://datafeed.dukascopy.com/datafeed
+sides: [bid, ask]
+price_divisor: 1000
+record_format: '>5If'
+record_fields: [seconds, open, close, low, high, volume]
+source_bar_seconds: 60
+day_seconds: 86400
+workers: 4
+timeout_seconds: 30
+max_attempts: 3
+retry_seconds: 5
+max_retry_after_seconds: 60
+progress_every: 100
+output: data/raw
+report_output: reports/data_readiness/import
+staging: .quality-cache/dukascopy_import
+source_documentation: https://www.dukascopy.com/wiki/en/development/data-export/
+decoder_reference: https://github.com/Leo4815162342/dukascopy-node

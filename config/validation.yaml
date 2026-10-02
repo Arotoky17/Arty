@@ -1,0 +1,36 @@
+version: 1
+audit:
+  timestamp_unit: ms
+  source_bar_minutes: 1
+  timeframes: {M5: 5, H1: 60, H4: 240}
+  max_return_fraction: 0.02
+  max_range_fraction: 0.02
+  spike_atr_multiple: 20.0
+  exclude_unchanged_flats_from_atr: true
+  lookahead_probes: 12
+  expected_start: '2020-01-01T00:00:00+00:00'
+  # Updated to the captured UTC cutoff after each successful import.
+  expected_end: '2026-10-02T18:19:00+00:00'
+  example_limit: 10
+  tick_rolling_window: 200
+  tick_spike_multiple: 20.0
+  tick_max_gap_seconds: 300
+regime:
+  timeframe: H1
+  adx_period: 14
+  trend_min_adx: 25.0
+  range_max_adx: 20.0
+  minimum_consecutive_bars: 24
+review:
+  timeframe: M5
+  samples_per_type: 20
+  seed: 20261002
+  window_bars: 120
+  overlap_bars: 40
+  plot_before_bars: 20
+  plot_after_bars: 10
+  dpi: 110
+regression:
+  reference_revision: ff73228102403e11f9f7a9908de9349a1db00a82
+  reference_start: '2024-01-01T00:00:00+00:00'
+  reference_end: '2024-07-01T00:00:00+00:00'

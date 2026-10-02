@@ -932,44 +932,8 @@ class TradingEngine:
     # -------------------------------------------------------------------------
 
     def _configure_detector_for_symbol(self, symbol: str) -> None:
-        """
-        Phase 3 — applique les filtres de qualité du profil instrument aux
-        sous-détecteurs SMC (liquidity, FVG, order blocks).
-
-        Les paramètres inconnus d'un détecteur sont ignorés silencieusement
-        (rétro-compatibilité avec des détecteurs mockés dans les tests).
-        """
-        try:
-            profile = self._settings.get_instrument_profile(symbol)
-        except Exception:
-            profile = None
-        if profile is None:
-            return
-
-        detectors = getattr(self._smc_detector, "detectors", None)
-        if not isinstance(detectors, dict):
-            return
-
-        param_map = {
-            "liquidity": {
-                "_min_rejection_ratio": profile.sweep_min_rejection_ratio,
-                "_displacement_atr_mult": profile.sweep_displacement_atr_mult,
-            },
-            "fair_value_gap": {
-                "_min_gap_atr": profile.min_fvg_atr,
-            },
-            "order_blocks": {
-                "_max_ob_atr_mult": profile.max_ob_atr_mult,
-                "_displacement_confirmation_bars": profile.displacement_confirmation_bars,
-            },
-        }
-        for name, params in param_map.items():
-            detector = detectors.get(name)
-            if detector is None:
-                continue
-            for attr, value in params.items():
-                if hasattr(detector, attr):
-                    setattr(detector, attr, value)
+        from arty_trading.config.operational import apply_operational_definitions
+        apply_operational_definitions(self._smc_detector, symbol)
 
     async def _download_data(
         self, symbol: str, timeframe: TimeFrame | None = None

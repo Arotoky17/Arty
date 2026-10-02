@@ -29,6 +29,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
+from arty_trading.config.operational import definitions
 from arty_trading.core.entities import Candle
 from arty_trading.core.enums import SMCConcept
 
@@ -138,8 +139,8 @@ class BaseDetector(ABC):
 
 def find_swing_points(
     candles: list[Candle],
-    window: int = 2,
-    external_window: int = 5,
+    window: int | None = None,
+    external_window: int | None = None,
 ) -> list[SwingPoint]:
     """
     Identifie les swing highs et swing lows (points pivots).
@@ -160,6 +161,9 @@ def find_swing_points(
     Returns:
         Liste triée par index des swing points
     """
+    cfg = definitions()["swing"]
+    window = cfg["window"] if window is None else window
+    external_window = cfg["external_window"] if external_window is None else external_window
     swing_points: list[SwingPoint] = []
     n = len(candles)
 
@@ -223,18 +227,18 @@ def find_swing_points(
     return swing_points
 
 
-def find_swing_highs(candles: list[Candle], window: int = 2) -> list[SwingPoint]:
+def find_swing_highs(candles: list[Candle], window: int | None = None) -> list[SwingPoint]:
     """Retourne uniquement les swing highs."""
     return [sp for sp in find_swing_points(candles, window) if sp.type == "high"]
 
 
-def find_swing_lows(candles: list[Candle], window: int = 2) -> list[SwingPoint]:
+def find_swing_lows(candles: list[Candle], window: int | None = None) -> list[SwingPoint]:
     """Retourne uniquement les swing lows."""
     return [sp for sp in find_swing_points(candles, window) if sp.type == "low"]
 
 
 def find_external_swing_points(
-    candles: list[Candle], window: int = 2, external_window: int = 5
+    candles: list[Candle], window: int | None = None, external_window: int | None = None
 ) -> list[SwingPoint]:
     """Retourne uniquement les swing points externes (forts)."""
     return [
@@ -245,7 +249,7 @@ def find_external_swing_points(
 
 
 def find_internal_swing_points(
-    candles: list[Candle], window: int = 2, external_window: int = 5
+    candles: list[Candle], window: int | None = None, external_window: int | None = None
 ) -> list[SwingPoint]:
     """Retourne uniquement les swing points internes (faibles)."""
     return [

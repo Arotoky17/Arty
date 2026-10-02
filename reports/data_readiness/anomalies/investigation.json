@@ -1,0 +1,327 @@
+{
+  "criterion": {
+    "return": "abs(close / previous_close - 1) > 0.02",
+    "range": "(high - low) / previous_close > 0.02",
+    "spike": "TR > 20 * EWM(TR.shift(1), alpha=1/14, adjust=False), ATR > 0",
+    "TR": "max(high-low, abs(high-previous_close), abs(low-previous_close))",
+    "combination": "OR; thresholds come from validation.yaml and definitions.yaml"
+  },
+  "summary": {
+    "bid": {
+      "legacy_count": 135,
+      "corrected_count": 7,
+      "padding_atr_false_positives": 128,
+      "absolute_return_flags": 0,
+      "absolute_range_flags": 0
+    },
+    "ask": {
+      "legacy_count": 136,
+      "corrected_count": 7,
+      "padding_atr_false_positives": 129,
+      "absolute_return_flags": 0,
+      "absolute_range_flags": 0
+    }
+  },
+  "raw_examples": [
+    {
+      "time_utc": "2024-01-02T23:00:00+00:00",
+      "bid": {
+        "timestamp": 1704236400000,
+        "open": 2058.018,
+        "high": 2059.134,
+        "low": 2058.018,
+        "close": 2058.795,
+        "true_range": 1.1159999999999854,
+        "past_atr_grid": 0.0022733765698353097,
+        "past_atr_active": 0.19397795745051905
+      },
+      "ask": {
+        "timestamp": 1704236400000,
+        "open": 2059.772,
+        "high": 2059.882,
+        "low": 2059.352,
+        "close": 2059.352,
+        "true_range": 0.8369999999999891,
+        "past_atr_grid": 0.0024345507701363177,
+        "past_atr_active": 0.20773029508914242
+      }
+    },
+    {
+      "time_utc": "2024-01-03T23:00:00+00:00",
+      "bid": {
+        "timestamp": 1704322800000,
+        "open": 2041.895,
+        "high": 2042.095,
+        "low": 2041.698,
+        "close": 2041.998,
+        "true_range": 0.900000000000091,
+        "past_atr_grid": 0.0037072083802194475,
+        "past_atr_active": 0.3163209821813685
+      },
+      "ask": {
+        "timestamp": 1704322800000,
+        "open": 2042.452,
+        "high": 2042.655,
+        "low": 2042.352,
+        "close": 2042.552,
+        "true_range": 0.6800000000000637,
+        "past_atr_grid": 0.0036736554759545293,
+        "past_atr_active": 0.3134580496068882
+      }
+    },
+    {
+      "time_utc": "2024-01-04T23:00:00+00:00",
+      "bid": {
+        "timestamp": 1704409200000,
+        "open": 2043.218,
+        "high": 2043.685,
+        "low": 2043.118,
+        "close": 2043.385,
+        "true_range": 0.5670000000000073,
+        "past_atr_grid": 0.001895903413520524,
+        "past_atr_active": 0.16176971143184615
+      },
+      "ask": {
+        "timestamp": 1704409200000,
+        "open": 2044.812,
+        "high": 2045.092,
+        "low": 2043.902,
+        "close": 2043.902,
+        "true_range": 1.5070000000000618,
+        "past_atr_grid": 0.0020199820032613097,
+        "past_atr_active": 0.17235683180627745
+      }
+    },
+    {
+      "time_utc": "2024-01-07T23:00:00+00:00",
+      "bid": {
+        "timestamp": 1704668400000,
+        "open": 2044.385,
+        "high": 2045.005,
+        "low": 2043.745,
+        "close": 2044.498,
+        "true_range": 1.6100000000001273,
+        "past_atr_grid": 7.871574526226241e-96,
+        "past_atr_active": 0.3303929133702079
+      },
+      "ask": {
+        "timestamp": 1704668400000,
+        "open": 2046.355,
+        "high": 2046.445,
+        "low": 2044.602,
+        "close": 2045.102,
+        "true_range": 1.8429999999998472,
+        "past_atr_grid": 8.424557976169118e-96,
+        "past_atr_active": 0.3536032396478052
+      }
+    },
+    {
+      "time_utc": "2024-01-08T23:00:00+00:00",
+      "bid": {
+        "timestamp": 1704754800000,
+        "open": 2028.045,
+        "high": 2028.248,
+        "low": 2027.848,
+        "close": 2027.948,
+        "true_range": 0.4130000000000109,
+        "past_atr_grid": 0.002220786697629801,
+        "past_atr_active": 0.18949067798772987
+      },
+      "ask": {
+        "timestamp": 1704754800000,
+        "open": 2028.635,
+        "high": 2028.875,
+        "low": 2028.435,
+        "close": 2028.535,
+        "true_range": 0.599999999999909,
+        "past_atr_grid": 0.0023037107227248427,
+        "past_atr_active": 0.19656624708831089
+      }
+    }
+  ],
+  "remaining_candidates": [
+    {
+      "side": "bid",
+      "time_utc": "2024-01-28T23:00:00+00:00",
+      "true_range": 9.098999999999933
+    },
+    {
+      "side": "bid",
+      "time_utc": "2024-02-13T13:30:00+00:00",
+      "true_range": 14.740000000000009
+    },
+    {
+      "side": "bid",
+      "time_utc": "2024-03-20T22:16:00+00:00",
+      "true_range": 26.84999999999991
+    },
+    {
+      "side": "bid",
+      "time_utc": "2024-03-28T20:49:00+00:00",
+      "true_range": 10.519999999999982
+    },
+    {
+      "side": "bid",
+      "time_utc": "2024-04-14T22:00:00+00:00",
+      "true_range": 23.769999999999982
+    },
+    {
+      "side": "bid",
+      "time_utc": "2024-04-17T20:50:00+00:00",
+      "true_range": 9.490000000000236
+    },
+    {
+      "side": "bid",
+      "time_utc": "2024-05-03T12:30:00+00:00",
+      "true_range": 24.889999999999873
+    },
+    {
+      "side": "ask",
+      "time_utc": "2024-01-28T23:00:00+00:00",
+      "true_range": 8.760999999999967
+    },
+    {
+      "side": "ask",
+      "time_utc": "2024-02-13T13:30:00+00:00",
+      "true_range": 14.65300000000002
+    },
+    {
+      "side": "ask",
+      "time_utc": "2024-03-20T22:16:00+00:00",
+      "true_range": 26.940000000000055
+    },
+    {
+      "side": "ask",
+      "time_utc": "2024-03-28T20:49:00+00:00",
+      "true_range": 11.675000000000182
+    },
+    {
+      "side": "ask",
+      "time_utc": "2024-04-14T22:00:00+00:00",
+      "true_range": 22.70699999999988
+    },
+    {
+      "side": "ask",
+      "time_utc": "2024-04-17T20:50:00+00:00",
+      "true_range": 9.393000000000029
+    },
+    {
+      "side": "ask",
+      "time_utc": "2024-05-03T12:30:00+00:00",
+      "true_range": 24.36700000000019
+    }
+  ],
+  "alignment": {
+    "bid_only_timestamps": 0,
+    "ask_only_timestamps": 0,
+    "negative_close_spreads": 0,
+    "utc_clock": "epochs align; provider clock attestation remains unavailable"
+  },
+  "conclusion": "Predominantly (a): unchanged flat grid rows decay ATR artificially. No observed timestamp misalignment. Remaining paired large moves are candidates, not proven corruption; compare original ticks before rejecting.",
+  "correction": "Freeze ATR observation clock on unchanged flat OHLC equal to previous close; retain all raw rows, old flags and absolute 2% checks. No price interpolation.",
+  "provenance": {
+    "files": [
+      {
+        "path": "data\\historical\\xauusd\\bid\\m1\\xauusd_bid_m1_2024_01.csv",
+        "sha256": "7414d1cf6a02cf4fff5347e79602e9109549622cb73b152e5462188cc797135d"
+      },
+      {
+        "path": "data\\historical\\xauusd\\bid\\m1\\xauusd_bid_m1_2024_02.csv",
+        "sha256": "45060c59ccfc0ef3d5f78b49d793b7e3f97757a7659c604b887850068346621f"
+      },
+      {
+        "path": "data\\historical\\xauusd\\bid\\m1\\xauusd_bid_m1_2024_03.csv",
+        "sha256": "28c82e54e1bd7f586f5d22c0c39d9217618f62e8dfdd7eab94602c2c2bb81a14"
+      },
+      {
+        "path": "data\\historical\\xauusd\\bid\\m1\\xauusd_bid_m1_2024_04.csv",
+        "sha256": "ce55b0d9acdf20c694c37e3c53233455cc8b772269eb39f60357808abe37b9c9"
+      },
+      {
+        "path": "data\\historical\\xauusd\\bid\\m1\\xauusd_bid_m1_2024_05.csv",
+        "sha256": "18084ecf8e9d5cef352cc290a55de29f27f006653b5da24a6520f8a02488f4f6"
+      },
+      {
+        "path": "data\\historical\\xauusd\\bid\\m1\\xauusd_bid_m1_2024_06.csv",
+        "sha256": "f7cad6452e9666b37f6f7830bb69a61439095919bb1609daa80839fdb3a8fd39"
+      },
+      {
+        "path": "data\\historical\\xauusd\\ask\\m1\\xauusd_ask_m1_2024_01.csv",
+        "sha256": "a4ac5385c164b40a5760890279455228f64646180ea04bb6e45e633cafc024ae"
+      },
+      {
+        "path": "data\\historical\\xauusd\\ask\\m1\\xauusd_ask_m1_2024_02.csv",
+        "sha256": "40706a4ec8abb07c6fe13e4c4562f7d07485c104226e42d36c57e06d36c1c167"
+      },
+      {
+        "path": "data\\historical\\xauusd\\ask\\m1\\xauusd_ask_m1_2024_03.csv",
+        "sha256": "12ee5b98105d955b18b7a496120998f5f6647987cd16f706c94da6bd7541eb91"
+      },
+      {
+        "path": "data\\historical\\xauusd\\ask\\m1\\xauusd_ask_m1_2024_04.csv",
+        "sha256": "ef4001235ec800174d32459174e2235d7cdaf9f67662108c78a962d1d4cb43c6"
+      },
+      {
+        "path": "data\\historical\\xauusd\\ask\\m1\\xauusd_ask_m1_2024_05.csv",
+        "sha256": "54ffe9267ce4be51e68746c20eb0a3d5d77f46b0fc71c34af7eb8884d0af6588"
+      },
+      {
+        "path": "data\\historical\\xauusd\\ask\\m1\\xauusd_ask_m1_2024_06.csv",
+        "sha256": "ec13944e0fa902394e6a48baf8e142696c3b1486d229d50603f5464085073c56"
+      }
+    ],
+    "manifest_checks": [
+      {
+        "file": "xauusd_bid_m1_2024_01.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_bid_m1_2024_02.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_bid_m1_2024_03.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_bid_m1_2024_04.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_bid_m1_2024_05.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_bid_m1_2024_06.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_ask_m1_2024_01.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_ask_m1_2024_02.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_ask_m1_2024_03.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_ask_m1_2024_04.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_ask_m1_2024_05.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_ask_m1_2024_06.csv",
+        "matches": true
+      }
+    ],
+    "timestamp_provenance": "Unix milliseconds interpreted as UTC; source offset unverified"
+  },
+  "raw_data_modified": false,
+  "pnl_inspected": false
+}

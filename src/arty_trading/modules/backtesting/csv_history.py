@@ -10,6 +10,8 @@ from typing import Any
 
 import pandas as pd
 
+from arty_trading.validation.market_data import resample_closed_bars
+
 
 def read_side(paths: list[Path]) -> pd.DataFrame:
     if not paths:
@@ -31,6 +33,13 @@ def read_side(paths: list[Path]) -> pd.DataFrame:
     ).any():
         raise ValueError("Invalid CSV OHLC bounds")
     frame.index = pd.DatetimeIndex(pd.to_datetime(frame.timestamp, unit="ms", utc=True))
+    from arty_trading.validation.split import HOLDOUT_LOADING, DataSplit, HoldoutAccessError
+    from arty_trading.validation.trial_registry import TrialRegistry
+
+    split = DataSplit(TrialRegistry())
+    bounds = (split.dev[0], split.holdout[1]) if HOLDOUT_LOADING.get() else split.dev
+    if ((frame.index < bounds[0]) | (frame.index >= bounds[1])).any():
+        raise HoldoutAccessError("CSV outside allowed split: use engine.load_holdout")
     return frame
 
 
@@ -54,24 +63,13 @@ def load_csv_history(directory: Path, point: float) -> dict[str, Any]:
     ).all(axis=1)
     bid, ask = bid.loc[~unchanged], ask.loc[~unchanged]
     candles: dict[str, list[dict[str, Any]]] = {}
-    aggregations = {"open": "first", "high": "max", "low": "min", "close": "last"}
     volume_column = next((key for key in ("tick_volume", "volume") if key in bid.columns), None)
-    bid_aggregations = dict(aggregations)
     if volume_column is not None:
         if bid[volume_column].isna().any() or (bid[volume_column] < 0).any():
             raise ValueError("Invalid historical volume")
-        bid_aggregations[volume_column] = "sum"
-    for timeframe, rule in (("M5", "5min"), ("H1", "1h"), ("H4", "4h")):
-        b = (
-            bid.resample(rule, origin="epoch", closed="left", label="left")
-            .agg(bid_aggregations)
-            .dropna()
-        )
-        a = (
-            ask.resample(rule, origin="epoch", closed="left", label="left")
-            .agg(aggregations)
-            .dropna()
-        )
+    for timeframe, minutes in (("M5", 5), ("H1", 60), ("H4", 240)):
+        b = resample_closed_bars(bid, minutes)
+        a = resample_closed_bars(ask, minutes)
         rows: list[dict[str, Any]] = []
         for time, row in b.iterrows():
             quote = a.loc[time]
@@ -80,6 +78,7 @@ def load_csv_history(directory: Path, point: float) -> dict[str, Any]:
             item.update(
                 {
                     "time": int(pd.Timestamp(time).timestamp()),
+                    "available_at": int(row.available_at.timestamp()),
                     "tick_volume": int(row[volume_column]) if volume_column is not None else 0,
                     "spread": math.ceil(max(0.0, (quote.close - row.close) / point)),
                 }

@@ -22,7 +22,6 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Any
 
-from arty_trading.config.settings import Settings
 from arty_trading.core.entities import Candle
 from arty_trading.core.enums import TimeFrame
 from arty_trading.modules.backtesting.engine import BacktestEngine
@@ -99,43 +98,8 @@ class Config:
 
 
 def configure_detector_for_symbol(detector: SMCDetector, symbol: str) -> None:
-    """
-    Phase 3 — applique les filtres de qualité du profil instrument aux
-    sous-détecteurs SMC (même logique que
-    ``TradingEngine._configure_detector_for_symbol``), pour que les backtests
-    utilisent les mêmes paramètres que le chemin live.
-    """
-    try:
-        profile = Settings().get_instrument_profile(symbol)
-    except Exception:
-        profile = None
-    if profile is None:
-        return
-
-    detectors = getattr(detector, "detectors", None)
-    if not isinstance(detectors, dict):
-        return
-
-    param_map = {
-        "liquidity": {
-            "_min_rejection_ratio": profile.sweep_min_rejection_ratio,
-            "_displacement_atr_mult": profile.sweep_displacement_atr_mult,
-        },
-        "fair_value_gap": {
-            "_min_gap_atr": profile.min_fvg_atr,
-        },
-        "order_blocks": {
-            "_max_ob_atr_mult": profile.max_ob_atr_mult,
-            "_displacement_confirmation_bars": profile.displacement_confirmation_bars,
-        },
-    }
-    for name, params in param_map.items():
-        sub = detectors.get(name)
-        if sub is None:
-            continue
-        for attr, value in params.items():
-            if hasattr(sub, attr):
-                setattr(sub, attr, value)
+    from arty_trading.config.operational import apply_operational_definitions
+    apply_operational_definitions(detector, symbol)
 
 
 async def run_one(symbol: str, candles: list[Candle], cfg: Config) -> dict[str, Any]:
@@ -163,6 +127,8 @@ async def run_one(symbol: str, candles: list[Candle], cfg: Config) -> dict[str, 
         "max_dd": stats.max_drawdown,
         "final_balance": stats.final_balance,
         "expectancy": stats.expectancy,
+        "cost_sensitivity": stats.cost_sensitivity,
+        "cost_assumptions": stats.cost_assumptions,
         "consec_wins": stats.max_consecutive_wins,
         "consec_losses": stats.max_consecutive_losses,
         # Phase 3F : breakdown par type de setup / direction.
@@ -222,6 +188,8 @@ async def main() -> int:
             f"{r['profit_factor']:>6.2f} {r['sharpe']:>7.2f} {r['max_dd']*100:>6.1f}% "
             f"{r['final_balance']:>12.2f} {float(r['expectancy']):>10.2f}"
         )
+        print("Cost sensitivity:", r["cost_sensitivity"])
+        print("Cost assumptions:", r["cost_assumptions"])
         if cfg.validator is not None:
             print_setup_breakdown(r["config"], r["setup_breakdown"])
 

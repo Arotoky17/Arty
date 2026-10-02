@@ -792,42 +792,6 @@
     "source": "                content=\"Erreur : API key OpenAI non configuree. Configurez OPENAI_API_KEY dans le fichier .env\","
   },
   {
-    "file": "src/arty_trading/modules/backtesting/mtf_engine.py",
-    "code": "E501",
-    "message": "Line too long (112 > 100)",
-    "source": "            candles[0].timeframe.value if hasattr(candles[0].timeframe, \"value\") else str(candles[0].timeframe),"
-  },
-  {
-    "file": "src/arty_trading/modules/backtesting/stats.py",
-    "code": "E501",
-    "message": "Line too long (102 > 100)",
-    "source": "    stats.average_loss = gross_loss / stats.losing_trades if stats.losing_trades > 0 else Decimal(\"0\")"
-  },
-  {
-    "file": "src/arty_trading/modules/backtesting/stats.py",
-    "code": "E501",
-    "message": "Line too long (105 > 100)",
-    "source": "    stats.average_win = gross_profit / stats.winning_trades if stats.winning_trades > 0 else Decimal(\"0\")"
-  },
-  {
-    "file": "src/arty_trading/modules/backtesting/stats.py",
-    "code": "E501",
-    "message": "Line too long (110 > 100)",
-    "source": "    stats.average_profit = stats.total_profit / stats.total_trades if stats.total_trades > 0 else Decimal(\"0\")"
-  },
-  {
-    "file": "src/arty_trading/modules/backtesting/stats.py",
-    "code": "E501",
-    "message": "Line too long (110 > 100)",
-    "source": "    stats.total_return_pct = float(stats.total_profit / initial_balance * 100) if initial_balance > 0 else 0.0"
-  },
-  {
-    "file": "src/arty_trading/modules/backtesting/stats.py",
-    "code": "E501",
-    "message": "Line too long (118 > 100)",
-    "source": "        stats.expectancy = (Decimal(str(win_pct)) * stats.average_win) - (Decimal(str(loss_pct)) * stats.average_loss)"
-  },
-  {
     "file": "src/arty_trading/modules/decision/engine.py",
     "code": "E501",
     "message": "Line too long (106 > 100)",
@@ -886,18 +850,6 @@
     "code": "E501",
     "message": "Line too long (106 > 100)",
     "source": "        decision = \"ACCEPT\" if weighted_score >= self._min_score and not hard_reject_reasons else \"REJECT\""
-  },
-  {
-    "file": "src/arty_trading/modules/smc/order_blocks.py",
-    "code": "E501",
-    "message": "Line too long (102 > 100)",
-    "source": "                    mitigated_count = self._is_mitigated(candles, i + 2, ob_top, ob_bottom, \"bearish\")"
-  },
-  {
-    "file": "src/arty_trading/modules/smc/order_blocks.py",
-    "code": "E501",
-    "message": "Line too long (102 > 100)",
-    "source": "                    mitigated_count = self._is_mitigated(candles, i + 2, ob_top, ob_bottom, \"bullish\")"
   },
   {
     "file": "src/arty_trading/modules/smc/setup_tracker.py",
@@ -2274,18 +2226,6 @@
     "source": "from datetime import datetime"
   },
   {
-    "file": "src/arty_trading/modules/backtesting/engine.py",
-    "code": "F401",
-    "message": "`arty_trading.core.enums.TimeFrame` imported but unused",
-    "source": "from arty_trading.core.enums import Direction, LogCategory, TimeFrame"
-  },
-  {
-    "file": "src/arty_trading/modules/backtesting/engine.py",
-    "code": "F401",
-    "message": "`asyncio` imported but unused",
-    "source": "import asyncio"
-  },
-  {
     "file": "src/arty_trading/modules/decision/master_trend.py",
     "code": "F401",
     "message": "`arty_trading.modules.smc.base.find_external_swing_points` imported but unused",
@@ -2302,12 +2242,6 @@
     "code": "F401",
     "message": "`arty_trading.modules.execution.executor.MT5PositionNotFoundError` imported but unused; consider removing, adding to `__all__`, or using a redundant alias",
     "source": "    MT5PositionNotFoundError,"
-  },
-  {
-    "file": "src/arty_trading/modules/smc/liquidity.py",
-    "code": "F401",
-    "message": "`arty_trading.modules.smc.base.SwingPoint` imported but unused",
-    "source": "    SwingPoint,"
   },
   {
     "file": "src/arty_trading/modules/smc/sessions.py",
@@ -2974,12 +2908,6 @@
     "code": "I001",
     "message": "Import block is un-sorted or un-formatted",
     "source": "from arty_trading.modules.execution.executor import (\n    MT5OrderError,\n    MT5PositionNotFoundError,\n    OrderExecutor,\n)\nfrom arty_trading.modules.execution.paper_executor import PaperOrderExecutor\nfrom arty_trading.modules.execution.position_manager import PositionAction, PositionManager\nfrom arty_trading.modules.execution.profit_lock import ProfitLockLevel, ProfitLockManager\nfrom arty_trading.modules.execution.runner import RunnerManager\nfrom arty_trading.modules.execution.sl_guard import (\n    StructureContext,\n    is_more_protective,\n    most_protective,\n)\nfrom arty_trading.modules.execution.structure_trailing import StructureTrailingManager\nfrom arty_trading.modules.execution.partial_profit import PartialLevel, PartialProfitManager"
-  },
-  {
-    "file": "src/arty_trading/modules/smc/fair_value_gap.py",
-    "code": "I001",
-    "message": "Import block is un-sorted or un-formatted",
-    "source": "from __future__ import annotations\n\nfrom typing import Any\n\nfrom decimal import Decimal\n\nfrom arty_trading.core.entities import Candle\nfrom arty_trading.core.enums import SMCConcept\nfrom arty_trading.modules.smc.base import BaseDetector, SMCDetection"
   },
   {
     "file": "src/arty_trading/utils/__init__.py",
@@ -3826,12 +3754,6 @@
     "code": "W292",
     "message": "No newline at end of file",
     "source": "__all__ = [\"RiskManager\"]"
-  },
-  {
-    "file": "src/arty_trading/modules/smc/liquidity.py",
-    "code": "W292",
-    "message": "No newline at end of file",
-    "source": "        return detections"
   },
   {
     "file": "src/arty_trading/modules/smc/sessions.py",

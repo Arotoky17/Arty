@@ -49,7 +49,9 @@ logs/
 *.log
 data/cache/
 data/exports/
+data/validation.sqlite*
 *.csv
+!config/news_calendar.csv
 *.pdf
 
 # Docker

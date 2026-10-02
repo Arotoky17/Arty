@@ -55,13 +55,13 @@ async def run_backtest(req: BacktestRequest, request: Request) -> dict:
     engine = BacktestEngine(
         initial_balance=Decimal(str(req.initial_balance)),
         risk_per_trade=req.risk_per_trade,
+        symbol=req.symbol,
     )
 
-    stats = engine.run(
+    stats = await engine.run_async(
         candles=candles,
         signal_generator=signal_generator,
         smc_detector=smc_detector,
-        symbol=req.symbol,
     )
 
     return {
@@ -81,6 +81,11 @@ async def run_backtest(req: BacktestRequest, request: Request) -> dict:
             "max_drawdown": round(stats.max_drawdown, 4),
             "sharpe_ratio": round(stats.sharpe_ratio, 4),
             "expectancy": str(stats.expectancy),
+            "expectancy_r": stats.expectancy_r,
+            "fill_rate": stats.fill_rate,
+            "unfilled_orders": stats.unfilled_orders,
+            "cost_sensitivity": stats.cost_sensitivity,
+            "cost_assumptions": stats.cost_assumptions,
             "total_return_pct": round(stats.total_return_pct, 2),
             "max_consecutive_wins": stats.max_consecutive_wins,
             "max_consecutive_losses": stats.max_consecutive_losses,

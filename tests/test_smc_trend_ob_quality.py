@@ -262,4 +262,8 @@ async def test_backtest_timestamp_alignment_trade_count() -> None:
         engine = BacktestEngine(symbol="XAUUSD")
         stats = await engine.run_async(candles, generator, ReplayDetector())
         assert generator.called
-        assert stats.total_trades == expected_trades, strategy.last_ob_rejection
+        # The dated confirmation submits at the last bar: no subsequent bar
+        # exists to fill a limit order. Admission remains the tested invariant.
+        assert stats.orders_submitted == expected_trades, strategy.last_ob_rejection
+        assert stats.total_trades == 0
+        assert stats.unfilled_orders == expected_trades

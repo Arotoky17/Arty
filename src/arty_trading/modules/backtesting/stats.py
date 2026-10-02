@@ -7,14 +7,21 @@ et autres métriques de performance.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
+from typing import Any
 
 
 @dataclass
 class BacktestStats:
     """Statistiques de performance d'un backtest."""
 
+    orders_submitted: int = 0
+    unfilled_orders: int = 0
+    fill_rate: float = 0.0
+    expectancy_r: float = 0.0
+    cost_sensitivity: list[dict[str, Any]] = field(default_factory=list)
+    cost_assumptions: dict[str, Any] = field(default_factory=dict)
     total_trades: int = 0
     winning_trades: int = 0
     losing_trades: int = 0
@@ -115,19 +122,29 @@ def calculate_stats(
     stats.profit_factor = float(gross_profit / gross_loss) if gross_loss > 0 else float("inf")
 
     # Average profit
-    stats.average_profit = stats.total_profit / stats.total_trades if stats.total_trades > 0 else Decimal("0")
-    stats.average_win = gross_profit / stats.winning_trades if stats.winning_trades > 0 else Decimal("0")
-    stats.average_loss = gross_loss / stats.losing_trades if stats.losing_trades > 0 else Decimal("0")
+    stats.average_profit = (
+        stats.total_profit / stats.total_trades if stats.total_trades > 0 else Decimal("0")
+    )
+    stats.average_win = (
+        gross_profit / stats.winning_trades if stats.winning_trades > 0 else Decimal("0")
+    )
+    stats.average_loss = (
+        gross_loss / stats.losing_trades if stats.losing_trades > 0 else Decimal("0")
+    )
 
     # Expectancy = (Win% * Avg Win) - (Loss% * Avg Loss)
     if stats.total_trades > 0:
         win_pct = stats.winning_trades / stats.total_trades
         loss_pct = stats.losing_trades / stats.total_trades
-        stats.expectancy = (Decimal(str(win_pct)) * stats.average_win) - (Decimal(str(loss_pct)) * stats.average_loss)
+        stats.expectancy = (Decimal(str(win_pct)) * stats.average_win) - (
+            Decimal(str(loss_pct)) * stats.average_loss
+        )
 
     # Final balance
     stats.final_balance = initial_balance + stats.total_profit
-    stats.total_return_pct = float(stats.total_profit / initial_balance * 100) if initial_balance > 0 else 0.0
+    stats.total_return_pct = (
+        float(stats.total_profit / initial_balance * 100) if initial_balance > 0 else 0.0
+    )
 
     # Max drawdown
     if equity_curve:
@@ -140,8 +157,8 @@ def calculate_stats(
             dd = peak - equity
             if dd > max_dd:
                 max_dd = dd
-                if peak > 0:
-                    max_dd_pct = float(dd / peak)
+            if peak > 0:
+                max_dd_pct = max(max_dd_pct, float(dd / peak))
         stats.max_drawdown = max_dd_pct
         stats.max_drawdown_amount = max_dd
 
@@ -149,7 +166,7 @@ def calculate_stats(
     if len(profits) > 1:
         avg = sum(profits) / len(profits)
         variance = sum((p - avg) ** 2 for p in profits) / (len(profits) - 1)
-        std = variance ** 0.5
+        std = variance**0.5
         stats.sharpe_ratio = avg / std if std > 0 else 0.0
 
     return stats

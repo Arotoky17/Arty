@@ -129,6 +129,12 @@ async def main() -> int:
             f"maxDD={st.max_drawdown*100:.1f}% expectancy={st.expectancy:.2f} "
             f"final={st.final_balance:.2f}"
         )
+        for scenario in stats["cost_sensitivity"]:
+            lines.append(
+                f"costs x{scenario['cost_multiplier']}: "
+                f"expectancy_R={scenario['expectancy_r']:.4f} "
+                f"PF={scenario['profit_factor']} MDD={scenario['max_drawdown']:.4f}"
+            )
         lines += _fmt_breakdown("Par direction", engine.direction_breakdown())
         lines += _fmt_breakdown("Par type de setup", engine.setup_type_breakdown())
         lines += _fmt_breakdown("Par tier Validator/Decision", engine.tier_breakdown())

@@ -1,0 +1,48 @@
+version: 1
+# Declared operational changes. This is a coverage map, not a proof of each event's cause.
+rules:
+  swing:
+    membership: null
+    fields: []
+  displacement:
+    membership: DISP_CAUSAL_ATR_STRICT_BODY
+    fields: [atr, body_atr]
+  FVG:
+    membership: FVG_CAUSAL_ATR_AND_NO_FIXED_PIP_FLOOR
+    fields: [gap_size_atr]
+  IFVG:
+    membership: FVG_CAUSAL_ATR_AND_NO_FIXED_PIP_FLOOR
+    fields: [gap_size_atr]
+  OB:
+    membership: OB_CAUSAL_ATR_AND_STRICT_DISPLACEMENT
+    fields: [fresh]
+  breaker:
+    membership: OB_CAUSAL_ATR_AND_STRICT_DISPLACEMENT
+    fields: [fresh]
+  mitigation:
+    membership: OB_CAUSAL_ATR_AND_STRICT_DISPLACEMENT
+    fields: [fresh]
+  sweep:
+    membership: SWEEP_PENETRATION_AND_REINTEGRATION_DEADLINE
+    fields: [penetration, rejection_ratio, quality, displacement_confirmed, sweep_low, sweep_high, swept_index]
+  EQH:
+    membership: EQUAL_LEVELS_ATR_TOLERANCE
+    fields: [tolerance]
+  EQL:
+    membership: EQUAL_LEVELS_ATR_TOLERANCE
+    fields: [tolerance]
+  BOS:
+    membership: STRUCTURE_CONFIRMED_SWINGS
+    fields: [displacement, swing_strength, subtype, broken_index, trend]
+  internal_BOS:
+    membership: STRUCTURE_CONFIRMED_SWINGS
+    fields: [displacement, swing_strength, broken_index, trend]
+  external_BOS:
+    membership: STRUCTURE_CONFIRMED_SWINGS
+    fields: [displacement, swing_strength, broken_index, trend]
+  CHoCH:
+    membership: STRUCTURE_CONFIRMED_SWINGS
+    fields: [displacement, swing_strength, broken_index, previous_trend]
+  MSS:
+    membership: STRUCTURE_CONFIRMED_SWINGS
+    fields: [displacement, swing_strength]

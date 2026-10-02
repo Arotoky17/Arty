@@ -19,3 +19,9 @@ def _clear_settings_cache():
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
+
+
+@pytest.fixture(autouse=True)
+def _isolate_trial_registry(tmp_path, monkeypatch):
+    """Tests must never consume research trials or holdout authorizations."""
+    monkeypatch.setenv("ARTY_TRIAL_REGISTRY", str(tmp_path / "validation.sqlite"))

@@ -1,0 +1,40 @@
+version: 1
+setup_id: setup_1_bos_retest_ob_fvg_v1
+phase: development_baseline
+approval:
+  status: pending_user_validation
+  approved_by: null
+  approved_at_utc: null
+  configuration_sha256: null
+data:
+  status: missing_2020_2026
+  audit_report: reports/data_audit/audit_data.json
+  approved_audit_sha256: null
+  news_calendar_status: primary_sources_provided_pending_user_review
+strategy:
+  symbol: XAUUSD
+  timeframe: M5
+  rule: BOS_with_displacement_then_first_retest_of_fresh_OB_or_FVG
+  zone_priority: [OB, FVG]
+  zone_selection: newest_eligible_confirmed_zone_at_BOS_close
+  entry_zone_fraction: 0.5
+  stop_buffer_atr: 0.1
+  reward_risk: 2.0
+  risk_fraction: 0.01
+  one_trade_at_a_time: true
+  regime_filter: false
+  htf_bias_filter: false
+  session_filter: false
+  confluence_sizing: false
+validation:
+  variants_planned: 1
+  expectancy_net_r_min_exclusive: 0.0
+  bootstrap_lower_bound_min_exclusive: 0.0
+  bootstrap_confidence: 0.95
+  bootstrap_method: percentile_weekly_calendar_blocks
+  bootstrap_replicates: 10000
+  bootstrap_seed: 20261002
+  profit_factor_net_min_exclusive: 1.2
+  minimum_dev_trades: 100
+  minimum_holdout_trades: 100
+  failure_policy: delete_setup_no_retuning

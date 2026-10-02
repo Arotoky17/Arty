@@ -68,6 +68,15 @@ def obtain_history(
     start: datetime,
     end: datetime,
 ) -> tuple[dict[str, Any], dict[TimeFrame, list[Candle]]]:
+    from arty_trading.validation.split import HOLDOUT_LOADING, DataSplit, HoldoutAccessError
+    from arty_trading.validation.trial_registry import TrialRegistry
+
+    split = DataSplit(TrialRegistry())
+    if HOLDOUT_LOADING.get():
+        if not split.holdout[0] <= start < end <= split.holdout[1]:
+            raise HoldoutAccessError("Requested period is outside holdout")
+    else:
+        split.assert_period_development(start, end)
     path = config.get("history_file")
     if config.get("source") == "csv":
         from arty_trading.modules.backtesting.csv_history import load_csv_history

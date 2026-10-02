@@ -15,10 +15,10 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from arty_trading.config.operational import definitions, operational_atr
 from arty_trading.core.entities import Candle
 from arty_trading.core.enums import SMCConcept
 from arty_trading.modules.smc.base import BaseDetector, SMCDetection
-from arty_trading.utils.helpers import calculate_atr
 
 
 class OrderBlockDetector(BaseDetector):
@@ -29,16 +29,16 @@ class OrderBlockDetector(BaseDetector):
     leurs ordres. Le prix a tendance à revenir mitiguer ces zones.
     """
 
-    MAX_ZONE_AGE = 30
+    MAX_ZONE_AGE = definitions()["ob"]["max_age_bars"]
 
     def __init__(
         self,
         enabled: bool = True,
-        displacement_threshold: float = 1.0,
-        mitigation_lookback: int = 20,
-        max_mitigations: int = 2,
-        max_ob_atr_mult: float = 0.0,
-        displacement_confirmation_bars: int = 1,
+        displacement_threshold: float | None = None,
+        mitigation_lookback: int | None = None,
+        max_mitigations: int | None = None,
+        max_ob_atr_mult: float | None = None,
+        displacement_confirmation_bars: int | None = None,
     ) -> None:
         """
         Args:
@@ -59,6 +59,27 @@ class OrderBlockDetector(BaseDetector):
                 doit dépasser le seuil de displacement et chaque bougie doit
                 être dans le sens du déplacement.
         """
+        displacement_threshold = (
+            definitions()["displacement"]["body_atr"]
+            if displacement_threshold is None
+            else displacement_threshold
+        )
+        mitigation_lookback = (
+            definitions()["ob"]["mitigation_lookback"]
+            if mitigation_lookback is None
+            else mitigation_lookback
+        )
+        max_mitigations = (
+            definitions()["ob"]["max_mitigations"] if max_mitigations is None else max_mitigations
+        )
+        max_ob_atr_mult = (
+            definitions()["ob"]["max_size_atr"] if max_ob_atr_mult is None else max_ob_atr_mult
+        )
+        displacement_confirmation_bars = (
+            definitions()["displacement"]["confirmation_bars"]
+            if displacement_confirmation_bars is None
+            else displacement_confirmation_bars
+        )
         super().__init__(enabled=enabled)
         self._displacement_threshold = displacement_threshold
         self._mitigation_lookback = mitigation_lookback
@@ -87,15 +108,11 @@ class OrderBlockDetector(BaseDetector):
 
         detections: list[SMCDetection] = []
 
-        atr = calculate_atr(candles, period=14)
-        if atr == 0:
-            average_range = sum(float(abs(c.high - c.low)) for c in candles) / len(candles)
-            atr = Decimal(str(average_range))
-
-        displacement_min = atr * Decimal(str(self._displacement_threshold))
-
-        # Détecter les Order Blocks
         for i in range(1, len(candles) - 1):
+            atr = operational_atr(candles[: i + 1])
+            if atr <= 0:
+                continue
+            displacement_min = atr * Decimal(str(self._displacement_threshold))
             # Bullish OB : chercher une bougie baissière suivie d'un déplacement haussier
             if candles[i].close < candles[i].open:  # Bougie baissière
                 # Vérifier le déplacement haussier suivant
@@ -107,12 +124,16 @@ class OrderBlockDetector(BaseDetector):
                     ob_bottom = candles[i].low
 
                     # Filtre de taille : OB gigantesque = clump de volatilité
-                    if self._max_ob_atr_mult > 0 and atr > 0 and (
-                        ob_top - ob_bottom > atr * Decimal(str(self._max_ob_atr_mult))
+                    if (
+                        self._max_ob_atr_mult > 0
+                        and atr > 0
+                        and (ob_top - ob_bottom > atr * Decimal(str(self._max_ob_atr_mult)))
                     ):
                         continue
                     # Vérifier si l'OB est mitigé plus tard
-                    mitigated_count = self._is_mitigated(candles, i + 2, ob_top, ob_bottom, "bullish")
+                    mitigated_count = self._is_mitigated(
+                        candles, i + 2, ob_top, ob_bottom, "bullish"
+                    )
                     violated = self._is_violated(candles, i + 2, ob_bottom, "bullish")
 
                     if violated:
@@ -160,12 +181,16 @@ class OrderBlockDetector(BaseDetector):
                     ob_bottom = candles[i].low
 
                     # Filtre de taille : OB gigantesque = clump de volatilité
-                    if self._max_ob_atr_mult > 0 and atr > 0 and (
-                        ob_top - ob_bottom > atr * Decimal(str(self._max_ob_atr_mult))
+                    if (
+                        self._max_ob_atr_mult > 0
+                        and atr > 0
+                        and (ob_top - ob_bottom > atr * Decimal(str(self._max_ob_atr_mult)))
                     ):
                         continue
                     # Vérifier si l'OB est mitigé plus tard
-                    mitigated_count = self._is_mitigated(candles, i + 2, ob_top, ob_bottom, "bearish")
+                    mitigated_count = self._is_mitigated(
+                        candles, i + 2, ob_top, ob_bottom, "bearish"
+                    )
                     violated = self._is_violated(candles, i + 2, ob_top, "bearish")
 
                     if violated:
@@ -205,11 +230,14 @@ class OrderBlockDetector(BaseDetector):
         # Détecter les Mitigation Blocks (après un liquidity sweep)
         detections.extend(self._detect_mitigation_blocks(candles))
 
-        detections = [
-            d for d in detections
-            if (len(candles) - 1 - d.index) <= self.MAX_ZONE_AGE
-        ]
+        detections = [d for d in detections if (len(candles) - 1 - d.index) <= self.MAX_ZONE_AGE]
 
+        for detection in detections:
+            detection.details["fresh"] = detection.concept == SMCConcept.ORDER_BLOCK and not any(
+                bar.low <= Decimal(str(detection.details["ob_top"]))
+                and bar.high >= Decimal(str(detection.details["ob_bottom"]))
+                for bar in candles[detection.index + 1 + self._displacement_confirmation_bars :]
+            )
         return detections
 
     def _confirmed_displacement(
@@ -236,7 +264,7 @@ class OrderBlockDetector(BaseDetector):
             if direction == "bearish" and c.close >= c.open:
                 return False, Decimal("0")
             cumulative += body
-        if cumulative >= displacement_min:
+        if cumulative > displacement_min:
             return True, cumulative
         return False, cumulative
 

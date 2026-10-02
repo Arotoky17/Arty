@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import random
 import sys
 from collections import Counter
 from datetime import UTC, datetime, timedelta
@@ -107,6 +108,15 @@ class ControlReplay:
         history: dict[TimeFrame, list[Candle]],
         quotes: list[dict[str, Any]] | None = None,
     ) -> None:
+        from arty_trading.config.operational import load_config
+        from arty_trading.modules.execution.fill_model import FillModel
+        from arty_trading.validation.split import DataSplit
+        from arty_trading.validation.trial_registry import TrialRegistry
+
+        self.registry = TrialRegistry(config.get("trial_registry"))
+        self.split = DataSplit(self.registry)
+        self.fill_model = FillModel(**load_config("execution.yaml")["fill"])
+        self.fill_rng = random.Random(self.fill_model.seed)
         self.config = config
         self.history = history
         self.ask_quotes = {
@@ -115,11 +125,29 @@ class ControlReplay:
             if "ask_close" in row
         }
         self.broker = config["broker"]
+        from arty_trading.modules.execution.cost_model import CostModel
+
+        # Actual bid/ask spread is charged by historical quotes, never twice.
+        self.cost_model = CostModel(
+            spread_pips=0,
+            slippage_pips=(
+                float(self.broker["slippage_points"])
+                * float(self.broker["point"])
+                / float(get_pip_size(config["symbol"]))
+            ),
+            commission_per_lot_side=float(self.broker["commission_per_lot_round_trip"]) / 2,
+        )
+        self._authorized_history: dict[TimeFrame, tuple[str, ...]] | None = None
         self.balance = Decimal(str(config["initial_balance"]))
         self.equity = self.balance
         self.peak = self.balance
         self.drawdown = 0.0
         self.position: Trade | None = None
+        self._current_candle: Candle | None = None
+        self._cost_total = 0.0
+        self._stress_equity: list[float] = [float(self.balance)]
+        self._stress_costs: list[float] = [0.0]
+        self.cost_sensitivity: list[dict[str, Any]] = []
         self.audits: list[dict[str, Any]] = []
         self.rejections: Counter[str] = Counter(
             {
@@ -186,19 +214,32 @@ class ControlReplay:
         trade = self.position
         assert trade is not None
         side = 1 if trade.direction == Direction.BUY else -1
-        slip = Decimal(str(self.broker["slippage_points"])) * Decimal(str(self.broker["point"]))
+        slip = Decimal(str(self.cost_model.slippage_pips)) * get_pip_size(trade.symbol)
         exit_price = price - side * slip
         profit = (exit_price - trade.entry_price) * side * trade.volume * Decimal(
             str(self.broker["contract_size"])
-        ) - trade.volume * Decimal(str(self.broker["commission_per_lot_round_trip"]))
+        ) - trade.volume * Decimal(str(2 * self.cost_model.commission_per_lot_side))
         self.balance += profit
         self.risk.close_trade(trade, profit)
         audit = self.audits[-1]
+        entry_spread = audit.get("entry_spread_price", 0.0)
+        exit_spread = entry_spread
+        if self._current_candle is not None:
+            exit_spread = float(
+                self.ask_price(self._current_candle, "close") - self._current_candle.close
+            )
+        roundtrip_cost = float(trade.volume) * (
+            ((entry_spread + exit_spread) / 2 + 2 * float(slip))
+            * float(self.broker["contract_size"])
+            + 2 * self.cost_model.commission_per_lot_side
+        )
+        self._cost_total += roundtrip_cost
         audit.update(
             {
                 "exit_timestamp": time.isoformat(),
                 "exit_price": float(exit_price),
                 "profit": float(profit),
+                "roundtrip_cost_usd": roundtrip_cost,
                 "r_multiple": float(profit) / audit["initial_risk_usd"],
                 "pips": float((exit_price - trade.entry_price) * side / get_pip_size(trade.symbol)),
             }
@@ -221,6 +262,8 @@ class ControlReplay:
         self.peak = max(self.peak, self.equity)
         self.drawdown = max(self.drawdown, float((self.peak - self.equity) / self.peak))
         self.risk.update_equity(self.equity)
+        self._stress_equity.append(float(self.equity))
+        self._stress_costs.append(self._cost_total)
 
     def check_exit(self, candle: Candle) -> None:
         if self.position is None:
@@ -355,10 +398,15 @@ class ControlReplay:
                     self.rejections[f"validator:{reason}"] += 1
             return
         self.signals_generated += 1
+        # Control replay submits market orders, so touch/cross is inapplicable.
+        if self.fill_rng.random() >= self.fill_model.probability:
+            self.rejections["unfilled_market_order"] += 1
+            return
         side = 1 if signal.direction == Direction.BUY else -1
-        point = Decimal(str(self.broker["point"]))
         entry_price = self.ask_price(candle, "close") if side == 1 else candle.close
-        entry_price += side * Decimal(str(self.broker["slippage_points"])) * point
+        entry_price += (
+            side * Decimal(str(self.cost_model.slippage_pips)) * get_pip_size(candle.symbol)
+        )
         signal = signal.model_copy(update={"entry_price": entry_price})
         if (signal.entry_price - signal.stop_loss) * side <= 0 or (
             signal.take_profit - signal.entry_price
@@ -394,6 +442,7 @@ class ControlReplay:
                 "entry_price": float(signal.entry_price),
                 "initial_risk_usd": float(risk),
                 "direction": signal.direction.value,
+                "entry_spread_price": float(self.ask_price(candle, "close") - candle.close),
             }
         )
         self.audits.append(record)
@@ -412,11 +461,80 @@ class ControlReplay:
         if setup is not None:
             self.tracker.mark_consumed(setup, reason="trade_executed")
 
+    def _history_fingerprint(self) -> dict[TimeFrame, tuple[str, ...]]:
+        return {tf: tuple(c.model_dump_json() for c in batch) for tf, batch in self.history.items()}
+
+    def load_holdout(
+        self, setup_id: str, reason: str, **kwargs: Any
+    ) -> dict[TimeFrame, list[Candle]]:
+        if setup_id != self.config.get("setup_id", "legacy_control"):
+            raise ValueError("Setup does not match replay")
+        self.history = self.split.load_holdout(setup_id, reason, **kwargs)
+        if not isinstance(self.history, dict):
+            raise ValueError("Control replay requires timeframe mapping")
+        self._authorized_history = self._history_fingerprint()
+        return self.history
+
     async def run(self) -> None:
+        from arty_trading.config.operational import load_config
+        from arty_trading.modules.backtesting.stats import BacktestStats
+        from arty_trading.validation.cost_sensitivity import cost_sensitivity
+        from arty_trading.validation.preregistration import assert_setup_run_allowed
+
+        assert_setup_run_allowed(self.config.get("setup_id", "legacy_control"))
+
+        if self._authorized_history is None:
+            for batch in self.history.values():
+                self.split.assert_development(batch)
+            partition = "dev"
+        else:
+            if self._authorized_history != self._history_fingerprint():
+                raise ValueError("Authorized history changed")
+            partition = "holdout"
+            self._authorized_history = None
+        bars = self.history.get(TimeFrame.M5, [])
+        trial_id = self.registry.begin(
+            self.config.get("setup_id", "legacy_control"),
+            self.config,
+            "M5",
+            bars[0].time.isoformat() if bars else None,
+            bars[-1].time.isoformat() if bars else None,
+            partition,
+        )
+        await self._run_replay()
+        self.cost_sensitivity = cost_sensitivity(
+            [
+                (row["profit"], row.get("roundtrip_cost_usd", 0.0), row["initial_risk_usd"])
+                for row in self.audits
+            ],
+            self._stress_equity,
+            self._stress_costs,
+            load_config("execution.yaml")["cost"]["sensitivity_multipliers"],
+        )
+        profits = [row["profit"] for row in self.audits]
+        gains = sum(p for p in profits if p > 0)
+        losses = -sum(p for p in profits if p < 0)
+        results = [row["r_multiple"] for row in self.audits]
+        stats = BacktestStats(
+            total_trades=len(profits),
+            profit_factor=gains / losses if losses else 0.0,
+            max_drawdown=self.drawdown,
+            fill_rate=len(profits) / self.signals_generated if self.signals_generated else 0.0,
+        )
+        # Trade-level Sharpe, unannualized (same frequency as registry R outcomes).
+        if len(results) > 1:
+            import statistics
+
+            std = statistics.stdev(results)
+            stats.sharpe_ratio = statistics.mean(results) / std if std else 0.0
+        self.registry.finish(trial_id, stats, sum(results) / len(results) if results else 0.0)
+
+    async def _run_replay(self) -> None:
         indices = {TimeFrame.H1: 0, TimeFrame.H4: 0}
         durations = {TimeFrame.H1: timedelta(hours=1), TimeFrame.H4: timedelta(hours=4)}
         previous_day = None
         for i, candle in enumerate(self.history[TimeFrame.M5]):
+            self._current_candle = candle
             if i and i % 1000 == 0:
                 print(f"Replay: {i} M5 bars; {len(self.audits)} trades", file=sys.stderr)
             close = candle.time + timedelta(minutes=5)
@@ -539,6 +657,12 @@ async def run_control(
         "win_rate": sum(value > 0 for value in profits) / count if count else 0,
         "profit_factor": gains / losses if losses else None,
         "expectancy_r": sum(row["r_multiple"] for row in replay.audits) / count if count else None,
+        "cost_sensitivity": replay.cost_sensitivity,
+        "cost_sensitivity_assumptions": {
+            "method": "fixed_path_repricing",
+            "spread": "historical bid/ask half spread at each side; not synthetic session spread",
+            "news": "historical quotes retain realized event spread; no synthetic extra markup",
+        },
         "max_drawdown_pct": replay.drawdown * 100,
         "avg_pips_per_trade": sum(row["pips"] for row in replay.audits) / count if count else None,
         "trades_par_grade": dict(Counter(row["grade"] for row in replay.audits)),

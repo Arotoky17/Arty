@@ -9,6 +9,8 @@ Détecteur de Fair Value Gap (FVG) et Inverse FVG (IFVG).
 
 from __future__ import annotations
 
+from typing import Any
+
 from decimal import Decimal
 
 from arty_trading.core.entities import Candle
@@ -67,7 +69,7 @@ class FairValueGapDetector(BaseDetector):
             return []
 
         detections: list[SMCDetection] = []
-        active_fvgs: list[dict] = []  # FVG non encore remplis
+        active_fvgs: list[dict[str, Any]] = []  # FVG non encore remplis
 
         # Seuil effectif : max(seuil fixe, min_gap_atr × ATR)
         atr = Decimal("0")
@@ -138,45 +140,45 @@ class FairValueGapDetector(BaseDetector):
                     })
 
             # Vérifier si un FVG actif est rempli ou inversé
-            for fvg in active_fvgs:
-                if fvg["filled"]:
+            for active_fvg in active_fvgs:
+                if active_fvg["filled"]:
                     continue
 
                 # Bullish FVG rempli si le prix redescend sous gap_bottom
-                if fvg["direction"] == "bullish":
-                    if candles[i + 2].close < fvg["gap_bottom"]:
-                        fvg["filled"] = True
+                if active_fvg["direction"] == "bullish":
+                    if candles[i + 2].close < active_fvg["gap_bottom"]:
+                        active_fvg["filled"] = True
                         # IFVG bearish : le FVG bullish a été rempli puis inversé
                         detections.append(
                             SMCDetection(
                                 concept=SMCConcept.IFVG,
                                 direction="bearish",
-                                price=fvg["gap_bottom"],
+                                price=active_fvg["gap_bottom"],
                                 index=i + 2,
                                 details={
                                     "original_fvg_direction": "bullish",
-                                    "gap_top": float(fvg["gap_top"]),
-                                    "gap_bottom": float(fvg["gap_bottom"]),
+                                    "gap_top": float(active_fvg["gap_top"]),
+                                    "gap_bottom": float(active_fvg["gap_bottom"]),
                                     "fill_index": i + 2,
                                 },
                             )
                         )
 
                 # Bearish FVG rempli si le prix remonte au-dessus gap_top
-                elif fvg["direction"] == "bearish":
-                    if candles[i + 2].close > fvg["gap_top"]:
-                        fvg["filled"] = True
+                elif active_fvg["direction"] == "bearish":
+                    if candles[i + 2].close > active_fvg["gap_top"]:
+                        active_fvg["filled"] = True
                         # IFVG bullish : le FVG bearish a été rempli puis inversé
                         detections.append(
                             SMCDetection(
                                 concept=SMCConcept.IFVG,
                                 direction="bullish",
-                                price=fvg["gap_top"],
+                                price=active_fvg["gap_top"],
                                 index=i + 2,
                                 details={
                                     "original_fvg_direction": "bearish",
-                                    "gap_top": float(fvg["gap_top"]),
-                                    "gap_bottom": float(fvg["gap_bottom"]),
+                                    "gap_top": float(active_fvg["gap_top"]),
+                                    "gap_bottom": float(active_fvg["gap_bottom"]),
                                     "fill_index": i + 2,
                                 },
                             )

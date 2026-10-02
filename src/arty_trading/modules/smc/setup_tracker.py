@@ -20,10 +20,11 @@ si le bot doit tourner en continu sans interruption.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field, replace
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Callable
+from typing import Any
 
 from arty_trading.core.enums import Direction, TimeFrame
 
@@ -131,7 +132,7 @@ class Setup:
     invalidation_price: float | None = None
     zone_concept: str | None = None
     zone_index: int = 0
-    structure_event: dict | None = None
+    structure_event: dict[str, Any] | None = None
     displacement_index: int | None = None
     retest_index: int | None = None
     rejection_index: int | None = None
@@ -386,7 +387,7 @@ class SetupTracker:
         zone_low: float | None = None,
         zone_concept: str | None = None,
         zone_index: int = 0,
-        structure_event: dict | None = None,
+        structure_event: dict[str, Any] | None = None,
         ttl_bars: int = 20,
         atr: float = 0.0,
         htf_trend: str = "neutral",
@@ -403,11 +404,11 @@ class SetupTracker:
         self._counter += 1
         setup_id = f"{self._symbol_key(symbol)}_{direction.value}_{self._counter}"
 
-        from datetime import timedelta, timezone
+        from datetime import timedelta
 
-        setup_created_at = created_at or datetime.now(timezone.utc)
+        setup_created_at = created_at or datetime.now(UTC)
         if setup_created_at.tzinfo is None:
-            setup_created_at = setup_created_at.replace(tzinfo=timezone.utc)
+            setup_created_at = setup_created_at.replace(tzinfo=UTC)
         expires_at = setup_created_at + timedelta(
             minutes=ttl_bars * _timeframe_minutes(source_timeframe)
         )

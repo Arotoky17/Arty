@@ -89,8 +89,8 @@ class OrderBlockDetector(BaseDetector):
 
         atr = calculate_atr(candles, period=14)
         if atr == 0:
-            atr = sum(float(abs(c.high - c.low)) for c in candles) / len(candles)
-            atr = Decimal(str(atr))
+            average_range = sum(float(abs(c.high - c.low)) for c in candles) / len(candles)
+            atr = Decimal(str(average_range))
 
         displacement_min = atr * Decimal(str(self._displacement_threshold))
 

@@ -193,7 +193,7 @@ def _no_setup(reason: str) -> SetupQualification:
 def classify_setup_type(
     zone_concept: str,
     direction: str,
-    smc_data: list[dict],
+    smc_data: list[dict[str, Any]],
     zone_index: int = 0,
     lookback_bars: int = 30,
 ) -> str:

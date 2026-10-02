@@ -1,0 +1,3944 @@
+[
+  {
+    "file": "archive/diagnostics/_aux_scan.py",
+    "code": "E401",
+    "message": "Multiple imports on one line",
+    "source": "﻿import re, subprocess, os"
+  },
+  {
+    "file": "archive/diagnostics/_swchk.py",
+    "code": "E401",
+    "message": "Multiple imports on one line",
+    "source": "import sys, random"
+  },
+  {
+    "file": "archive/diagnostics/_diag.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.application.market_context_builder import MarketContextBuilder"
+  },
+  {
+    "file": "archive/diagnostics/_diag.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.application.setup_service import update_setups_from_market_context"
+  },
+  {
+    "file": "archive/diagnostics/_diag.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.config.settings import Settings"
+  },
+  {
+    "file": "archive/diagnostics/_diag.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.core.enums import TimeFrame"
+  },
+  {
+    "file": "archive/diagnostics/_diag.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.backtesting.data_generator import (\n    aggregate_candles,\n    generate_multi_regime_candles,\n)"
+  },
+  {
+    "file": "archive/diagnostics/_diag.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.smc import SMCDetector, SetupTracker"
+  },
+  {
+    "file": "archive/diagnostics/_diag.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from decimal import Decimal"
+  },
+  {
+    "file": "archive/diagnostics/_diag2.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.application.market_context_builder import MarketContextBuilder"
+  },
+  {
+    "file": "archive/diagnostics/_diag2.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.config.settings import Settings"
+  },
+  {
+    "file": "archive/diagnostics/_diag2.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.core.enums import TimeFrame"
+  },
+  {
+    "file": "archive/diagnostics/_diag2.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.backtesting.data_generator import (\n    aggregate_candles,\n    generate_multi_regime_candles,\n)"
+  },
+  {
+    "file": "archive/diagnostics/_diag2.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.backtesting.mtf_engine import MTFBacktestEngine"
+  },
+  {
+    "file": "archive/diagnostics/_diag2.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.backtesting.mtf_engine import _CachedSMCDetector"
+  },
+  {
+    "file": "archive/diagnostics/_diag2.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.backtesting.symbol_config import configure_detector_for_symbol"
+  },
+  {
+    "file": "archive/diagnostics/_diag2.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.decision import DecisionEngine"
+  },
+  {
+    "file": "archive/diagnostics/_diag2.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.signals import SignalGenerator, SignalValidator"
+  },
+  {
+    "file": "archive/diagnostics/_diag2.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.smc import SMCDetector, SetupTracker"
+  },
+  {
+    "file": "archive/diagnostics/_diag2.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.strategies import SMCTrendStrategy"
+  },
+  {
+    "file": "archive/diagnostics/_diag2.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from decimal import Decimal"
+  },
+  {
+    "file": "archive/diagnostics/_diag2s.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.application.market_context_builder import MarketContextBuilder"
+  },
+  {
+    "file": "archive/diagnostics/_diag2s.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.config.settings import Settings"
+  },
+  {
+    "file": "archive/diagnostics/_diag2s.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.core.enums import TimeFrame"
+  },
+  {
+    "file": "archive/diagnostics/_diag2s.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.backtesting.data_generator import (\n    aggregate_candles,\n    generate_multi_regime_candles,\n)"
+  },
+  {
+    "file": "archive/diagnostics/_diag2s.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.backtesting.mtf_engine import MTFBacktestEngine"
+  },
+  {
+    "file": "archive/diagnostics/_diag2s.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.backtesting.mtf_engine import _CachedSMCDetector"
+  },
+  {
+    "file": "archive/diagnostics/_diag2s.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.backtesting.symbol_config import configure_detector_for_symbol"
+  },
+  {
+    "file": "archive/diagnostics/_diag2s.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.decision import DecisionEngine"
+  },
+  {
+    "file": "archive/diagnostics/_diag2s.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.signals import SignalGenerator, SignalValidator"
+  },
+  {
+    "file": "archive/diagnostics/_diag2s.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.smc import SMCDetector, SetupTracker"
+  },
+  {
+    "file": "archive/diagnostics/_diag2s.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.strategies import SMCTrendStrategy"
+  },
+  {
+    "file": "archive/diagnostics/_diag2s.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from decimal import Decimal"
+  },
+  {
+    "file": "archive/diagnostics/_diag3.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.application.market_context_builder import MarketContextBuilder"
+  },
+  {
+    "file": "archive/diagnostics/_diag3.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.config.settings import Settings"
+  },
+  {
+    "file": "archive/diagnostics/_diag3.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.core.enums import TimeFrame"
+  },
+  {
+    "file": "archive/diagnostics/_diag3.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.backtesting.data_generator import (\n    aggregate_candles,\n    generate_multi_regime_candles,\n)"
+  },
+  {
+    "file": "archive/diagnostics/_diag3.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.backtesting.mtf_engine import MTFBacktestEngine"
+  },
+  {
+    "file": "archive/diagnostics/_diag3.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.backtesting.mtf_engine import _CachedSMCDetector"
+  },
+  {
+    "file": "archive/diagnostics/_diag3.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.backtesting.symbol_config import configure_detector_for_symbol"
+  },
+  {
+    "file": "archive/diagnostics/_diag3.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.decision import DecisionEngine"
+  },
+  {
+    "file": "archive/diagnostics/_diag3.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.signals import SignalGenerator, SignalValidator"
+  },
+  {
+    "file": "archive/diagnostics/_diag3.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.smc import SMCDetector, SetupTracker"
+  },
+  {
+    "file": "archive/diagnostics/_diag3.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.strategies import SMCTrendStrategy"
+  },
+  {
+    "file": "archive/diagnostics/_diag3.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from decimal import Decimal"
+  },
+  {
+    "file": "archive/diagnostics/_speed.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.config.settings import Settings"
+  },
+  {
+    "file": "archive/diagnostics/_speed.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.core.enums import TimeFrame"
+  },
+  {
+    "file": "archive/diagnostics/_speed.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.backtesting.data_generator import (\n    aggregate_candles,\n    generate_multi_regime_candles,\n)"
+  },
+  {
+    "file": "archive/diagnostics/_speed.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.backtesting.mtf_engine import MTFBacktestEngine"
+  },
+  {
+    "file": "archive/diagnostics/_speed.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.backtesting.symbol_config import configure_detector_for_symbol"
+  },
+  {
+    "file": "archive/diagnostics/_speed.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.decision import DecisionEngine"
+  },
+  {
+    "file": "archive/diagnostics/_speed.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.signals import SignalGenerator, SignalValidator"
+  },
+  {
+    "file": "archive/diagnostics/_speed.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.smc import SMCDetector, SetupTracker"
+  },
+  {
+    "file": "archive/diagnostics/_speed.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.strategies import SMCTrendStrategy"
+  },
+  {
+    "file": "archive/diagnostics/_speed.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from decimal import Decimal"
+  },
+  {
+    "file": "archive/diagnostics/_swchk.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.core.models import Candle"
+  },
+  {
+    "file": "archive/diagnostics/_swchk.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from datetime import datetime, timezone, timedelta"
+  },
+  {
+    "file": "archive/diagnostics/_swchk.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from decimal import Decimal"
+  },
+  {
+    "file": "scripts/run_backtest_mtf.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.config.settings import Settings"
+  },
+  {
+    "file": "scripts/run_backtest_mtf.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.core.enums import TimeFrame"
+  },
+  {
+    "file": "scripts/run_backtest_mtf.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.backtesting.data_generator import (\n    aggregate_candles,\n    generate_multi_regime_candles,\n)"
+  },
+  {
+    "file": "scripts/run_backtest_mtf.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.backtesting.mtf_engine import MTFBacktestEngine"
+  },
+  {
+    "file": "scripts/run_backtest_mtf.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.backtesting.symbol_config import (\n    configure_detector_for_symbol,\n)"
+  },
+  {
+    "file": "scripts/run_backtest_mtf.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.decision import DecisionEngine"
+  },
+  {
+    "file": "scripts/run_backtest_mtf.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.signals import SignalGenerator, SignalValidator"
+  },
+  {
+    "file": "scripts/run_backtest_mtf.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.smc import SMCDetector, SetupTracker"
+  },
+  {
+    "file": "scripts/run_backtest_mtf.py",
+    "code": "E402",
+    "message": "Module level import not at top of file",
+    "source": "from arty_trading.modules.strategies import SMCTrendStrategy"
+  },
+  {
+    "file": "archive/diagnostics/_aux_scan.py",
+    "code": "E501",
+    "message": "Line too long (108 > 100)",
+    "source": "  ('GENERIC_TOKEN/API_KEY', re.compile(r'(?i)(api_key|access_token|auth_token|secret\\s*[:=]|credentials)')),"
+  },
+  {
+    "file": "archive/diagnostics/_candlechk.py",
+    "code": "E501",
+    "message": "Line too long (108 > 100)",
+    "source": "from arty_trading.modules.backtesting.data_generator import generate_multi_regime_candles, aggregate_candles"
+  },
+  {
+    "file": "archive/diagnostics/_speed.py",
+    "code": "E501",
+    "message": "Line too long (120 > 100)",
+    "source": "        out.append(str({k: e.get(k) for k in ('setup_type','direction','tier','score','regime','profit','r_multiple')}))"
+  },
+  {
+    "file": "archive/diagnostics/_swchk.py",
+    "code": "E501",
+    "message": "Line too long (108 > 100)",
+    "source": "from arty_trading.modules.backtesting.data_generator import generate_multi_regime_candles, aggregate_candles"
+  },
+  {
+    "file": "archive/diagnostics/_swchk.py",
+    "code": "E501",
+    "message": "Line too long (109 > 100)",
+    "source": "                     close=Decimal(str(cl)), volume=Decimal('100'), symbol='XAUUSD', timeframe=TimeFrame.H1))"
+  },
+  {
+    "file": "archive/diagnostics/_trendchk.py",
+    "code": "E501",
+    "message": "Line too long (108 > 100)",
+    "source": "from arty_trading.modules.backtesting.data_generator import generate_multi_regime_candles, aggregate_candles"
+  },
+  {
+    "file": "archive/diagnostics/_trenddbg.py",
+    "code": "E501",
+    "message": "Line too long (108 > 100)",
+    "source": "from arty_trading.modules.backtesting.data_generator import generate_multi_regime_candles, aggregate_candles"
+  },
+  {
+    "file": "archive/diagnostics/_trenddbg.py",
+    "code": "E501",
+    "message": "Line too long (113 > 100)",
+    "source": "print('params: swing_window=', ta._swing_window, 'external=', ta._external_window, 'min_swings=', ta._min_swings)"
+  },
+  {
+    "file": "examples/demo_trading_modes.py",
+    "code": "E501",
+    "message": "Line too long (167 > 100)",
+    "source": "    print(f\"  │ LIVE       │    {stats_live['total_analyses']}     │    {stats_live['total_signals']}     │   {stats_live['total_trades']}    │ Trading réel        │\")"
+  },
+  {
+    "file": "examples/demo_trading_modes.py",
+    "code": "E501",
+    "message": "Line too long (170 > 100)",
+    "source": "    print(f\"  │ PAPER      │    {stats_paper['total_analyses']}     │    {stats_paper['total_signals']}     │   {stats_paper['total_trades']}    │ Simulation complète │\")"
+  },
+  {
+    "file": "examples/demo_trading_modes.py",
+    "code": "E501",
+    "message": "Line too long (178 > 100)",
+    "source": "    print(f\"  │ ANALYSIS   │    {stats_analysis['total_analyses']}     │    {stats_analysis['total_signals']}     │   {stats_analysis['total_trades']}    │ Analyse seule      │\")"
+  },
+  {
+    "file": "examples/paper_test.py",
+    "code": "E501",
+    "message": "Line too long (104 > 100)",
+    "source": "    logger.info(\"  distance_to_zone=%s max_distance=%.6f\", diag_x.distance_to_zone, diag_x.max_distance)"
+  },
+  {
+    "file": "examples/paper_test.py",
+    "code": "E501",
+    "message": "Line too long (108 > 100)",
+    "source": "    logger.info(\"  max_zone_age_bars=%d retest_atr_mult=%.1f\", diag.max_zone_age_bars, diag.retest_atr_mult)"
+  },
+  {
+    "file": "examples/paper_test.py",
+    "code": "E501",
+    "message": "Line too long (111 > 100)",
+    "source": "    logger.info(\"  zone_type=%s zone_age_bars=%s ATR=%.6f\", diag_x.zone_type, diag_x.zone_age_bars, diag_x.atr)"
+  },
+  {
+    "file": "examples/paper_test.py",
+    "code": "E501",
+    "message": "Line too long (111 > 100)",
+    "source": "    logger.info(\"  zone_type=%s zone_id=%s zone_age_bars=%s\", diag.zone_type, diag.zone_id, diag.zone_age_bars)"
+  },
+  {
+    "file": "examples/paper_test.py",
+    "code": "E501",
+    "message": "Line too long (119 > 100)",
+    "source": "    logger.info(\"  ATR=%.6f distance_to_zone=%s max_distance=%.6f\", diag.atr, diag.distance_to_zone, diag.max_distance)"
+  },
+  {
+    "file": "examples/paper_test_adaptive.py",
+    "code": "E501",
+    "message": "Line too long (104 > 100)",
+    "source": "    print(f\"Mode trading: {settings.trading_mode.value} | LIVE autorisé: {settings.allow_live_trading}\")"
+  },
+  {
+    "file": "examples/paper_test_adaptive.py",
+    "code": "E501",
+    "message": "Line too long (104 > 100)",
+    "source": "    print(f\"✅ MT5 connecté | {account.server} | balance={account.balance} | mode={account.mode.value}\")"
+  },
+  {
+    "file": "examples/paper_test_adaptive.py",
+    "code": "E501",
+    "message": "Line too long (115 > 100)",
+    "source": "        print(f\"  RR min={rr_values[0]:.2f} | médian={rr_values[len(rr_values)//2]:.2f} | max={rr_values[-1]:.2f}\")"
+  },
+  {
+    "file": "examples/paper_test_adaptive.py",
+    "code": "E501",
+    "message": "Line too long (116 > 100)",
+    "source": "        print(f\"\\n--- {symbol} | M5 x{len(ltf)} | H1 trend={trend} | SMC LTF={len(smc_ltf)} HTF={len(smc_htf)} ---\")"
+  },
+  {
+    "file": "examples/paper_test_adaptive.py",
+    "code": "E501",
+    "message": "Line too long (131 > 100)",
+    "source": "            print(f\"  signal | {sig.direction.value} | conf={conf:.2f} | RR={rr:.2f} | legacy={'PASS' if legacy_ok else 'REJECT'}\")"
+  },
+  {
+    "file": "examples/paper_test_adaptive.py",
+    "code": "E501",
+    "message": "Line too long (145 > 100)",
+    "source": "                print(f\"  🆕 NOUVEAU TRADE | {symbol} {sig.direction.value} | conf={conf:.2f} | RR={rr:.2f} | bucket={policy.confidence_bucket}\")"
+  },
+  {
+    "file": "scripts/calibrate_retest_filter.py",
+    "code": "E501",
+    "message": "Line too long (113 > 100)",
+    "source": "        final_balance=Decimal(str(stats.final_balance)) if hasattr(stats, \"final_balance\") else Decimal(\"10000\"),"
+  },
+  {
+    "file": "scripts/diagnose_filters.py",
+    "code": "E501",
+    "message": "Line too long (102 > 100)",
+    "source": "    print(f\"\\nEURUSD.min_risk_reward = {eurusd_profile.min_risk_reward if eurusd_profile else 'N/A'}\")"
+  },
+  {
+    "file": "scripts/diagnose_filters.py",
+    "code": "E501",
+    "message": "Line too long (103 > 100)",
+    "source": "    print(f\"MarketStructureSettings.max_structure_age = {MarketStructureSettings().max_structure_age}\")"
+  },
+  {
+    "file": "scripts/diagnose_filters.py",
+    "code": "E501",
+    "message": "Line too long (107 > 100)",
+    "source": "    print(f\"\\nDecisionEngine : approved={decision.approved}, score={decision.score}, tier={decision.tier}\")"
+  },
+  {
+    "file": "scripts/diagnose_filters.py",
+    "code": "E501",
+    "message": "Line too long (111 > 100)",
+    "source": "        {\"concept\": \"break_of_structure\", \"direction\": \"bullish\", \"price\": 1.0850, \"index\": 10, \"details\": {}},"
+  },
+  {
+    "file": "scripts/diagnose_filters.py",
+    "code": "E501",
+    "message": "Line too long (135 > 100)",
+    "source": "        {\"concept\": \"premium_discount\", \"direction\": \"neutral\", \"price\": 1.0840, \"index\": 13, \"details\": {\"current_zone\": \"discount\"}},"
+  },
+  {
+    "file": "scripts/diagnose_filters.py",
+    "code": "E501",
+    "message": "Line too long (141 > 100)",
+    "source": "        {\"concept\": \"liquidity_sweep\", \"direction\": \"bullish\", \"price\": 1.0820, \"index\": 12, \"details\": {\"type\": \"buy_side_liquidity_grab\"}},"
+  },
+  {
+    "file": "scripts/diagnose_filters.py",
+    "code": "E501",
+    "message": "Line too long (146 > 100)",
+    "source": "        {\"concept\": \"fair_value_gap\", \"direction\": \"bullish\", \"price\": 1.0840, \"index\": 11, \"details\": {\"gap_top\": 1.0845, \"gap_bottom\": 1.0835}},"
+  },
+  {
+    "file": "scripts/diagnose_filters.py",
+    "code": "E501",
+    "message": "Line too long (163 > 100)",
+    "source": "        {\"concept\": \"order_block\", \"direction\": \"bullish\", \"price\": 1.0825, \"index\": 9, \"details\": {\"ob_top\": 1.0830, \"ob_bottom\": 1.0820, \"mitigation_count\": 0}},"
+  },
+  {
+    "file": "scripts/diagnose_sells.py",
+    "code": "E501",
+    "message": "Line too long (104 > 100)",
+    "source": "        validator=SignalValidator(min_risk_reward=rr_min, max_spread=200 if symbol == \"XAUUSD\" else 30),"
+  },
+  {
+    "file": "scripts/diagnose_sells.py",
+    "code": "E501",
+    "message": "Line too long (105 > 100)",
+    "source": "        entry = {\"direction\": latest.get(\"direction\"), \"index\": latest.get(\"index\"), \"count\": len(items)}"
+  },
+  {
+    "file": "scripts/diagnose_sells.py",
+    "code": "E501",
+    "message": "Line too long (109 > 100)",
+    "source": "        print(f\"  MFE max en R: {max(mfe_list):.2f} | MFE médiane: {sorted(mfe_list)[len(mfe_list)//2]:.2f}\")"
+  },
+  {
+    "file": "scripts/run_backtest.py",
+    "code": "E501",
+    "message": "Line too long (116 > 100)",
+    "source": "        Config(\"Validateur RR>=1.5 (conf=0.60)\", 0.60, SignalValidator(min_risk_reward=1.5, max_spread=max_spread)),"
+  },
+  {
+    "file": "scripts/run_backtest.py",
+    "code": "E501",
+    "message": "Line too long (116 > 100)",
+    "source": "        Config(\"Validateur RR>=2.0 (conf=0.60)\", 0.60, SignalValidator(min_risk_reward=2.0, max_spread=max_spread)),"
+  },
+  {
+    "file": "scripts/run_backtest.py",
+    "code": "E501",
+    "message": "Line too long (118 > 100)",
+    "source": "    print(f\"BACKTEST NOUVELLE VERSION — {symbol} | bougies={args.candles} | balance initiale=10000 | risque=1%/trade\")"
+  },
+  {
+    "file": "scripts/run_backtest.py",
+    "code": "E501",
+    "message": "Line too long (128 > 100)",
+    "source": "    header = f\"{'configuration':<28} {'trades':>6} {'win%':>7} {'PF':>6} {'sharpe':>7} {'maxDD':>7} {'balance':>12} {'exp':>10}\""
+  },
+  {
+    "file": "scripts/run_backtest.py",
+    "code": "E501",
+    "message": "Line too long (140 > 100)",
+    "source": "        h = max(o, c) + Decimal(str(rng.uniform(0.0001, 0.0004))) if symbol == \"EURUSD\" else max(o, c) + Decimal(str(rng.uniform(0.1, 0.4)))"
+  },
+  {
+    "file": "scripts/run_backtest.py",
+    "code": "E501",
+    "message": "Line too long (140 > 100)",
+    "source": "        l = min(o, c) - Decimal(str(rng.uniform(0.0001, 0.0004))) if symbol == \"EURUSD\" else min(o, c) - Decimal(str(rng.uniform(0.1, 0.4)))"
+  },
+  {
+    "file": "scripts/run_bot.py",
+    "code": "E501",
+    "message": "Line too long (129 > 100)",
+    "source": "    print(f\"Arty | mode={settings.trading_mode.value} | symbols={settings.symbols_list} | tf={settings.default_timeframe.value}\")"
+  },
+  {
+    "file": "scripts/test_efficacy.py",
+    "code": "E501",
+    "message": "Line too long (103 > 100)",
+    "source": "    parser = argparse.ArgumentParser(description=\"Test d'efficacité du bot sur données réelles (démo)\")"
+  },
+  {
+    "file": "scripts/test_efficacy.py",
+    "code": "E501",
+    "message": "Line too long (104 > 100)",
+    "source": "            \"Lance ce script sur la machine où le terminal MT5 (compte démo) est configuré et connecté.\""
+  },
+  {
+    "file": "scripts/test_efficacy.py",
+    "code": "E501",
+    "message": "Line too long (104 > 100)",
+    "source": "    parser.add_argument(\"--days\", type=int, default=30, help=\"Nombre de jours d'historique à récupérer\")"
+  },
+  {
+    "file": "scripts/test_efficacy.py",
+    "code": "E501",
+    "message": "Line too long (106 > 100)",
+    "source": "    parser.add_argument(\"--symbols\", type=str, default=\"XAUUSD\", help=\"Symboles separes par des virgules\")"
+  },
+  {
+    "file": "scripts/test_efficacy.py",
+    "code": "E501",
+    "message": "Line too long (114 > 100)",
+    "source": "async def fetch_candles(mt5_connector, market_data, symbol: str, timeframe: TimeFrame, days: int) -> list[Candle]:"
+  },
+  {
+    "file": "scripts/test_efficacy.py",
+    "code": "E501",
+    "message": "Line too long (117 > 100)",
+    "source": "        logger.error(\"Connexion MT5 impossible. Vérifie MT5_* dans .env et que le terminal démo est lancé/connecté.\")"
+  },
+  {
+    "file": "src/arty_trading/api/routes/backtesting.py",
+    "code": "E501",
+    "message": "Line too long (109 > 100)",
+    "source": "            \"profit_factor\": round(stats.profit_factor, 2) if stats.profit_factor != float(\"inf\") else \"inf\","
+  },
+  {
+    "file": "src/arty_trading/application/market_context_builder.py",
+    "code": "E501",
+    "message": "Line too long (110 > 100)",
+    "source": "            \"Analyse MTF | %s | H4=%s | H1=%s | M15=%s (detections=%d) | M5 detections=%d | H1 detections=%d\","
+  },
+  {
+    "file": "src/arty_trading/application/position_monitor.py",
+    "code": "E501",
+    "message": "Line too long (102 > 100)",
+    "source": "    async def _validated_sl(self, trade: Trade, candidate: Decimal, price: Decimal) -> Decimal | None:"
+  },
+  {
+    "file": "src/arty_trading/application/position_monitor.py",
+    "code": "E501",
+    "message": "Line too long (134 > 100)",
+    "source": "                    \"[SL UPDATE REJECTED] %s | ticket=%s | candidate_sl=%s | price=%s | min_distance=%s | reason=TOO_CLOSE_TO_MARKET\","
+  },
+  {
+    "file": "src/arty_trading/application/statistics.py",
+    "code": "E501",
+    "message": "Line too long (102 > 100)",
+    "source": "            gross_profit / gross_loss if gross_loss > 0 else float(\"inf\") if gross_profit > 0 else 0.0"
+  },
+  {
+    "file": "src/arty_trading/application/statistics.py",
+    "code": "E501",
+    "message": "Line too long (109 > 100)",
+    "source": "            (datetime.fromisoformat(t[\"closed_at\"]) - datetime.fromisoformat(t[\"opened_at\"])).total_seconds()"
+  },
+  {
+    "file": "src/arty_trading/application/statistics.py",
+    "code": "E501",
+    "message": "Line too long (112 > 100)",
+    "source": "            \"average_time_in_position_seconds\": round(sum(durations) / len(durations), 2) if durations else 0.0,"
+  },
+  {
+    "file": "src/arty_trading/application/trade_journal.py",
+    "code": "E501",
+    "message": "Line too long (103 > 100)",
+    "source": "            \"take_profit\": str(trade.take_profit), \"volume\": str(trade.volume), \"ticket\": trade.ticket,"
+  },
+  {
+    "file": "src/arty_trading/application/trade_journal.py",
+    "code": "E501",
+    "message": "Line too long (103 > 100)",
+    "source": "            return [dict(row) for row in connection.execute(\"SELECT * FROM trades ORDER BY opened_at\")]"
+  },
+  {
+    "file": "src/arty_trading/infrastructure/mt5/market_data.py",
+    "code": "E501",
+    "message": "Line too long (101 > 100)",
+    "source": "            logger.debug(\"Cache hit | latest_candles | %s | %s | %d\", symbol, timeframe.value, count)"
+  },
+  {
+    "file": "src/arty_trading/infrastructure/mt5/market_data.py",
+    "code": "E501",
+    "message": "Line too long (123 > 100)",
+    "source": "            cache_ttl: TTL du cache pour les bougies (5s par défaut - court pour détecter les nouvelles bougies rapidement)"
+  },
+  {
+    "file": "src/arty_trading/infrastructure/notifications/manager.py",
+    "code": "E501",
+    "message": "Line too long (113 > 100)",
+    "source": "            title=f\"{direction_emoji} Signal {signal_data.get('symbol', '')} {signal_data.get('direction', '')}\","
+  },
+  {
+    "file": "src/arty_trading/modules/ai/anthropic_provider.py",
+    "code": "E501",
+    "message": "Line too long (101 > 100)",
+    "source": "                logger.error(\"Package anthropic non installe. Installez avec: pip install anthropic\")"
+  },
+  {
+    "file": "src/arty_trading/modules/ai/anthropic_provider.py",
+    "code": "E501",
+    "message": "Line too long (119 > 100)",
+    "source": "                content=\"Erreur : API key Anthropic non configuree. Configurez ANTHROPIC_API_KEY dans le fichier .env\","
+  },
+  {
+    "file": "src/arty_trading/modules/ai/assistant.py",
+    "code": "E501",
+    "message": "Line too long (114 > 100)",
+    "source": "DEFAULT_SYSTEM_PROMPT = \"\"\"Tu es Arty, un assistant IA specialise en trading Forex Smart Money Concepts (SMC/ICT)."
+  },
+  {
+    "file": "src/arty_trading/modules/ai/assistant.py",
+    "code": "E501",
+    "message": "Line too long (119 > 100)",
+    "source": "                content=\"Assistant IA non configure. Ajoutez OPENAI_API_KEY ou ANTHROPIC_API_KEY dans le fichier .env\","
+  },
+  {
+    "file": "src/arty_trading/modules/ai/openai_provider.py",
+    "code": "E501",
+    "message": "Line too long (104 > 100)",
+    "source": "            logger.info(\"OpenAI chat | model=%s | tokens=%s\", self._model, usage.get(\"total_tokens\", 0))"
+  },
+  {
+    "file": "src/arty_trading/modules/ai/openai_provider.py",
+    "code": "E501",
+    "message": "Line too long (113 > 100)",
+    "source": "                content=\"Erreur : API key OpenAI non configuree. Configurez OPENAI_API_KEY dans le fichier .env\","
+  },
+  {
+    "file": "src/arty_trading/modules/backtesting/mtf_engine.py",
+    "code": "E501",
+    "message": "Line too long (112 > 100)",
+    "source": "            candles[0].timeframe.value if hasattr(candles[0].timeframe, \"value\") else str(candles[0].timeframe),"
+  },
+  {
+    "file": "src/arty_trading/modules/backtesting/stats.py",
+    "code": "E501",
+    "message": "Line too long (102 > 100)",
+    "source": "    stats.average_loss = gross_loss / stats.losing_trades if stats.losing_trades > 0 else Decimal(\"0\")"
+  },
+  {
+    "file": "src/arty_trading/modules/backtesting/stats.py",
+    "code": "E501",
+    "message": "Line too long (105 > 100)",
+    "source": "    stats.average_win = gross_profit / stats.winning_trades if stats.winning_trades > 0 else Decimal(\"0\")"
+  },
+  {
+    "file": "src/arty_trading/modules/backtesting/stats.py",
+    "code": "E501",
+    "message": "Line too long (110 > 100)",
+    "source": "    stats.average_profit = stats.total_profit / stats.total_trades if stats.total_trades > 0 else Decimal(\"0\")"
+  },
+  {
+    "file": "src/arty_trading/modules/backtesting/stats.py",
+    "code": "E501",
+    "message": "Line too long (110 > 100)",
+    "source": "    stats.total_return_pct = float(stats.total_profit / initial_balance * 100) if initial_balance > 0 else 0.0"
+  },
+  {
+    "file": "src/arty_trading/modules/backtesting/stats.py",
+    "code": "E501",
+    "message": "Line too long (118 > 100)",
+    "source": "        stats.expectancy = (Decimal(str(win_pct)) * stats.average_win) - (Decimal(str(loss_pct)) * stats.average_loss)"
+  },
+  {
+    "file": "src/arty_trading/modules/decision/engine.py",
+    "code": "E501",
+    "message": "Line too long (106 > 100)",
+    "source": "        buffer = sl_buffer if sl_buffer is not None else atr * Decimal(str(self._settings.atr_multiplier))"
+  },
+  {
+    "file": "src/arty_trading/modules/decision/engine.py",
+    "code": "E501",
+    "message": "Line too long (117 > 100)",
+    "source": "        self, signal: Signal, candles: list[Candle], data: list[dict], atr: Decimal, sl_buffer: Decimal | None = None"
+  },
+  {
+    "file": "src/arty_trading/modules/decision/market_structure_engine.py",
+    "code": "E501",
+    "message": "Line too long (103 > 100)",
+    "source": "            f\"Score de tendance {score:+.0f} trop faible pour une direction claire → RANGE / NO TRADE\","
+  },
+  {
+    "file": "src/arty_trading/modules/decision/market_structure_engine.py",
+    "code": "E501",
+    "message": "Line too long (104 > 100)",
+    "source": "                f\"Régime bearish | score {score:+.0f} | structure {self._structure_summary(structure)}\","
+  },
+  {
+    "file": "src/arty_trading/modules/decision/market_structure_engine.py",
+    "code": "E501",
+    "message": "Line too long (104 > 100)",
+    "source": "                f\"Régime bullish | score {score:+.0f} | structure {self._structure_summary(structure)}\","
+  },
+  {
+    "file": "src/arty_trading/modules/decision/market_structure_engine.py",
+    "code": "E501",
+    "message": "Line too long (111 > 100)",
+    "source": "                f\"Régime strong_bearish | score {score:+.0f} | structure {self._structure_summary(structure)}\","
+  },
+  {
+    "file": "src/arty_trading/modules/decision/market_structure_engine.py",
+    "code": "E501",
+    "message": "Line too long (111 > 100)",
+    "source": "                f\"Régime strong_bullish | score {score:+.0f} | structure {self._structure_summary(structure)}\","
+  },
+  {
+    "file": "src/arty_trading/modules/execution/position_manager.py",
+    "code": "E501",
+    "message": "Line too long (112 > 100)",
+    "source": "                    \"[SL UPDATE REJECTED] %s %s | candidate_sl=%s | current_sl=%s | reason=NOT_MORE_PROTECTIVE\","
+  },
+  {
+    "file": "src/arty_trading/modules/signals/news.py",
+    "code": "E501",
+    "message": "Line too long (102 > 100)",
+    "source": "                        currencies=tuple(currency.upper() for currency in item.get(\"currencies\", [])),"
+  },
+  {
+    "file": "src/arty_trading/modules/signals/validator.py",
+    "code": "E501",
+    "message": "Line too long (106 > 100)",
+    "source": "        decision = \"ACCEPT\" if weighted_score >= self._min_score and not hard_reject_reasons else \"REJECT\""
+  },
+  {
+    "file": "src/arty_trading/modules/smc/order_blocks.py",
+    "code": "E501",
+    "message": "Line too long (102 > 100)",
+    "source": "                    mitigated_count = self._is_mitigated(candles, i + 2, ob_top, ob_bottom, \"bearish\")"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/order_blocks.py",
+    "code": "E501",
+    "message": "Line too long (102 > 100)",
+    "source": "                    mitigated_count = self._is_mitigated(candles, i + 2, ob_top, ob_bottom, \"bullish\")"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/setup_tracker.py",
+    "code": "E501",
+    "message": "Line too long (101 > 100)",
+    "source": "        SetupState.ACCEPTED: {SetupState.EXECUTED, SetupState.INVALIDATED, SetupState.SETUP_EXPIRED},"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/setup_tracker.py",
+    "code": "E501",
+    "message": "Line too long (104 > 100)",
+    "source": "                        rejection_confirmed = bool(last.is_bullish and float(last.close) >= zone_bottom)"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/setup_tracker.py",
+    "code": "E501",
+    "message": "Line too long (104 > 100)",
+    "source": "        SetupState.WAITING: {SetupState.ZONE_REACHED, SetupState.INVALIDATED, SetupState.SETUP_EXPIRED},"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/setup_tracker.py",
+    "code": "E501",
+    "message": "Line too long (105 > 100)",
+    "source": "                        rejection_confirmed = bool(not last.is_bullish and float(last.close) <= zone_top)"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/setup_tracker.py",
+    "code": "E501",
+    "message": "Line too long (105 > 100)",
+    "source": "    def set_on_setup_transition(self, callback: Callable[[Setup, SetupState, str], None] | None) -> None:"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/setup_tracker.py",
+    "code": "E501",
+    "message": "Line too long (106 > 100)",
+    "source": "                    if concept in (\"break_of_structure\", \"change_of_character\", \"market_structure_shift\"):"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/setup_tracker.py",
+    "code": "E501",
+    "message": "Line too long (106 > 100)",
+    "source": "        SetupState.FINAL_VALIDATION: {SetupState.TRADE, SetupState.INVALIDATED, SetupState.SETUP_EXPIRED},"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/setup_tracker.py",
+    "code": "E501",
+    "message": "Line too long (106 > 100)",
+    "source": "    def is_duplicate(self, symbol: str, direction: Direction, zone_concept: str, zone_index: int) -> bool:"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/setup_tracker.py",
+    "code": "E501",
+    "message": "Line too long (110 > 100)",
+    "source": "                if setup.state in (SetupState.ARMED, SetupState.WATCHING) and in_zone and rejection_confirmed:"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/setup_tracker.py",
+    "code": "E501",
+    "message": "Line too long (112 > 100)",
+    "source": "        SetupState.ENTRY_READY: {SetupState.FINAL_VALIDATION, SetupState.INVALIDATED, SetupState.SETUP_EXPIRED},"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/setup_tracker.py",
+    "code": "E501",
+    "message": "Line too long (114 > 100)",
+    "source": "                    self._notify_transition(setup, SetupState.INVALIDATED, \"STRUCTURE_INVALIDATED:trend_reversal\")"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/setup_tracker.py",
+    "code": "E501",
+    "message": "Line too long (114 > 100)",
+    "source": "        SetupState.WAITING_RETEST: {SetupState.RETEST_DETECTED, SetupState.INVALIDATED, SetupState.SETUP_EXPIRED},"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/setup_tracker.py",
+    "code": "E501",
+    "message": "Line too long (115 > 100)",
+    "source": "        SetupState.REJECTION_CONFIRMED: {SetupState.ENTRY_READY, SetupState.INVALIDATED, SetupState.SETUP_EXPIRED},"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/setup_tracker.py",
+    "code": "E501",
+    "message": "Line too long (116 > 100)",
+    "source": "                        self._notify_transition(setup, SetupState.INVALIDATED, \"STRUCTURE_INVALIDATED:opposite_bos\")"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/setup_tracker.py",
+    "code": "E501",
+    "message": "Line too long (116 > 100)",
+    "source": "        SetupState.ARMED: {SetupState.WATCHING, SetupState.READY, SetupState.INVALIDATED, SetupState.SETUP_EXPIRED},"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/setup_tracker.py",
+    "code": "E501",
+    "message": "Line too long (119 > 100)",
+    "source": "        SetupState.DETECTED: {SetupState.ARMED, SetupState.WATCHING, SetupState.INVALIDATED, SetupState.SETUP_EXPIRED},"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/setup_tracker.py",
+    "code": "E501",
+    "message": "Line too long (119 > 100)",
+    "source": "        SetupState.LIQUIDITY_SWEEP: {SetupState.STRUCTURE_CONFIRMED, SetupState.INVALIDATED, SetupState.SETUP_EXPIRED},"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/setup_tracker.py",
+    "code": "E501",
+    "message": "Line too long (119 > 100)",
+    "source": "        SetupState.RETEST_DETECTED: {SetupState.REJECTION_CONFIRMED, SetupState.INVALIDATED, SetupState.SETUP_EXPIRED},"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/setup_tracker.py",
+    "code": "E501",
+    "message": "Line too long (121 > 100)",
+    "source": "        SetupState.DISPLACEMENT_CONFIRMED: {SetupState.WAITING_RETEST, SetupState.INVALIDATED, SetupState.SETUP_EXPIRED},"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/setup_tracker.py",
+    "code": "E501",
+    "message": "Line too long (122 > 100)",
+    "source": "        \"\"\"Retourne les setups prêts pour signal (READY, ACCEPTED, ENTRY_READY, FINAL_VALIDATION, REJECTION_CONFIRMED).\"\"\""
+  },
+  {
+    "file": "src/arty_trading/modules/smc/setup_tracker.py",
+    "code": "E501",
+    "message": "Line too long (126 > 100)",
+    "source": "                        if latest_opposite_event is None or detection.get(\"index\", 0) > latest_opposite_event.get(\"index\", 0):"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/setup_tracker.py",
+    "code": "E501",
+    "message": "Line too long (126 > 100)",
+    "source": "        SetupState.STRUCTURE_CONFIRMED: {SetupState.DISPLACEMENT_CONFIRMED, SetupState.INVALIDATED, SetupState.SETUP_EXPIRED},"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/setup_tracker.py",
+    "code": "E501",
+    "message": "Line too long (139 > 100)",
+    "source": "        SetupState.ZONE_REACHED: {SetupState.LIQUIDITY_SWEEP, SetupState.WAITING_RETEST, SetupState.INVALIDATED, SetupState.SETUP_EXPIRED},"
+  },
+  {
+    "file": "tests/integration/test_mt5_live.py",
+    "code": "E501",
+    "message": "Line too long (121 > 100)",
+    "source": "        print(f\"Account: login={account.login}, server={account.server}, balance={account.balance}, mode={account.mode}\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_smc_trade.py",
+    "code": "E501",
+    "message": "Line too long (101 > 100)",
+    "source": "    print(f\"   Risk/trade    : {settings.risk.risk_per_trade} ({settings.risk.risk_per_trade*100}%)\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_smc_trade.py",
+    "code": "E501",
+    "message": "Line too long (103 > 100)",
+    "source": "            current_profit = (current_pos.price_open - current_tick.ask) * current_pos.volume * 100_000"
+  },
+  {
+    "file": "tests/integration/test_mt5_smc_trade.py",
+    "code": "E501",
+    "message": "Line too long (103 > 100)",
+    "source": "            current_profit = (current_tick.bid - current_pos.price_open) * current_pos.volume * 100_000"
+  },
+  {
+    "file": "tests/integration/test_mt5_smc_trade.py",
+    "code": "E501",
+    "message": "Line too long (105 > 100)",
+    "source": "            print(f\"   Tendance baissière détectée ({bearish}/{len(recent_candles)} bougies baissières)\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_smc_trade.py",
+    "code": "E501",
+    "message": "Line too long (105 > 100)",
+    "source": "            print(f\"   Tendance haussière détectée ({bullish}/{len(recent_candles)} bougies haussières)\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_smc_trade.py",
+    "code": "E501",
+    "message": "Line too long (111 > 100)",
+    "source": "    print(f\"   Ratio R/R      : 1:{abs(tp-entry)/sl_distance:.2f}\" if sl_distance > 0 else \"   Ratio R/R: N/A\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_smc_trade.py",
+    "code": "E501",
+    "message": "Line too long (113 > 100)",
+    "source": "            print(f\"   {d.get('concept', '?'):20s} | {d.get('direction', '?'):10s} | prix={d.get('price', '?')}\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_smc_trade.py",
+    "code": "E501",
+    "message": "Line too long (120 > 100)",
+    "source": "def calculate_position_size(balance: float, risk_per_trade: float, sl_distance: float, symbol: str = \"EURUSD\") -> float:"
+  },
+  {
+    "file": "tests/integration/test_mt5_smc_trade.py",
+    "code": "E501",
+    "message": "Line too long (141 > 100)",
+    "source": "        print(f\"   {i:2d}s | Profit: {current_pos.profit:.2f} USD | Bid: {current_tick.bid} | Ask: {current_tick.ask}\", end=\"\\r\", flush=True)"
+  },
+  {
+    "file": "tests/test_backtesting.py",
+    "code": "E501",
+    "message": "Line too long (107 > 100)",
+    "source": "        equity = [Decimal(\"10000\"), Decimal(\"10050\"), Decimal(\"10020\"), Decimal(\"10040\"), Decimal(\"10030\")]"
+  },
+  {
+    "file": "tests/test_backtesting.py",
+    "code": "E501",
+    "message": "Line too long (113 > 100)",
+    "source": "        stats = calculate_stats(trades, [Decimal(\"10000\"), Decimal(\"10050\"), Decimal(\"10020\")], Decimal(\"10000\"))"
+  },
+  {
+    "file": "tests/test_execution_guards.py",
+    "code": "E501",
+    "message": "Line too long (104 > 100)",
+    "source": "    r = await final_gate_before_execution(\"XAUUSD\", _signal(), _context(\"bullish\", spread=50), settings)"
+  },
+  {
+    "file": "tests/test_execution_guards.py",
+    "code": "E501",
+    "message": "Line too long (107 > 100)",
+    "source": "    assert await revalidate_before_execution(\"XAUUSD\", _signal(Direction.BUY), _context(\"bullish\")) is True"
+  },
+  {
+    "file": "tests/test_execution_guards.py",
+    "code": "E501",
+    "message": "Line too long (108 > 100)",
+    "source": "    assert await revalidate_before_execution(\"XAUUSD\", _signal(Direction.BUY), _context(\"bearish\")) is False"
+  },
+  {
+    "file": "tests/test_execution_guards.py",
+    "code": "E501",
+    "message": "Line too long (108 > 100)",
+    "source": "    assert await revalidate_before_execution(\"XAUUSD\", _signal(Direction.BUY), _context(\"neutral\")) is False"
+  },
+  {
+    "file": "tests/test_execution_guards.py",
+    "code": "E501",
+    "message": "Line too long (108 > 100)",
+    "source": "    assert await revalidate_before_execution(\"XAUUSD\", _signal(Direction.SELL), _context(\"bearish\")) is True"
+  },
+  {
+    "file": "tests/test_execution_guards.py",
+    "code": "E501",
+    "message": "Line too long (109 > 100)",
+    "source": "    assert await revalidate_before_execution(\"XAUUSD\", _signal(Direction.SELL), _context(\"bullish\")) is False"
+  },
+  {
+    "file": "tests/test_market_context_builder.py",
+    "code": "E501",
+    "message": "Line too long (109 > 100)",
+    "source": "        return self.results.get(key, [{\"concept\": \"break_of_structure\", \"direction\": \"bullish\", \"index\": 1}])"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "E501",
+    "message": "Line too long (106 > 100)",
+    "source": "        ctx = MarketContext(symbol=\"EURUSD\", timestamp=datetime.now(timezone.utc), master_trend=\"bearish\")"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "E501",
+    "message": "Line too long (106 > 100)",
+    "source": "        ctx = MarketContext(symbol=\"EURUSD\", timestamp=datetime.now(timezone.utc), master_trend=\"bullish\")"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "E501",
+    "message": "Line too long (106 > 100)",
+    "source": "        ctx = MarketContext(symbol=\"EURUSD\", timestamp=datetime.now(timezone.utc), master_trend=\"neutral\")"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "E501",
+    "message": "Line too long (106 > 100)",
+    "source": "        {\"concept\": \"fair_value_gap\", \"direction\": \"bearish\", \"price\": 1.0800, \"index\": 6, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "E501",
+    "message": "Line too long (106 > 100)",
+    "source": "        {\"concept\": \"fair_value_gap\", \"direction\": \"bullish\", \"price\": 1.0810, \"index\": 6, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "E501",
+    "message": "Line too long (107 > 100)",
+    "source": "        {\"concept\": \"liquidity_sweep\", \"direction\": \"bearish\", \"price\": 1.0820, \"index\": 7, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "E501",
+    "message": "Line too long (107 > 100)",
+    "source": "        {\"concept\": \"liquidity_sweep\", \"direction\": \"bullish\", \"price\": 1.0790, \"index\": 7, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "E501",
+    "message": "Line too long (109 > 100)",
+    "source": "def make_signal(direction: Direction, entry: Decimal = Decimal(\"1.0800\"), confidence: float = 0.9) -> Signal:"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "E501",
+    "message": "Line too long (110 > 100)",
+    "source": "        {\"concept\": \"break_of_structure\", \"direction\": \"bearish\", \"price\": 1.0790, \"index\": 5, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "E501",
+    "message": "Line too long (110 > 100)",
+    "source": "        {\"concept\": \"break_of_structure\", \"direction\": \"bullish\", \"price\": 1.0820, \"index\": 5, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "E501",
+    "message": "Line too long (111 > 100)",
+    "source": "        {\"concept\": \"optimal_trade_entry\", \"direction\": \"bearish\", \"price\": 1.0795, \"index\": 8, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "E501",
+    "message": "Line too long (111 > 100)",
+    "source": "        {\"concept\": \"optimal_trade_entry\", \"direction\": \"bullish\", \"price\": 1.0815, \"index\": 8, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "E501",
+    "message": "Line too long (124 > 100)",
+    "source": "        {\"concept\": \"order_block\", \"direction\": \"bearish\", \"price\": 1.0815, \"index\": 4, \"details\": {\"mitigation_count\": 0}},"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "E501",
+    "message": "Line too long (124 > 100)",
+    "source": "        {\"concept\": \"order_block\", \"direction\": \"bullish\", \"price\": 1.0795, \"index\": 4, \"details\": {\"mitigation_count\": 0}},"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "E501",
+    "message": "Line too long (133 > 100)",
+    "source": "        {\"concept\": \"premium_discount\", \"direction\": \"neutral\", \"price\": 1.0800, \"index\": 8, \"details\": {\"current_zone\": \"premium\"}},"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "E501",
+    "message": "Line too long (134 > 100)",
+    "source": "        {\"concept\": \"premium_discount\", \"direction\": \"neutral\", \"price\": 1.0810, \"index\": 8, \"details\": {\"current_zone\": \"discount\"}},"
+  },
+  {
+    "file": "tests/test_news_and_journal.py",
+    "code": "E501",
+    "message": "Line too long (105 > 100)",
+    "source": "    calendar.write_text(json.dumps([{\"time\": now.isoformat(), \"currencies\": [\"USD\"], \"impact\": \"high\"}]))"
+  },
+  {
+    "file": "tests/test_news_and_journal.py",
+    "code": "E501",
+    "message": "Line too long (172 > 100)",
+    "source": "    journal.record(Trade(symbol=\"EURUSD\", direction=Direction.BUY, entry_price=Decimal(\"1.1\"), stop_loss=Decimal(\"1.0\"), take_profit=Decimal(\"1.3\"), volume=Decimal(\"0.1\")))"
+  },
+  {
+    "file": "tests/test_phase3_setup_quality.py",
+    "code": "E501",
+    "message": "Line too long (103 > 100)",
+    "source": "        assert classify_setup_type(\"order_block\", \"bullish\", [], zone_index=7) == \"ORDER_BLOCK_RETRACE\""
+  },
+  {
+    "file": "tests/test_phase3_setup_quality.py",
+    "code": "E501",
+    "message": "Line too long (104 > 100)",
+    "source": "        assert classify_setup_type(\"order_block\", \"bullish\", smc, zone_index=7) == \"ORDER_BLOCK_RETRACE\""
+  },
+  {
+    "file": "tests/test_phase3_setup_quality.py",
+    "code": "E501",
+    "message": "Line too long (104 > 100)",
+    "source": "        assert classify_setup_type(\"order_block\", \"bullish\", smc, zone_index=7) == \"ORDER_BLOCK_RETRACE\""
+  },
+  {
+    "file": "tests/test_phase3_setup_quality.py",
+    "code": "E501",
+    "message": "Line too long (108 > 100)",
+    "source": "        assert all(d.details[\"gap_size_atr\"] is not None and d.details[\"gap_size_atr\"] >= 0.5 for d in fvgs)"
+  },
+  {
+    "file": "tests/test_phase3_setup_quality.py",
+    "code": "E501",
+    "message": "Line too long (109 > 100)",
+    "source": "        assert classify_setup_type(\"order_block\", \"bullish\", smc, zone_index=7) == \"LIQUIDITY_SWEEP_REVERSAL\""
+  },
+  {
+    "file": "tests/test_phase3_setup_quality.py",
+    "code": "E501",
+    "message": "Line too long (117 > 100)",
+    "source": "        assert is_displacement(candles, 15, atr, body_atr_mult=0.5, range_atr_mult=0.5, direction=\"bullish\") is False"
+  },
+  {
+    "file": "tests/test_position_monitor.py",
+    "code": "E501",
+    "message": "Line too long (103 > 100)",
+    "source": "    pos.evaluate.return_value = [SimpleNamespace(kind=\"modify\", stop_loss=1.0960, reason=\"break_even\")]"
+  },
+  {
+    "file": "tests/test_position_monitor.py",
+    "code": "E501",
+    "message": "Line too long (105 > 100)",
+    "source": "    mon = _monitor(position_manager=pos, executor=ex, statistics=st, journal=jr, notify_trade_closed=ntc)"
+  },
+  {
+    "file": "tests/test_position_monitor.py",
+    "code": "E501",
+    "message": "Line too long (106 > 100)",
+    "source": "    pos.evaluate.return_value = [SimpleNamespace(kind=\"close\", reason=\"take_profit\", close_fraction=None)]"
+  },
+  {
+    "file": "tests/test_position_monitor.py",
+    "code": "E501",
+    "message": "Line too long (112 > 100)",
+    "source": "    pos.evaluate.return_value = [SimpleNamespace(kind=\"partial_close\", close_fraction=0.5, reason=\"partial_tp\")]"
+  },
+  {
+    "file": "tests/test_position_monitor.py",
+    "code": "E501",
+    "message": "Line too long (127 > 100)",
+    "source": "    md = market_data if market_data is not None else MagicMock(get_tick=AsyncMock(return_value={\"bid\": 1.1020, \"ask\": 1.1022}))"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E501",
+    "message": "Line too long (101 > 100)",
+    "source": "        \"\"\"FVG manquant = confluence manquante, le signal reste valide (≥2 confluences présentes).\"\"\""
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E501",
+    "message": "Line too long (102 > 100)",
+    "source": "        \"\"\"Pipeline complet : H4/H1 bullish, M5 bullish, bullish CHoCH, session=None → BUY accepté.\"\"\""
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E501",
+    "message": "Line too long (110 > 100)",
+    "source": "        {\"concept\": \"break_of_structure\", \"direction\": \"bearish\", \"price\": 1.0790, \"index\": 5, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E501",
+    "message": "Line too long (110 > 100)",
+    "source": "        {\"concept\": \"break_of_structure\", \"direction\": \"bullish\", \"price\": 1.0820, \"index\": 5, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E501",
+    "message": "Line too long (112 > 100)",
+    "source": "        \"\"\"Bougies vides → session neutre, le signal peut être accepté si les autres conditions sont valides.\"\"\""
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E501",
+    "message": "Line too long (114 > 100)",
+    "source": "            {\"concept\": \"break_of_structure\", \"direction\": \"bearish\", \"price\": 1.0750, \"index\": 3, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E501",
+    "message": "Line too long (114 > 100)",
+    "source": "            {\"concept\": \"break_of_structure\", \"direction\": \"bullish\", \"price\": 1.0820, \"index\": 5, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E501",
+    "message": "Line too long (114 > 100)",
+    "source": "            {\"concept\": \"break_of_structure\", \"direction\": \"bullish\", \"price\": 1.0820, \"index\": 5, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E501",
+    "message": "Line too long (114 > 100)",
+    "source": "            {\"concept\": \"break_of_structure\", \"direction\": \"bullish\", \"price\": 1.0850, \"index\": 3, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E501",
+    "message": "Line too long (115 > 100)",
+    "source": "            {\"concept\": \"change_of_character\", \"direction\": \"bullish\", \"price\": 1.0820, \"index\": 6, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E501",
+    "message": "Line too long (123 > 100)",
+    "source": "            {\"concept\": \"discount\", \"direction\": \"bullish\", \"price\": 1.0810, \"index\": 8, \"details\": {\"in_discount\": True}},"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E501",
+    "message": "Line too long (133 > 100)",
+    "source": "        {\"concept\": \"premium_discount\", \"direction\": \"neutral\", \"price\": 1.0800, \"index\": 8, \"details\": {\"current_zone\": \"premium\"}},"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E501",
+    "message": "Line too long (134 > 100)",
+    "source": "        {\"concept\": \"premium_discount\", \"direction\": \"neutral\", \"price\": 1.0810, \"index\": 8, \"details\": {\"current_zone\": \"discount\"}},"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E501",
+    "message": "Line too long (138 > 100)",
+    "source": "            {\"concept\": \"premium_discount\", \"direction\": \"neutral\", \"price\": 1.0810, \"index\": 9, \"details\": {\"current_zone\": \"discount\"}},"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E501",
+    "message": "Line too long (140 > 100)",
+    "source": "        {\"concept\": \"liquidity_sweep\", \"direction\": \"bullish\", \"price\": 1.0790, \"index\": 7, \"details\": {\"type\": \"buy_side_liquidity_grab\"}},"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E501",
+    "message": "Line too long (141 > 100)",
+    "source": "        {\"concept\": \"liquidity_sweep\", \"direction\": \"bearish\", \"price\": 1.0820, \"index\": 7, \"details\": {\"type\": \"sell_side_liquidity_grab\"}},"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E501",
+    "message": "Line too long (144 > 100)",
+    "source": "            {\"concept\": \"liquidity_sweep\", \"direction\": \"bullish\", \"price\": 1.0790, \"index\": 7, \"details\": {\"type\": \"buy_side_liquidity_grab\"}},"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E501",
+    "message": "Line too long (144 > 100)",
+    "source": "            {\"concept\": \"liquidity_sweep\", \"direction\": \"bullish\", \"price\": 1.0790, \"index\": 8, \"details\": {\"type\": \"buy_side_liquidity_grab\"}},"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E501",
+    "message": "Line too long (160 > 100)",
+    "source": "        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) + 0.0020)"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E501",
+    "message": "Line too long (160 > 100)",
+    "source": "        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) + 0.0020)"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E501",
+    "message": "Line too long (160 > 100)",
+    "source": "        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) + 0.0020)"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E501",
+    "message": "Line too long (160 > 100)",
+    "source": "        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) + 0.0020)"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E501",
+    "message": "Line too long (160 > 100)",
+    "source": "        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) + 0.0020)"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E501",
+    "message": "Line too long (163 > 100)",
+    "source": "        {\"concept\": \"order_block\", \"direction\": \"bearish\", \"price\": 1.0815, \"index\": 4, \"details\": {\"mitigation_count\": 0, \"ob_top\": 1.0820, \"ob_bottom\": 1.0810}},"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E501",
+    "message": "Line too long (163 > 100)",
+    "source": "        {\"concept\": \"order_block\", \"direction\": \"bullish\", \"price\": 1.0795, \"index\": 4, \"details\": {\"mitigation_count\": 0, \"ob_top\": 1.0800, \"ob_bottom\": 1.0790}},"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E501",
+    "message": "Line too long (165 > 100)",
+    "source": "        {\"concept\": \"fair_value_gap\", \"direction\": \"bearish\", \"price\": 1.0800, \"index\": 6, \"details\": {\"gap_size\": 0.0005, \"gap_top\": 1.0805, \"gap_bottom\": 1.0795}},"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E501",
+    "message": "Line too long (165 > 100)",
+    "source": "        {\"concept\": \"fair_value_gap\", \"direction\": \"bullish\", \"price\": 1.0810, \"index\": 6, \"details\": {\"gap_size\": 0.0005, \"gap_top\": 1.0815, \"gap_bottom\": 1.0805}},"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E501",
+    "message": "Line too long (167 > 100)",
+    "source": "            {\"concept\": \"order_block\", \"direction\": \"bullish\", \"price\": 1.0795, \"index\": 4, \"details\": {\"mitigation_count\": 0, \"ob_top\": 1.0800, \"ob_bottom\": 1.0790}},"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E501",
+    "message": "Line too long (167 > 100)",
+    "source": "            {\"concept\": \"order_block\", \"direction\": \"bullish\", \"price\": 1.0795, \"index\": 4, \"details\": {\"mitigation_count\": 0, \"ob_top\": 1.0800, \"ob_bottom\": 1.0790}},"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E501",
+    "message": "Line too long (169 > 100)",
+    "source": "            {\"concept\": \"fair_value_gap\", \"direction\": \"bullish\", \"price\": 1.0810, \"index\": 6, \"details\": {\"gap_size\": 0.0005, \"gap_top\": 1.0815, \"gap_bottom\": 1.0805}},"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E501",
+    "message": "Line too long (169 > 100)",
+    "source": "            {\"concept\": \"fair_value_gap\", \"direction\": \"bullish\", \"price\": 1.0810, \"index\": 7, \"details\": {\"gap_size\": 0.0005, \"gap_top\": 1.0815, \"gap_bottom\": 1.0805}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (101 > 100)",
+    "source": "        signal = await ReversalStrategy().analyze(make_uptrend_candles(20), make_reversal_smc_data())"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (101 > 100)",
+    "source": "        signal = await SMCTrendStrategy(confidence_min=0.1).analyze(candles, make_bearish_smc_data())"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (101 > 100)",
+    "source": "        signal = await SMCTrendStrategy(confidence_min=0.1).analyze(candles, make_bullish_smc_data())"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (103 > 100)",
+    "source": "        {\"concept\": \"order_block\", \"direction\": \"bullish\", \"price\": 1.0795, \"index\": 3, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (107 > 100)",
+    "source": "        signal = await SMCTrendStrategy(confidence_min=0.1).analyze(candles, smc_data, htf_trend=\"bearish\")"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (107 > 100)",
+    "source": "        {\"concept\": \"liquidity_sweep\", \"direction\": \"bearish\", \"price\": 1.0820, \"index\": 7, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (107 > 100)",
+    "source": "        {\"concept\": \"liquidity_sweep\", \"direction\": \"bullish\", \"price\": 1.0790, \"index\": 4, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (107 > 100)",
+    "source": "        {\"concept\": \"liquidity_sweep\", \"direction\": \"bullish\", \"price\": 1.0790, \"index\": 7, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (110 > 100)",
+    "source": "            {\"concept\": \"fair_value_gap\", \"direction\": \"bullish\", \"price\": 1.0810, \"index\": 6, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (110 > 100)",
+    "source": "        {\"concept\": \"break_of_structure\", \"direction\": \"bearish\", \"price\": 1.0790, \"index\": 5, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (110 > 100)",
+    "source": "        {\"concept\": \"break_of_structure\", \"direction\": \"bullish\", \"price\": 1.0820, \"index\": 5, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (111 > 100)",
+    "source": "        {\"concept\": \"change_of_character\", \"direction\": \"bullish\", \"price\": 1.0820, \"index\": 5, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (111 > 100)",
+    "source": "        {\"concept\": \"optimal_trade_entry\", \"direction\": \"bearish\", \"price\": 1.0795, \"index\": 8, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (111 > 100)",
+    "source": "        {\"concept\": \"optimal_trade_entry\", \"direction\": \"bullish\", \"price\": 1.0815, \"index\": 8, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (114 > 100)",
+    "source": "            {\"concept\": \"break_of_structure\", \"direction\": \"bearish\", \"price\": 1.0750, \"index\": 3, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (114 > 100)",
+    "source": "            {\"concept\": \"break_of_structure\", \"direction\": \"bearish\", \"price\": 1.0790, \"index\": 9, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (114 > 100)",
+    "source": "            {\"concept\": \"break_of_structure\", \"direction\": \"bearish\", \"price\": 1.0990, \"index\": 5, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (114 > 100)",
+    "source": "            {\"concept\": \"break_of_structure\", \"direction\": \"bearish\", \"price\": 1.0990, \"index\": 5, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (114 > 100)",
+    "source": "            {\"concept\": \"break_of_structure\", \"direction\": \"bearish\", \"price\": 1.0990, \"index\": 8, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (114 > 100)",
+    "source": "            {\"concept\": \"break_of_structure\", \"direction\": \"bullish\", \"price\": 1.0820, \"index\": 5, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (114 > 100)",
+    "source": "            {\"concept\": \"break_of_structure\", \"direction\": \"bullish\", \"price\": 1.0820, \"index\": 5, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (114 > 100)",
+    "source": "            {\"concept\": \"break_of_structure\", \"direction\": \"bullish\", \"price\": 1.0850, \"index\": 3, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (114 > 100)",
+    "source": "            {\"concept\": \"break_of_structure\", \"direction\": \"bullish\", \"price\": 1.0985, \"index\": 5, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (114 > 100)",
+    "source": "            {\"concept\": \"break_of_structure\", \"direction\": \"bullish\", \"price\": 1.0985, \"index\": 8, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (114 > 100)",
+    "source": "            {\"concept\": \"break_of_structure\", \"direction\": \"bullish\", \"price\": 1.0985, \"index\": 8, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (114 > 100)",
+    "source": "            {\"concept\": \"break_of_structure\", \"direction\": \"bullish\", \"price\": 1.0985, \"index\": 8, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (114 > 100)",
+    "source": "        {\"concept\": \"market_structure_shift\", \"direction\": \"bullish\", \"price\": 1.0820, \"index\": 5, \"details\": {}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (115 > 100)",
+    "source": "        signal = await SwingStrategy(confidence_min=0.1).analyze(make_uptrend_candles(20), make_bullish_smc_data())"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (116 > 100)",
+    "source": "        assert await SwingStrategy(enabled=False).analyze(make_uptrend_candles(20), make_bullish_smc_data()) is None"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (118 > 100)",
+    "source": "        smc_data = [{\"concept\": \"fair_value_gap\", \"direction\": \"bullish\", \"price\": 1.0810, \"index\": 5, \"details\": {}}]"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (118 > 100)",
+    "source": "        smc_data = [{\"concept\": \"fair_value_gap\", \"direction\": \"bullish\", \"price\": 1.0820, \"index\": 3, \"details\": {}}]"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (119 > 100)",
+    "source": "        assert await BreakoutStrategy(enabled=False).analyze(make_uptrend_candles(20), make_bullish_smc_data()) is None"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (119 > 100)",
+    "source": "        assert await SMCTrendStrategy(enabled=False).analyze(make_uptrend_candles(20), make_bullish_smc_data()) is None"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (120 > 100)",
+    "source": "        assert await ReversalStrategy(enabled=False).analyze(make_uptrend_candles(20), make_reversal_smc_data()) is None"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (129 > 100)",
+    "source": "        candles = [make_candle(i, 1.08 + i * 0.001, 1.081 + i * 0.001, 1.079 + i * 0.001, 1.0808 + i * 0.001) for i in range(10)]"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (133 > 100)",
+    "source": "        {\"concept\": \"premium_discount\", \"direction\": \"neutral\", \"price\": 1.0800, \"index\": 8, \"details\": {\"current_zone\": \"premium\"}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (134 > 100)",
+    "source": "        {\"concept\": \"premium_discount\", \"direction\": \"neutral\", \"price\": 1.0810, \"index\": 8, \"details\": {\"current_zone\": \"discount\"}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (140 > 100)",
+    "source": "        {\"concept\": \"order_block\", \"direction\": \"bearish\", \"price\": 1.0815, \"index\": 4, \"details\": {\"ob_top\": 1.0995, \"ob_bottom\": 1.0985}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (140 > 100)",
+    "source": "        {\"concept\": \"order_block\", \"direction\": \"bullish\", \"price\": 1.0795, \"index\": 4, \"details\": {\"ob_top\": 1.0800, \"ob_bottom\": 1.0790}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (144 > 100)",
+    "source": "            {\"concept\": \"order_block\", \"direction\": \"bearish\", \"price\": 1.0815, \"index\": 8, \"details\": {\"ob_top\": 1.0995, \"ob_bottom\": 1.0985}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (144 > 100)",
+    "source": "            {\"concept\": \"order_block\", \"direction\": \"bearish\", \"price\": 1.0990, \"index\": 4, \"details\": {\"ob_top\": 1.0995, \"ob_bottom\": 1.0980}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (144 > 100)",
+    "source": "            {\"concept\": \"order_block\", \"direction\": \"bearish\", \"price\": 1.0990, \"index\": 4, \"details\": {\"ob_top\": 1.0995, \"ob_bottom\": 1.0980}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (144 > 100)",
+    "source": "            {\"concept\": \"order_block\", \"direction\": \"bearish\", \"price\": 1.0990, \"index\": 6, \"details\": {\"ob_top\": 1.0995, \"ob_bottom\": 1.0980}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (144 > 100)",
+    "source": "            {\"concept\": \"order_block\", \"direction\": \"bullish\", \"price\": 1.0980, \"index\": 4, \"details\": {\"ob_top\": 1.0990, \"ob_bottom\": 1.0975}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (144 > 100)",
+    "source": "            {\"concept\": \"order_block\", \"direction\": \"bullish\", \"price\": 1.0980, \"index\": 7, \"details\": {\"ob_top\": 1.0990, \"ob_bottom\": 1.0975}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (144 > 100)",
+    "source": "            {\"concept\": \"order_block\", \"direction\": \"bullish\", \"price\": 1.0980, \"index\": 7, \"details\": {\"ob_top\": 1.0990, \"ob_bottom\": 1.0975}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (144 > 100)",
+    "source": "            {\"concept\": \"order_block\", \"direction\": \"bullish\", \"price\": 1.0980, \"index\": 7, \"details\": {\"ob_top\": 1.0990, \"ob_bottom\": 1.0975}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (145 > 100)",
+    "source": "        {\"concept\": \"fair_value_gap\", \"direction\": \"bearish\", \"price\": 1.0800, \"index\": 6, \"details\": {\"gap_top\": 1.0990, \"gap_bottom\": 1.0980}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (145 > 100)",
+    "source": "        {\"concept\": \"fair_value_gap\", \"direction\": \"bullish\", \"price\": 1.0810, \"index\": 6, \"details\": {\"gap_top\": 1.0815, \"gap_bottom\": 1.0805}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (149 > 100)",
+    "source": "            {\"concept\": \"fair_value_gap\", \"direction\": \"bearish\", \"price\": 1.0985, \"index\": 6, \"details\": {\"gap_top\": 1.0990, \"gap_bottom\": 1.0980}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (149 > 100)",
+    "source": "            {\"concept\": \"fair_value_gap\", \"direction\": \"bearish\", \"price\": 1.0985, \"index\": 6, \"details\": {\"gap_top\": 1.0990, \"gap_bottom\": 1.0980}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (149 > 100)",
+    "source": "            {\"concept\": \"fair_value_gap\", \"direction\": \"bearish\", \"price\": 1.0985, \"index\": 7, \"details\": {\"gap_top\": 1.0990, \"gap_bottom\": 1.0980}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (149 > 100)",
+    "source": "            {\"concept\": \"fair_value_gap\", \"direction\": \"bullish\", \"price\": 1.0810, \"index\": 6, \"details\": {\"gap_top\": 1.0815, \"gap_bottom\": 1.0805}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (150 > 100)",
+    "source": "            {\"concept\": \"fair_value_gap\", \"direction\": \"bearish\", \"price\": 1.0800, \"index\": 10, \"details\": {\"gap_top\": 1.0990, \"gap_bottom\": 1.0980}},"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (160 > 100)",
+    "source": "        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) + 0.0020)"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (160 > 100)",
+    "source": "        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) + 0.0020)"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (160 > 100)",
+    "source": "        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) + 0.0020)"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (160 > 100)",
+    "source": "        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) + 0.0020)"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (160 > 100)",
+    "source": "        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) + 0.0020)"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (160 > 100)",
+    "source": "        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) + 0.0020)"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (160 > 100)",
+    "source": "        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) + 0.0020)"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (160 > 100)",
+    "source": "        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) + 0.0020)"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (160 > 100)",
+    "source": "        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) + 0.0020)"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (160 > 100)",
+    "source": "        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) + 0.0020)"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (160 > 100)",
+    "source": "        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) - 0.0020)"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (160 > 100)",
+    "source": "        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) - 0.0020)"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (160 > 100)",
+    "source": "        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) - 0.0020)"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (160 > 100)",
+    "source": "        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) - 0.0020)"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (160 > 100)",
+    "source": "        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) - 0.0020)"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (160 > 100)",
+    "source": "        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close) - 0.0020)"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E501",
+    "message": "Line too long (163 > 100)",
+    "source": "        candles[-1] = make_candle(len(candles) - 1, float(candles[-1].open), float(candles[-1].high), float(candles[-1].low), float(candles[-1].close), volume=500)"
+  },
+  {
+    "file": "tests/test_trade_orchestrator.py",
+    "code": "E501",
+    "message": "Line too long (102 > 100)",
+    "source": "    mt5_c = mt5 if mt5 is not None else MagicMock(get_account_info=AsyncMock(return_value=_account()))"
+  },
+  {
+    "file": "tests/test_trade_orchestrator.py",
+    "code": "E501",
+    "message": "Line too long (104 > 100)",
+    "source": "    ex = executor if executor is not None else MagicMock(open_order=AsyncMock(return_value=_mk_trade()))"
+  },
+  {
+    "file": "tests/test_trading_engine.py",
+    "code": "E501",
+    "message": "Line too long (140 > 100)",
+    "source": "    async def mock_analyze(symbol: str, htf_candles: list[Candle], ltf_candles: list[Candle], setup_tf_candles: list[Candle] | None = None):"
+  },
+  {
+    "file": "tests/test_utils.py",
+    "code": "E501",
+    "message": "Line too long (108 > 100)",
+    "source": "        assert session in (TradingSession.LONDON, TradingSession.NEW_YORK, TradingSession.OVERLAP_LONDON_NY)"
+  },
+  {
+    "file": "archive/diagnostics/_swchk.py",
+    "code": "E702",
+    "message": "Multiple statements on one line (semicolon)",
+    "source": "    hi = max(o,cl)+rnd.uniform(0,1); lo = min(o,cl)-rnd.uniform(0,1)"
+  },
+  {
+    "file": "archive/diagnostics/_swchk.py",
+    "code": "E702",
+    "message": "Multiple statements on one line (semicolon)",
+    "source": "    o = prev; cl = o + rnd.uniform(-2,2)"
+  },
+  {
+    "file": "scripts/diagnose_filters.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "        l = o - 0.0003"
+  },
+  {
+    "file": "scripts/diagnose_filters.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "def make_candle(idx: int, symbol: str, o: float, h: float, l: float, c: float) -> Candle:"
+  },
+  {
+    "file": "scripts/run_backtest.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "        l = min(o, c) - Decimal(str(rng.uniform(0.0001, 0.0004))) if symbol == \"EURUSD\" else min(o, c) - Decimal(str(rng.uniform(0.1, 0.4)))"
+  },
+  {
+    "file": "src/arty_trading/modules/backtesting/data_generator.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "            l = min(o, c) - Decimal(str(round(rng.uniform(0.05, wick), 2)))"
+  },
+  {
+    "file": "src/arty_trading/modules/execution/position_manager.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "            [(Decimal(str(t)), Decimal(str(l))) for t, l in settings.profit_lock_level_list]"
+  },
+  {
+    "file": "src/arty_trading/modules/execution/profit_lock.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "            (ProfitLockLevel(t, l) for t, l in levels), key=lambda lv: lv.trigger_r"
+  },
+  {
+    "file": "tests/test_backtest.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "        l = o - 0.0003"
+  },
+  {
+    "file": "tests/test_backtest.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "        l = o - 0.3"
+  },
+  {
+    "file": "tests/test_backtest.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "def make_backtest_candle(idx: int, symbol: str, o: float, h: float, l: float, c: float) -> Candle:"
+  },
+  {
+    "file": "tests/test_market_structure_engine.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "def _candle(index: int, o: float, h: float, l: float, c: float) -> Candle:"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "            l = c - 0.0003"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "            l = o - 0.0002"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "        l = c - 0.0002"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "        l = c - 0.0003"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "        l = c - 0.0003"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "        l = float(o) - 0.0002"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "        l = float(o) - 0.0002"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "        l = min(o, c) - 0.0003"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "        l = o - 0.0002"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "    l: float,"
+  },
+  {
+    "file": "tests/test_phase3_setup_quality.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "def mk(idx, o, h, l, c, volume=100, spread=3):"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "            l = o - 0.0002"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "        l = c - 0.0003"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "        l = c - 0.0005"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "def make_candle(idx, o, h, l, c, volume=100, spread=3):"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "            l = c - 0.0005"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "            l = o - 0.0002"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "        l = c - 0.0003"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "        l = c - 0.0005"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "        l = c - 0.0005"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "        l = float(o) - 0.0002"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "        l = float(o) - 0.0005"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "    l: float,"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "            l = o - 0.0002"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "        l = c - 0.0003"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "        l = c - 0.0005"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "def make_candle(idx, o, h, l, c, volume=100, spread=3):"
+  },
+  {
+    "file": "tests/test_trading_engine.py",
+    "code": "E741",
+    "message": "Ambiguous variable name: `l`",
+    "source": "        o, h, l, c = prices[i]"
+  },
+  {
+    "file": "archive/diagnostics/_diag.py",
+    "code": "F401",
+    "message": "`decimal.Decimal` imported but unused",
+    "source": "from decimal import Decimal"
+  },
+  {
+    "file": "archive/diagnostics/_diag.py",
+    "code": "F401",
+    "message": "`time` imported but unused",
+    "source": "import time"
+  },
+  {
+    "file": "archive/diagnostics/_swchk.py",
+    "code": "F401",
+    "message": "`arty_trading.modules.decision.master_trend.MasterTrendAnalyzer` imported but unused",
+    "source": "from arty_trading.modules.decision.master_trend import MasterTrendAnalyzer"
+  },
+  {
+    "file": "archive/diagnostics/_trend.py",
+    "code": "F401",
+    "message": "`asyncio` imported but unused",
+    "source": "import asyncio"
+  },
+  {
+    "file": "archive/diagnostics/_trend.py",
+    "code": "F401",
+    "message": "`time` imported but unused",
+    "source": "import time"
+  },
+  {
+    "file": "scripts/calibrate_retest_filter.py",
+    "code": "F401",
+    "message": "`arty_trading.modules.signals.SignalGenerator` imported but unused",
+    "source": "from arty_trading.modules.signals import SignalGenerator, SignalValidator"
+  },
+  {
+    "file": "scripts/calibrate_retest_filter.py",
+    "code": "F401",
+    "message": "`arty_trading.utils.helpers.is_fresh_retest` imported but unused",
+    "source": "from arty_trading.utils.helpers import is_fresh_retest"
+  },
+  {
+    "file": "scripts/diagnose_filters.py",
+    "code": "F401",
+    "message": "`arty_trading.modules.decision.market_context.MarketContext` imported but unused",
+    "source": "from arty_trading.modules.decision.market_context import MarketContext"
+  },
+  {
+    "file": "scripts/diagnose_filters.py",
+    "code": "F401",
+    "message": "`arty_trading.modules.decision.market_structure_engine.MarketStructureEngine` imported but unused",
+    "source": "from arty_trading.modules.decision.market_structure_engine import MarketStructureEngine"
+  },
+  {
+    "file": "scripts/run_backtest.py",
+    "code": "F401",
+    "message": "`datetime.timedelta` imported but unused",
+    "source": "from datetime import datetime, timedelta, timezone"
+  },
+  {
+    "file": "src/arty_trading/cli.py",
+    "code": "F401",
+    "message": "`sys` imported but unused",
+    "source": "import sys"
+  },
+  {
+    "file": "src/arty_trading/core/enums.py",
+    "code": "F401",
+    "message": "`enum.IntEnum` imported but unused",
+    "source": "from enum import Enum, IntEnum"
+  },
+  {
+    "file": "src/arty_trading/logging/logger.py",
+    "code": "F401",
+    "message": "`datetime.datetime` imported but unused",
+    "source": "from datetime import datetime"
+  },
+  {
+    "file": "src/arty_trading/modules/backtesting/engine.py",
+    "code": "F401",
+    "message": "`arty_trading.core.enums.TimeFrame` imported but unused",
+    "source": "from arty_trading.core.enums import Direction, LogCategory, TimeFrame"
+  },
+  {
+    "file": "src/arty_trading/modules/backtesting/engine.py",
+    "code": "F401",
+    "message": "`asyncio` imported but unused",
+    "source": "import asyncio"
+  },
+  {
+    "file": "src/arty_trading/modules/decision/master_trend.py",
+    "code": "F401",
+    "message": "`arty_trading.modules.smc.base.find_external_swing_points` imported but unused",
+    "source": "    find_external_swing_points,"
+  },
+  {
+    "file": "src/arty_trading/modules/decision/master_trend.py",
+    "code": "F401",
+    "message": "`arty_trading.modules.smc.base.find_internal_swing_points` imported but unused",
+    "source": "    find_internal_swing_points,"
+  },
+  {
+    "file": "src/arty_trading/modules/execution/__init__.py",
+    "code": "F401",
+    "message": "`arty_trading.modules.execution.executor.MT5PositionNotFoundError` imported but unused; consider removing, adding to `__all__`, or using a redundant alias",
+    "source": "    MT5PositionNotFoundError,"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/liquidity.py",
+    "code": "F401",
+    "message": "`arty_trading.modules.smc.base.SwingPoint` imported but unused",
+    "source": "    SwingPoint,"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/sessions.py",
+    "code": "F401",
+    "message": "`typing.Any` imported but unused",
+    "source": "from typing import Any"
+  },
+  {
+    "file": "tests/integration/phase2_1_live_test.py",
+    "code": "F401",
+    "message": "`arty_trading.modules.execution.OrderExecutor` imported but unused",
+    "source": "    from arty_trading.modules.execution import OrderExecutor"
+  },
+  {
+    "file": "tests/integration/phase2_1_live_test.py",
+    "code": "F401",
+    "message": "`arty_trading.modules.execution.OrderExecutor` imported but unused",
+    "source": "from arty_trading.modules.execution import OrderExecutor, PaperOrderExecutor"
+  },
+  {
+    "file": "tests/integration/test_demo_live.py",
+    "code": "F401",
+    "message": "`arty_trading.core.enums.TradingMode` imported but unused",
+    "source": "from arty_trading.core.enums import TradingMode"
+  },
+  {
+    "file": "tests/integration/test_demo_live.py",
+    "code": "F401",
+    "message": "`datetime.UTC` imported but unused",
+    "source": "from datetime import UTC, datetime"
+  },
+  {
+    "file": "tests/integration/test_demo_live.py",
+    "code": "F401",
+    "message": "`datetime.datetime` imported but unused",
+    "source": "from datetime import UTC, datetime"
+  },
+  {
+    "file": "tests/integration/test_mt5_smc_trade.py",
+    "code": "F401",
+    "message": "`arty_trading.core.enums.SignalType` imported but unused",
+    "source": "from arty_trading.core.enums import TimeFrame, SignalType"
+  },
+  {
+    "file": "tests/test_ai.py",
+    "code": "F401",
+    "message": "`arty_trading.modules.ai.base.AIProvider` imported but unused",
+    "source": "from arty_trading.modules.ai.base import AIProvider"
+  },
+  {
+    "file": "tests/test_backtest.py",
+    "code": "F401",
+    "message": "`arty_trading.core.enums.Direction` imported but unused",
+    "source": "from arty_trading.core.enums import Direction, TimeFrame"
+  },
+  {
+    "file": "tests/test_backtest.py",
+    "code": "F401",
+    "message": "`arty_trading.modules.signals.validator.ALL_CONDITIONS` imported but unused",
+    "source": "from arty_trading.modules.signals.validator import ALL_CONDITIONS"
+  },
+  {
+    "file": "tests/test_backtest.py",
+    "code": "F401",
+    "message": "`arty_trading.utils.helpers.get_pip_size` imported but unused",
+    "source": "from arty_trading.utils.helpers import get_pip_size, pip_value"
+  },
+  {
+    "file": "tests/test_backtesting.py",
+    "code": "F401",
+    "message": "`arty_trading.modules.backtesting.BacktestStats` imported but unused",
+    "source": "from arty_trading.modules.backtesting import BacktestEngine, BacktestStats, calculate_stats"
+  },
+  {
+    "file": "tests/test_execution.py",
+    "code": "F401",
+    "message": "`arty_trading.core.entities.Trade` imported but unused",
+    "source": "from arty_trading.core.entities import Signal, Trade"
+  },
+  {
+    "file": "tests/test_market_data.py",
+    "code": "F401",
+    "message": "`unittest.mock.AsyncMock` imported but unused",
+    "source": "from unittest.mock import AsyncMock, MagicMock, patch"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "F401",
+    "message": "`arty_trading.modules.decision.master_trend.TrendAnalysis` imported but unused",
+    "source": "from arty_trading.modules.decision.master_trend import MasterTrendAnalyzer, TrendAnalysis"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "F401",
+    "message": "`arty_trading.modules.signals.validator.SignalValidator` imported but unused",
+    "source": "from arty_trading.modules.signals.validator import SignalValidator"
+  },
+  {
+    "file": "tests/test_mt5_connector.py",
+    "code": "F401",
+    "message": "`arty_trading.infrastructure.mt5.connector.MT5AccountError` imported but unused",
+    "source": "    MT5AccountError,"
+  },
+  {
+    "file": "tests/test_mt5_connector.py",
+    "code": "F401",
+    "message": "`arty_trading.infrastructure.mt5.connector.MT5TerminalError` imported but unused",
+    "source": "    MT5TerminalError,"
+  },
+  {
+    "file": "tests/test_mt5_connector.py",
+    "code": "F401",
+    "message": "`decimal.Decimal` imported but unused",
+    "source": "from decimal import Decimal"
+  },
+  {
+    "file": "tests/test_mt5_connector.py",
+    "code": "F401",
+    "message": "`unittest.mock.AsyncMock` imported but unused",
+    "source": "from unittest.mock import AsyncMock, MagicMock, patch"
+  },
+  {
+    "file": "tests/test_notifications.py",
+    "code": "F401",
+    "message": "`arty_trading.infrastructure.notifications.base.BaseNotifier` imported but unused",
+    "source": "from arty_trading.infrastructure.notifications.base import BaseNotifier, Notification"
+  },
+  {
+    "file": "tests/test_position_monitor.py",
+    "code": "F401",
+    "message": "`datetime.datetime` imported but unused",
+    "source": "from datetime import datetime, timezone"
+  },
+  {
+    "file": "tests/test_position_monitor.py",
+    "code": "F401",
+    "message": "`datetime.timezone` imported but unused",
+    "source": "from datetime import datetime, timezone"
+  },
+  {
+    "file": "tests/test_position_state_store.py",
+    "code": "F401",
+    "message": "`json` imported but unused",
+    "source": "import json"
+  },
+  {
+    "file": "tests/test_trade_orchestrator.py",
+    "code": "F401",
+    "message": "`datetime.UTC` imported but unused",
+    "source": "from datetime import UTC, datetime"
+  },
+  {
+    "file": "tests/test_trade_orchestrator.py",
+    "code": "F401",
+    "message": "`datetime.datetime` imported but unused",
+    "source": "from datetime import UTC, datetime"
+  },
+  {
+    "file": "tests/test_trading_engine.py",
+    "code": "F401",
+    "message": "`unittest.mock.patch` imported but unused",
+    "source": "from unittest.mock import MagicMock, patch"
+  },
+  {
+    "file": "tests/integration/test_mt5_live_trade.py",
+    "code": "F541",
+    "message": "f-string without any placeholders",
+    "source": "        print(f\"✅ Trade fermé !\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_live_trade.py",
+    "code": "F541",
+    "message": "f-string without any placeholders",
+    "source": "    print(f\"   Direction : BUY\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_live_trade.py",
+    "code": "F541",
+    "message": "f-string without any placeholders",
+    "source": "    print(f\"   Volume   : 0.01 lot\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_live_trade.py",
+    "code": "F541",
+    "message": "f-string without any placeholders",
+    "source": "    print(f\"\\n⏳ Attente de 5 secondes...\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_live_trade.py",
+    "code": "F541",
+    "message": "f-string without any placeholders",
+    "source": "    print(f\"\\n📊 Compte MT5 :\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_live_trade.py",
+    "code": "F541",
+    "message": "f-string without any placeholders",
+    "source": "    print(f\"\\n📊 Compte final :\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_live_trade.py",
+    "code": "F541",
+    "message": "f-string without any placeholders",
+    "source": "    print(f\"\\n📋 Configuration :\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_live_trade.py",
+    "code": "F541",
+    "message": "f-string without any placeholders",
+    "source": "    print(f\"\\n📋 Positions ouvertes :\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_live_trade.py",
+    "code": "F541",
+    "message": "f-string without any placeholders",
+    "source": "    print(f\"\\n🔌 Connexion à MT5...\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_live_trade.py",
+    "code": "F541",
+    "message": "f-string without any placeholders",
+    "source": "    print(f\"\\n🔌 Déconnecté de MT5.\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_live_trade.py",
+    "code": "F541",
+    "message": "f-string without any placeholders",
+    "source": "    print(f\"\\n🟢 Ouverture d'un trade de test...\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_smc_trade.py",
+    "code": "F541",
+    "message": "f-string without any placeholders",
+    "source": "            print(f\"\\n✅ Position fermée (SL ou TP atteint) !\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_smc_trade.py",
+    "code": "F541",
+    "message": "f-string without any placeholders",
+    "source": "            print(f\"✅ Trade fermé !\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_smc_trade.py",
+    "code": "F541",
+    "message": "f-string without any placeholders",
+    "source": "        print(f\"\\n📌 Dernières détections :\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_smc_trade.py",
+    "code": "F541",
+    "message": "f-string without any placeholders",
+    "source": "        print(f\"✅ Signal généré !\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_smc_trade.py",
+    "code": "F541",
+    "message": "f-string without any placeholders",
+    "source": "    print(f\"\\n⏳ Surveillance de la position (30 secondes)...\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_smc_trade.py",
+    "code": "F541",
+    "message": "f-string without any placeholders",
+    "source": "    print(f\"\\n🎯 Génération du signal...\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_smc_trade.py",
+    "code": "F541",
+    "message": "f-string without any placeholders",
+    "source": "    print(f\"\\n💰 Gestion du risque :\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_smc_trade.py",
+    "code": "F541",
+    "message": "f-string without any placeholders",
+    "source": "    print(f\"\\n📊 Compte MT5 :\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_smc_trade.py",
+    "code": "F541",
+    "message": "f-string without any placeholders",
+    "source": "    print(f\"\\n📊 Compte final :\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_smc_trade.py",
+    "code": "F541",
+    "message": "f-string without any placeholders",
+    "source": "    print(f\"\\n📋 Concepts SMC détectés :\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_smc_trade.py",
+    "code": "F541",
+    "message": "f-string without any placeholders",
+    "source": "    print(f\"\\n📋 Configuration :\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_smc_trade.py",
+    "code": "F541",
+    "message": "f-string without any placeholders",
+    "source": "    print(f\"\\n📋 Position ouverte :\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_smc_trade.py",
+    "code": "F541",
+    "message": "f-string without any placeholders",
+    "source": "    print(f\"\\n🔌 Connexion à MT5...\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_smc_trade.py",
+    "code": "F541",
+    "message": "f-string without any placeholders",
+    "source": "    print(f\"\\n🔌 Déconnecté de MT5.\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_smc_trade.py",
+    "code": "F541",
+    "message": "f-string without any placeholders",
+    "source": "    print(f\"\\n🔍 Analyse SMC en cours...\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_smc_trade.py",
+    "code": "F541",
+    "message": "f-string without any placeholders",
+    "source": "    print(f\"\\n🟢 Exécution du trade...\")"
+  },
+  {
+    "file": "src/arty_trading/modules/signals/generator.py",
+    "code": "F601",
+    "message": "Dictionary key literal `\"setup_type\"` repeated",
+    "source": "                \"setup_type\": getattr(setup, \"metadata\", {}).get("
+  },
+  {
+    "file": "tests/integration/phase2_1_live_test.py",
+    "code": "F811",
+    "message": "Redefinition of unused `OrderExecutor` from line 34: `OrderExecutor` redefined here",
+    "source": "    from arty_trading.modules.execution import OrderExecutor"
+  },
+  {
+    "file": "tests/test_backtest.py",
+    "code": "F811",
+    "message": "Redefinition of unused `get_pip_size` from line 21: `get_pip_size` redefined here",
+    "source": "        from arty_trading.utils.helpers import get_pip_size"
+  },
+  {
+    "file": "src/arty_trading/modules/decision/engine.py",
+    "code": "F821",
+    "message": "Undefined name `Any`",
+    "source": "        market_context: Any | None = None,"
+  },
+  {
+    "file": "archive/diagnostics/_aux_scan.py",
+    "code": "F841",
+    "message": "Local variable `e` is assigned to but never used",
+    "source": "    except Exception as e:"
+  },
+  {
+    "file": "archive/diagnostics/_diag2.py",
+    "code": "F841",
+    "message": "Local variable `sig` is assigned to but never used",
+    "source": "        sig = await gen.generate("
+  },
+  {
+    "file": "archive/diagnostics/_diag2s.py",
+    "code": "F841",
+    "message": "Local variable `sig` is assigned to but never used",
+    "source": "        sig = await gen.generate("
+  },
+  {
+    "file": "archive/diagnostics/_diag3.py",
+    "code": "F841",
+    "message": "Local variable `sig` is assigned to but never used",
+    "source": "        sig = await gen.generate("
+  },
+  {
+    "file": "examples/demo_trading_modes.py",
+    "code": "F841",
+    "message": "Local variable `stats_blocked` is assigned to but never used",
+    "source": "    stats_blocked = await test_live_mode_blocked()"
+  },
+  {
+    "file": "examples/demo_trading_modes.py",
+    "code": "F841",
+    "message": "Local variable `stats_multi` is assigned to but never used",
+    "source": "    stats_multi = await test_multiple_analyses()"
+  },
+  {
+    "file": "scripts/calibrate_retest_filter.py",
+    "code": "F841",
+    "message": "Local variable `strategy` is assigned to but never used",
+    "source": "    strategy = SMCTrendStrategy()"
+  },
+  {
+    "file": "tests/integration/test_mt5_smc_trade.py",
+    "code": "F841",
+    "message": "Local variable `current_profit` is assigned to but never used",
+    "source": "            current_profit = (current_pos.price_open - current_tick.ask) * current_pos.volume * 100_000"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "F841",
+    "message": "Local variable `gen` is assigned to but never used",
+    "source": "        gen = SignalGenerator(min_confidence=0.1, validator=validator)"
+  },
+  {
+    "file": "tests/test_trading_engine.py",
+    "code": "F841",
+    "message": "Local variable `original_analyze` is assigned to but never used",
+    "source": "    original_analyze = engine._analyze_multitimeframe"
+  },
+  {
+    "file": "archive/diagnostics/_aux_scan.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "﻿import re, subprocess, os"
+  },
+  {
+    "file": "archive/diagnostics/_candlechk.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from arty_trading.core.enums import TimeFrame\nfrom arty_trading.modules.backtesting.data_generator import generate_multi_regime_candles, aggregate_candles"
+  },
+  {
+    "file": "archive/diagnostics/_candlechk.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "import sys"
+  },
+  {
+    "file": "archive/diagnostics/_diag.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from decimal import Decimal\nfrom arty_trading.config.settings import Settings\nfrom arty_trading.core.enums import TimeFrame\nfrom arty_trading.modules.backtesting.data_generator import (\n    aggregate_candles,\n    generate_multi_regime_candles,\n)\nfrom arty_trading.application.market_context_builder import MarketContextBuilder\nfrom arty_trading.application.setup_service import update_setups_from_market_context\nfrom arty_trading.modules.smc import SMCDetector, SetupTracker"
+  },
+  {
+    "file": "archive/diagnostics/_diag.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "import io\nimport sys\nimport time\nimport asyncio"
+  },
+  {
+    "file": "archive/diagnostics/_diag2.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from decimal import Decimal\nfrom arty_trading.config.settings import Settings\nfrom arty_trading.core.enums import TimeFrame\nfrom arty_trading.modules.backtesting.data_generator import (\n    aggregate_candles,\n    generate_multi_regime_candles,\n)\nfrom arty_trading.modules.backtesting.mtf_engine import MTFBacktestEngine\nfrom arty_trading.modules.backtesting.symbol_config import configure_detector_for_symbol\nfrom arty_trading.modules.decision import DecisionEngine\nfrom arty_trading.modules.signals import SignalGenerator, SignalValidator\nfrom arty_trading.modules.smc import SMCDetector, SetupTracker\nfrom arty_trading.modules.strategies import SMCTrendStrategy"
+  },
+  {
+    "file": "archive/diagnostics/_diag2.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "import io\nimport sys\nimport asyncio\nimport logging\nfrom collections import Counter"
+  },
+  {
+    "file": "archive/diagnostics/_diag2s.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from decimal import Decimal\nfrom arty_trading.config.settings import Settings\nfrom arty_trading.core.enums import TimeFrame\nfrom arty_trading.modules.backtesting.data_generator import (\n    aggregate_candles,\n    generate_multi_regime_candles,\n)\nfrom arty_trading.modules.backtesting.mtf_engine import MTFBacktestEngine\nfrom arty_trading.modules.backtesting.symbol_config import configure_detector_for_symbol\nfrom arty_trading.modules.decision import DecisionEngine\nfrom arty_trading.modules.signals import SignalGenerator, SignalValidator\nfrom arty_trading.modules.smc import SMCDetector, SetupTracker\nfrom arty_trading.modules.strategies import SMCTrendStrategy"
+  },
+  {
+    "file": "archive/diagnostics/_diag2s.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "import io\nimport sys\nimport asyncio\nimport logging\nfrom collections import Counter"
+  },
+  {
+    "file": "archive/diagnostics/_diag3.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from decimal import Decimal\nfrom arty_trading.config.settings import Settings\nfrom arty_trading.core.enums import TimeFrame\nfrom arty_trading.modules.backtesting.data_generator import (\n    aggregate_candles,\n    generate_multi_regime_candles,\n)\nfrom arty_trading.modules.backtesting.mtf_engine import MTFBacktestEngine\nfrom arty_trading.modules.backtesting.symbol_config import configure_detector_for_symbol\nfrom arty_trading.modules.decision import DecisionEngine\nfrom arty_trading.modules.signals import SignalGenerator, SignalValidator\nfrom arty_trading.modules.smc import SMCDetector, SetupTracker\nfrom arty_trading.modules.strategies import SMCTrendStrategy"
+  },
+  {
+    "file": "archive/diagnostics/_diag3.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "import io\nimport sys\nimport asyncio\nimport logging\nfrom collections import Counter"
+  },
+  {
+    "file": "archive/diagnostics/_prof.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from arty_trading.core.enums import TimeFrame\nfrom arty_trading.modules.backtesting.data_generator import (\n    aggregate_candles,\n    generate_multi_regime_candles,\n)\nfrom arty_trading.application.market_context_builder import MarketContextBuilder\nfrom arty_trading.application.setup_service import update_setups_from_market_context\nfrom arty_trading.config.settings import Settings\nfrom arty_trading.modules.smc import SMCDetector, SetupTracker"
+  },
+  {
+    "file": "archive/diagnostics/_prof.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "import io\nimport sys\nimport time\nimport asyncio"
+  },
+  {
+    "file": "archive/diagnostics/_speed.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from decimal import Decimal\nfrom arty_trading.config.settings import Settings\nfrom arty_trading.core.enums import TimeFrame\nfrom arty_trading.modules.backtesting.data_generator import (\n    aggregate_candles,\n    generate_multi_regime_candles,\n)\nfrom arty_trading.modules.backtesting.mtf_engine import MTFBacktestEngine\nfrom arty_trading.modules.backtesting.symbol_config import configure_detector_for_symbol\nfrom arty_trading.modules.decision import DecisionEngine\nfrom arty_trading.modules.signals import SignalGenerator, SignalValidator\nfrom arty_trading.modules.smc import SMCDetector, SetupTracker\nfrom arty_trading.modules.strategies import SMCTrendStrategy"
+  },
+  {
+    "file": "archive/diagnostics/_speed.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "import io\nimport sys\nimport time\nimport asyncio"
+  },
+  {
+    "file": "archive/diagnostics/_swchk.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from arty_trading.core.enums import TimeFrame\nfrom arty_trading.modules.backtesting.data_generator import generate_multi_regime_candles, aggregate_candles\nfrom arty_trading.modules.smc.base import find_swing_points\nfrom arty_trading.modules.decision.master_trend import MasterTrendAnalyzer"
+  },
+  {
+    "file": "archive/diagnostics/_swchk.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from datetime import datetime, timezone, timedelta\nfrom decimal import Decimal\nfrom arty_trading.core.models import Candle"
+  },
+  {
+    "file": "archive/diagnostics/_swchk.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "import sys, random"
+  },
+  {
+    "file": "archive/diagnostics/_trend.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "import io\nimport sys\nimport time\nimport asyncio"
+  },
+  {
+    "file": "archive/diagnostics/_trendchk.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from collections import Counter\nfrom arty_trading.core.enums import TimeFrame\nfrom arty_trading.modules.backtesting.data_generator import generate_multi_regime_candles, aggregate_candles\nfrom arty_trading.modules.decision.master_trend import MasterTrendAnalyzer"
+  },
+  {
+    "file": "archive/diagnostics/_trendchk.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "import sys"
+  },
+  {
+    "file": "archive/diagnostics/_trenddbg.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from arty_trading.core.enums import TimeFrame\nfrom arty_trading.modules.backtesting.data_generator import generate_multi_regime_candles, aggregate_candles\nfrom arty_trading.modules.decision.master_trend import MasterTrendAnalyzer, find_swing_points"
+  },
+  {
+    "file": "archive/diagnostics/_trenddbg.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "import sys"
+  },
+  {
+    "file": "examples/demo_test_adaptive.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "import MetaTrader5 as mt5  # noqa: N813\n\nfrom arty_trading.config.settings import get_settings\nfrom arty_trading.modules.signals.generator import SignalGenerator\nfrom arty_trading.modules.smc.detector import SMCDetector\nfrom paper_test_adaptive import derive_htf_trend, fetch_candles"
+  },
+  {
+    "file": "scripts/run_backtest_mtf.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from arty_trading.config.settings import Settings\nfrom arty_trading.core.enums import TimeFrame\nfrom arty_trading.modules.backtesting.data_generator import (\n    aggregate_candles,\n    generate_multi_regime_candles,\n)\nfrom arty_trading.modules.backtesting.mtf_engine import MTFBacktestEngine\nfrom arty_trading.modules.backtesting.symbol_config import (\n    configure_detector_for_symbol,\n)\nfrom arty_trading.modules.decision import DecisionEngine\nfrom arty_trading.modules.signals import SignalGenerator, SignalValidator\nfrom arty_trading.modules.smc import SMCDetector, SetupTracker\nfrom arty_trading.modules.strategies import SMCTrendStrategy"
+  },
+  {
+    "file": "scripts/run_bot.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from __future__ import annotations\n\nimport argparse\nimport uvicorn\n\nfrom arty_trading.config import get_settings"
+  },
+  {
+    "file": "scripts/test_efficacy.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "    from arty_trading.infrastructure.mt5.connector import MT5Connector\n    from arty_trading.infrastructure.mt5.market_data import MT5MarketDataProvider, MT5_AVAILABLE"
+  },
+  {
+    "file": "src/arty_trading/__main__.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from arty_trading.cli import main"
+  },
+  {
+    "file": "src/arty_trading/api/routes/__init__.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from arty_trading.api.routes.ai import router as ai_router\nfrom arty_trading.api.routes.notifications import router as notifications_router\nfrom arty_trading.api.routes.backtesting import router as backtesting_router\nfrom arty_trading.api.routes.execution import router as execution_router\nfrom arty_trading.api.routes.risk import router as risk_router\nfrom arty_trading.api.routes.signals import router as signals_router\nfrom arty_trading.api.routes.smc import router as smc_router"
+  },
+  {
+    "file": "src/arty_trading/application/__init__.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from arty_trading.application.candle_synchronizer import CandleSynchronizer\nfrom arty_trading.application.statistics import TradingStatistics\nfrom arty_trading.application.trade_decision_diagnostic import (\n    ExecutionGuardDiagnostic,\n    MasterTrendDiagnostic,\n    PipelineStep,\n    RRDiagnostic,\n    RejectionReason,\n    RiskManagerDiagnostic,\n    ScoreDiagnostic,\n    SMCValidatorDiagnostic,\n    SpreadDiagnostic,\n    TradeDecisionDiagnostic,\n)\nfrom arty_trading.application.trade_decision_debugger import TradeDecisionDebugger\nfrom arty_trading.application.trade_journal import TradeJournal\nfrom arty_trading.application.trading_engine import TradingEngine"
+  },
+  {
+    "file": "src/arty_trading/application/statistics.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from __future__ import annotations\n\nfrom decimal import Decimal\nfrom datetime import datetime\nfrom typing import Any\n\nfrom arty_trading.core.entities import Signal, Trade\nfrom arty_trading.core.enums import TradingMode"
+  },
+  {
+    "file": "src/arty_trading/cli.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "import argparse\nimport sys\nfrom collections.abc import Sequence\n\nimport uvicorn\n\nfrom arty_trading import __version__\nfrom arty_trading.config import get_settings\nfrom arty_trading.logging import setup_logging, get_logger\nfrom arty_trading.core.enums import LogCategory"
+  },
+  {
+    "file": "src/arty_trading/core/__init__.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from arty_trading.core.enums import (\n    Direction,\n    OrderType,\n    SignalType,\n    TimeFrame,\n    TradingMode,\n    TradingSession,\n)\nfrom arty_trading.core.entities import (\n    Candle,\n    Signal,\n    Trade,\n    TradingAccount,\n)"
+  },
+  {
+    "file": "src/arty_trading/infrastructure/mt5/__init__.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from arty_trading.infrastructure.mt5.connector import (\n    MT5AccountError,\n    MT5ConnectionError,\n    MT5Connector,\n    MT5TerminalError,\n)\nfrom arty_trading.infrastructure.mt5.market_data import (\n    MT5MarketDataProvider,\n    MarketDataError,\n    SymbolNotFoundError,\n)"
+  },
+  {
+    "file": "src/arty_trading/infrastructure/notifications/__init__.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from arty_trading.infrastructure.notifications.manager import NotificationManager\nfrom arty_trading.infrastructure.notifications.telegram import TelegramNotifier\nfrom arty_trading.infrastructure.notifications.discord import DiscordNotifier\nfrom arty_trading.infrastructure.notifications.email import EmailNotifier"
+  },
+  {
+    "file": "src/arty_trading/infrastructure/notifications/discord.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from __future__ import annotations\n\nimport urllib.request\nimport json\n\nfrom arty_trading.core.enums import LogCategory\nfrom arty_trading.logging.logger import get_logger\nfrom arty_trading.infrastructure.notifications.base import BaseNotifier, Notification"
+  },
+  {
+    "file": "src/arty_trading/infrastructure/notifications/email.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from __future__ import annotations\n\nimport smtplib\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\n\nfrom arty_trading.core.enums import LogCategory\nfrom arty_trading.logging.logger import get_logger\nfrom arty_trading.infrastructure.notifications.base import BaseNotifier, Notification"
+  },
+  {
+    "file": "src/arty_trading/infrastructure/notifications/telegram.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from __future__ import annotations\n\nimport urllib.request\nimport urllib.parse\nimport json\n\nfrom arty_trading.core.enums import LogCategory\nfrom arty_trading.logging.logger import get_logger\nfrom arty_trading.infrastructure.notifications.base import BaseNotifier, Notification"
+  },
+  {
+    "file": "src/arty_trading/logging/__init__.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from arty_trading.logging.logger import (\n    get_logger,\n    setup_logging,\n    log_signal,\n    log_trade,\n    log_error,\n)"
+  },
+  {
+    "file": "src/arty_trading/logging/logger.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from __future__ import annotations\n\nimport logging\nimport sys\nfrom datetime import datetime\nfrom logging.handlers import RotatingFileHandler\nfrom pathlib import Path\nfrom typing import Any\n\nfrom arty_trading.core.enums import LogCategory"
+  },
+  {
+    "file": "src/arty_trading/modules/ai/__init__.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from arty_trading.modules.ai.assistant import AIAssistant\nfrom arty_trading.modules.ai.base import AIProvider, AIResponse, AIMessage"
+  },
+  {
+    "file": "src/arty_trading/modules/ai/assistant.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from __future__ import annotations\n\nfrom typing import Any\n\nfrom arty_trading.core.enums import LogCategory\nfrom arty_trading.logging.logger import get_logger\nfrom arty_trading.modules.ai.base import AIMessage, AIProvider, AIResponse\nfrom arty_trading.modules.ai.anthropic_provider import AnthropicProvider\nfrom arty_trading.modules.ai.openai_provider import OpenAIProvider"
+  },
+  {
+    "file": "src/arty_trading/modules/decision/master_trend.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from __future__ import annotations\n\nfrom dataclasses import dataclass, field\nfrom datetime import datetime\nfrom typing import Any\n\nfrom decimal import Decimal\n\nfrom arty_trading.core.entities import Candle\nfrom arty_trading.core.enums import SMCConcept, TimeFrame\nfrom arty_trading.modules.decision.market_context import MarketContext\nfrom arty_trading.modules.smc.base import (\n    SMCDetection,\n    find_external_swing_points,\n    find_internal_swing_points,\n    find_swing_points,\n)\nfrom arty_trading.modules.smc.structure import StructureDetector\nfrom arty_trading.utils.helpers import calculate_atr_sliding"
+  },
+  {
+    "file": "src/arty_trading/modules/execution/__init__.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from arty_trading.modules.execution.executor import (\n    MT5OrderError,\n    MT5PositionNotFoundError,\n    OrderExecutor,\n)\nfrom arty_trading.modules.execution.paper_executor import PaperOrderExecutor\nfrom arty_trading.modules.execution.position_manager import PositionAction, PositionManager\nfrom arty_trading.modules.execution.profit_lock import ProfitLockLevel, ProfitLockManager\nfrom arty_trading.modules.execution.runner import RunnerManager\nfrom arty_trading.modules.execution.sl_guard import (\n    StructureContext,\n    is_more_protective,\n    most_protective,\n)\nfrom arty_trading.modules.execution.structure_trailing import StructureTrailingManager\nfrom arty_trading.modules.execution.partial_profit import PartialLevel, PartialProfitManager"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/fair_value_gap.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from __future__ import annotations\n\nfrom typing import Any\n\nfrom decimal import Decimal\n\nfrom arty_trading.core.entities import Candle\nfrom arty_trading.core.enums import SMCConcept\nfrom arty_trading.modules.smc.base import BaseDetector, SMCDetection"
+  },
+  {
+    "file": "src/arty_trading/utils/__init__.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from arty_trading.utils.sessions import (\n    get_active_session,\n    is_kill_zone,\n    is_session_active,\n)\nfrom arty_trading.utils.helpers import (\n    round_price,\n    calculate_pips,\n    pip_value,\n)"
+  },
+  {
+    "file": "tests/integration/test_demo_live.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from __future__ import annotations\n\nimport asyncio\nimport sys\nfrom datetime import UTC, datetime\n\nfrom arty_trading.config import get_settings\nfrom arty_trading.core.enums import TradingMode\nfrom arty_trading.infrastructure.mt5 import MT5Connector, MT5MarketDataProvider\nfrom arty_trading.logging import setup_logging, get_logger\nfrom arty_trading.modules.execution import OrderExecutor\nfrom arty_trading.modules.risk import RiskManager\nfrom arty_trading.modules.signals import SignalGenerator\nfrom arty_trading.modules.smc import SMCDetector"
+  },
+  {
+    "file": "tests/integration/test_mt5_live.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from arty_trading.config.settings import get_settings\nfrom arty_trading.infrastructure.mt5.connector import MT5Connector, MT5_AVAILABLE"
+  },
+  {
+    "file": "tests/integration/test_mt5_live_trade.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "import MetaTrader5 as mt5\nfrom arty_trading.config.settings import get_settings\nfrom arty_trading.infrastructure.mt5.connector import MT5Connector"
+  },
+  {
+    "file": "tests/integration/test_mt5_smc_trade.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "import MetaTrader5 as mt5\nfrom arty_trading.config.settings import get_settings\nfrom arty_trading.core.entities import Candle\nfrom arty_trading.core.enums import TimeFrame, SignalType\nfrom arty_trading.infrastructure.mt5.connector import MT5Connector\nfrom arty_trading.modules.smc.detector import SMCDetector\nfrom arty_trading.modules.signals.generator import SignalGenerator"
+  },
+  {
+    "file": "tests/test_ai.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "        from httpx import ASGITransport, AsyncClient\n        from arty_trading.api.main import create_app"
+  },
+  {
+    "file": "tests/test_ai.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "        from httpx import ASGITransport, AsyncClient\n        from arty_trading.api.main import create_app"
+  },
+  {
+    "file": "tests/test_ai.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "        from httpx import ASGITransport, AsyncClient\n        from arty_trading.api.main import create_app"
+  },
+  {
+    "file": "tests/test_ai.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "        from httpx import ASGITransport, AsyncClient\n        from arty_trading.api.main import create_app"
+  },
+  {
+    "file": "tests/test_ai.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "import pytest\n\nfrom arty_trading.modules.ai import AIAssistant, AIMessage, AIResponse\nfrom arty_trading.modules.ai.base import AIProvider\nfrom arty_trading.modules.ai.openai_provider import OpenAIProvider\nfrom arty_trading.modules.ai.anthropic_provider import AnthropicProvider"
+  },
+  {
+    "file": "tests/test_backtest.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from __future__ import annotations\n\nfrom datetime import datetime, timedelta, timezone\nfrom decimal import Decimal\n\nimport pytest\n\nfrom arty_trading.core.entities import Candle\nfrom arty_trading.core.enums import Direction, TimeFrame\nfrom arty_trading.modules.backtesting.engine import BacktestEngine\nfrom arty_trading.modules.smc import SMCDetector\nfrom arty_trading.modules.signals import SignalGenerator, SignalValidator\nfrom arty_trading.modules.signals.validator import ALL_CONDITIONS\nfrom arty_trading.modules.strategies import SMCTrendStrategy\nfrom arty_trading.utils.helpers import get_pip_size, pip_value"
+  },
+  {
+    "file": "tests/test_candle_synchronizer.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from __future__ import annotations\n\nfrom datetime import UTC, datetime\n\nfrom arty_trading.application.candle_synchronizer import CandleSynchronizer"
+  },
+  {
+    "file": "tests/test_market_data.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from datetime import datetime, timezone\nfrom decimal import Decimal\nfrom unittest.mock import AsyncMock, MagicMock, patch\n\nimport numpy as np\nimport pandas as pd\nimport pytest\n\nfrom arty_trading.core.enums import TimeFrame\nfrom arty_trading.infrastructure.cache import InMemoryCache\nfrom arty_trading.infrastructure.mt5.market_data import (\n    MT5MarketDataProvider,\n    MarketDataError,\n    SymbolNotFoundError,\n)"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "        from arty_trading.application.trading_engine import TradingEngine\n        from unittest.mock import MagicMock"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from __future__ import annotations\n\nfrom datetime import datetime, timezone\nfrom decimal import Decimal\n\nimport pytest\n\nfrom arty_trading.core.entities import Candle, Signal\nfrom arty_trading.core.enums import Direction, SignalType, TimeFrame\nfrom arty_trading.modules.decision.engine import DecisionEngine\nfrom arty_trading.modules.decision.market_context import MarketContext\nfrom arty_trading.modules.decision.master_trend import MasterTrendAnalyzer, TrendAnalysis\nfrom arty_trading.modules.signals.generator import SignalGenerator\nfrom arty_trading.modules.signals.validator import SignalValidator"
+  },
+  {
+    "file": "tests/test_notifications.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "        from httpx import ASGITransport, AsyncClient\n        from arty_trading.api.main import create_app"
+  },
+  {
+    "file": "tests/test_notifications.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "        from httpx import ASGITransport, AsyncClient\n        from arty_trading.api.main import create_app"
+  },
+  {
+    "file": "tests/test_notifications.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "        from httpx import ASGITransport, AsyncClient\n        from arty_trading.api.main import create_app"
+  },
+  {
+    "file": "tests/test_notifications.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "        from httpx import ASGITransport, AsyncClient\n        from arty_trading.api.main import create_app"
+  },
+  {
+    "file": "tests/test_notifications.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "import pytest\n\nfrom arty_trading.infrastructure.notifications.base import BaseNotifier, Notification\nfrom arty_trading.infrastructure.notifications.telegram import TelegramNotifier\nfrom arty_trading.infrastructure.notifications.discord import DiscordNotifier\nfrom arty_trading.infrastructure.notifications.email import EmailNotifier\nfrom arty_trading.infrastructure.notifications.manager import NotificationManager"
+  },
+  {
+    "file": "tests/test_phase3_setup_quality.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from __future__ import annotations\n\nfrom datetime import datetime, timezone\nfrom decimal import Decimal\n\nimport pytest\n\nfrom arty_trading.core.entities import Candle\nfrom arty_trading.core.enums import TimeFrame\nfrom arty_trading.modules.smc.detector import SMCDetector\nfrom arty_trading.modules.smc.fair_value_gap import FairValueGapDetector\nfrom arty_trading.modules.smc.liquidity import LiquidityDetector\nfrom arty_trading.modules.smc.order_blocks import OrderBlockDetector\nfrom arty_trading.modules.smc.setup_classifier import (\n    SETUP_TYPES,\n    classify_setup_type,\n    qualify_setup_type,\n)\nfrom arty_trading.modules.smc.setup_tracker import SetupType\nfrom arty_trading.utils.helpers import calculate_atr, is_displacement\nfrom arty_trading.config.settings import Settings"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from datetime import datetime, timezone\nfrom decimal import Decimal\n\nimport pytest\n\nfrom arty_trading.core.entities import Candle, Signal\nfrom arty_trading.core.enums import Direction, SignalType, TimeFrame, TradingSession\nfrom arty_trading.modules.signals import SignalGenerator, SignalValidator, ValidationResult\nfrom arty_trading.modules.signals.validator import (\n    ALL_CONDITIONS,\n    COND_BOS,\n    COND_CHOCH,\n    COND_FVG,\n    COND_HTF_TREND,\n    COND_LIQUIDITY_SWEEP,\n    COND_NEWS,\n    COND_ORDER_BLOCK,\n    COND_PREMIUM_DISCOUNT,\n    COND_RR,\n    COND_SESSION,\n    COND_SPREAD,\n)"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "from datetime import datetime, time, timezone\nfrom decimal import Decimal\n\nimport pytest\n\nfrom arty_trading.core.entities import Candle\nfrom arty_trading.core.enums import SMCConcept, TimeFrame, TradingSession\nfrom arty_trading.modules.smc import (\n    FairValueGapDetector,\n    LiquidityDetector,\n    OrderBlockDetector,\n    PremiumDiscountDetector,\n    SMCDetector,\n    SessionDetector,\n    SessionWindow,\n    StructureDetector,\n    find_external_swing_points,\n    find_internal_swing_points,\n    find_swing_points,\n)"
+  },
+  {
+    "file": "tests/test_trading_engine.py",
+    "code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "source": "        from arty_trading.modules.decision.market_context import MarketContext\n        from arty_trading.modules.decision.master_trend import TrendAnalysis\n        from decimal import Decimal"
+  },
+  {
+    "file": "examples/paper_test_adaptive.py",
+    "code": "N813",
+    "message": "Camelcase `MetaTrader5` imported as lowercase `mt5`",
+    "source": "import MetaTrader5 as mt5"
+  },
+  {
+    "file": "src/arty_trading/infrastructure/mt5/connector.py",
+    "code": "N813",
+    "message": "Camelcase `MetaTrader5` imported as lowercase `mt5`",
+    "source": "    import MetaTrader5 as mt5"
+  },
+  {
+    "file": "src/arty_trading/infrastructure/mt5/market_data.py",
+    "code": "N813",
+    "message": "Camelcase `MetaTrader5` imported as lowercase `mt5`",
+    "source": "    import MetaTrader5 as mt5"
+  },
+  {
+    "file": "tests/integration/test_mt5_connect_demo.py",
+    "code": "N813",
+    "message": "Camelcase `MetaTrader5` imported as lowercase `mt5`",
+    "source": "import MetaTrader5 as mt5"
+  },
+  {
+    "file": "tests/integration/test_mt5_live_trade.py",
+    "code": "N813",
+    "message": "Camelcase `MetaTrader5` imported as lowercase `mt5`",
+    "source": "import MetaTrader5 as mt5"
+  },
+  {
+    "file": "tests/integration/test_mt5_smc_trade.py",
+    "code": "N813",
+    "message": "Camelcase `MetaTrader5` imported as lowercase `mt5`",
+    "source": "import MetaTrader5 as mt5"
+  },
+  {
+    "file": "scripts/calibrate_retest_filter.py",
+    "code": "N817",
+    "message": "CamelCase `SignalGenerator` imported as acronym `SG`",
+    "source": "from arty_trading.modules.signals.generator import SignalGenerator as SG"
+  },
+  {
+    "file": "archive/diagnostics/_aux_scan.py",
+    "code": "UP015",
+    "message": "Unnecessary mode argument",
+    "source": "        with open(path,'r',encoding='utf-8',errors='replace') as fh:"
+  },
+  {
+    "file": "archive/diagnostics/_swchk.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "    cc.append(Candle(time=datetime(2024,1,1,tzinfo=timezone.utc)+timedelta(hours=i),"
+  },
+  {
+    "file": "examples/paper_test_adaptive.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "            time=datetime.fromtimestamp(rate[\"time\"], tz=timezone.utc),"
+  },
+  {
+    "file": "scripts/calibrate_retest_filter.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "        time = datetime.fromtimestamp(time.timestamp() + 3600, tz=timezone.utc)"
+  },
+  {
+    "file": "scripts/calibrate_retest_filter.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "    time = datetime(2024, 1, 1, 0, 0, tzinfo=timezone.utc)"
+  },
+  {
+    "file": "scripts/diagnose_filters.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "        time=datetime(2024, 1, 1, 0, 0, tzinfo=timezone.utc),"
+  },
+  {
+    "file": "scripts/run_backtest.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "        time = datetime.fromtimestamp(time.timestamp() + 3600, tz=timezone.utc)"
+  },
+  {
+    "file": "scripts/run_backtest.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "    time = datetime(2024, 1, 1, 0, 0, tzinfo=timezone.utc)"
+  },
+  {
+    "file": "scripts/test_efficacy.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "            ts = ts.astimezone(timezone.utc)"
+  },
+  {
+    "file": "scripts/test_efficacy.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "            ts = ts.replace(tzinfo=timezone.utc)"
+  },
+  {
+    "file": "scripts/test_efficacy.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "    end = datetime.now(timezone.utc)"
+  },
+  {
+    "file": "src/arty_trading/infrastructure/mt5/market_data.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "                    \"time\": datetime.fromtimestamp(tick.time, tz=timezone.utc).isoformat(),"
+  },
+  {
+    "file": "src/arty_trading/infrastructure/mt5/market_data.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "                time=datetime.fromtimestamp(rate[\"time\"], tz=timezone.utc),"
+  },
+  {
+    "file": "src/arty_trading/infrastructure/mt5/market_data.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "            \"time\": datetime.fromtimestamp(tick.time, tz=timezone.utc).isoformat(),"
+  },
+  {
+    "file": "src/arty_trading/infrastructure/mt5/market_data.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "        end = end or datetime.now(timezone.utc)"
+  },
+  {
+    "file": "src/arty_trading/modules/backtesting/data_generator.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "    time = start_time or datetime(2024, 1, 1, 0, 0, tzinfo=timezone.utc)"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/sessions.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "        return dt.replace(tzinfo=timezone.utc)"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/sessions.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "    return dt.astimezone(timezone.utc)"
+  },
+  {
+    "file": "tests/integration/test_mt5_smc_trade.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "            time=datetime.fromtimestamp(rate[\"time\"], tz=timezone.utc),"
+  },
+  {
+    "file": "tests/test_backtest.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "        time=datetime(2024, 1, 1, 0, 0, tzinfo=timezone.utc) + timedelta(minutes=idx * 5),"
+  },
+  {
+    "file": "tests/test_backtesting.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "        time=datetime(2024, 1, 1, 0, index, tzinfo=timezone.utc),"
+  },
+  {
+    "file": "tests/test_market_context_builder.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "        time=datetime(2024, 1, 2, 8, idx % 60, tzinfo=timezone.utc),"
+  },
+  {
+    "file": "tests/test_market_data.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "                \"EURUSD\", TimeFrame.H1, datetime(2024, 1, 1, tzinfo=timezone.utc)"
+  },
+  {
+    "file": "tests/test_market_data.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "                end = datetime(2024, 1, 2, tzinfo=timezone.utc)"
+  },
+  {
+    "file": "tests/test_market_data.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "                start = datetime(2024, 1, 1, tzinfo=timezone.utc)"
+  },
+  {
+    "file": "tests/test_market_data.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "                start = datetime(2024, 1, 1, tzinfo=timezone.utc)"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "            timestamp=datetime.now(timezone.utc),"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "        ctx = MarketContext(symbol=\"EURUSD\", timestamp=datetime.now(timezone.utc), master_trend=\"bearish\")"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "        ctx = MarketContext(symbol=\"EURUSD\", timestamp=datetime.now(timezone.utc), master_trend=\"bullish\")"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "        ctx = MarketContext(symbol=\"EURUSD\", timestamp=datetime.now(timezone.utc), master_trend=\"neutral\")"
+  },
+  {
+    "file": "tests/test_master_trend.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "        time=datetime(2024, 1, 1, h_arg, 0, tzinfo=timezone.utc),"
+  },
+  {
+    "file": "tests/test_phase3_setup_quality.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "        time=datetime(2024, 1, 1, 0, idx, tzinfo=timezone.utc),"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "                time=datetime(2024, 1, 1, 14, i, tzinfo=timezone.utc),"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "                time=datetime(2024, 1, 1, 2, i, tzinfo=timezone.utc),"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "                time=datetime(2024, 1, 1, 2, i, tzinfo=timezone.utc),"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "                time=datetime(2024, 1, 1, hour, i, tzinfo=timezone.utc),"
+  },
+  {
+    "file": "tests/test_signal_validator.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "        time=datetime(2024, 1, 1, 8, idx, tzinfo=timezone.utc),  # 08:xx UTC = London session"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "            datetime(2024, 1, 1, 0, 0, tzinfo=timezone.utc),"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "            datetime(2024, 1, 1, 11, 59, tzinfo=timezone.utc),"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "            datetime(2024, 1, 1, 12, 0, tzinfo=timezone.utc),"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "            datetime(2024, 1, 1, 16, 59, tzinfo=timezone.utc),"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "            datetime(2024, 1, 1, 17, 0, tzinfo=timezone.utc),"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "            datetime(2024, 1, 1, 23, 0, tzinfo=timezone.utc),"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "            datetime(2024, 1, 1, 6, 30, tzinfo=timezone.utc),"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "            datetime(2024, 1, 1, 7, 0, tzinfo=timezone.utc),"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "            datetime(2024, 1, 2, 0, 0, tzinfo=timezone.utc),"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "        assert detector.is_kill_zone(datetime(2024, 1, 1, 13, 0, tzinfo=timezone.utc)) is True"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "        assert detector.is_kill_zone(datetime(2024, 1, 1, 2, 0, tzinfo=timezone.utc)) is False"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "        assert detector.is_kill_zone(datetime(2024, 1, 1, 20, 0, tzinfo=timezone.utc)) is False"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "        assert detector.is_kill_zone(datetime(2024, 1, 1, 8, 0, tzinfo=timezone.utc)) is True"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "        session = detector.get_session_for_time(datetime(2024, 1, 1, 0, 0, tzinfo=timezone.utc))"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "        session = detector.get_session_for_time(datetime(2024, 1, 1, 11, 59, tzinfo=timezone.utc))"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "        session = detector.get_session_for_time(datetime(2024, 1, 1, 12, 0, tzinfo=timezone.utc))"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "        session = detector.get_session_for_time(datetime(2024, 1, 1, 14, 0, tzinfo=timezone.utc))"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "        session = detector.get_session_for_time(datetime(2024, 1, 1, 16, 59, tzinfo=timezone.utc))"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "        session = detector.get_session_for_time(datetime(2024, 1, 1, 17, 0, tzinfo=timezone.utc))"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "        session = detector.get_session_for_time(datetime(2024, 1, 1, 2, 0, tzinfo=timezone.utc))"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "        session = detector.get_session_for_time(datetime(2024, 1, 1, 23, 0, tzinfo=timezone.utc))"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "        session = detector.get_session_for_time(datetime(2024, 1, 1, 6, 30, tzinfo=timezone.utc))"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "        session = detector.get_session_for_time(datetime(2024, 1, 1, 7, 0, tzinfo=timezone.utc))"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "        session = detector.get_session_for_time(datetime(2024, 1, 1, 8, 0, tzinfo=timezone.utc))"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "        time=datetime(2024, 1, 1, h_arg, 0, tzinfo=timezone.utc),"
+  },
+  {
+    "file": "tests/test_strategies.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "        time=datetime(2024, 1, 1, idx, 0, tzinfo=timezone.utc),"
+  },
+  {
+    "file": "tests/test_utils.py",
+    "code": "UP017",
+    "message": "Use `datetime.UTC` alias",
+    "source": "                time=datetime(2024, 1, 2, 8, i, tzinfo=timezone.utc),"
+  },
+  {
+    "file": "archive/diagnostics/_diag.py",
+    "code": "UP020",
+    "message": "Use builtin `open`",
+    "source": "    io.open(\"_diag.txt\", \"w\", encoding=\"utf-8\").write(\"\\n\".join(out))"
+  },
+  {
+    "file": "archive/diagnostics/_diag2.py",
+    "code": "UP020",
+    "message": "Use builtin `open`",
+    "source": "    io.open(\"_diag2.txt\", \"w\", encoding=\"utf-8\").write(\"\\n\".join(out))"
+  },
+  {
+    "file": "archive/diagnostics/_diag2s.py",
+    "code": "UP020",
+    "message": "Use builtin `open`",
+    "source": "    io.open(\"_diag2.txt\", \"w\", encoding=\"utf-8\").write(\"\\n\".join(out))"
+  },
+  {
+    "file": "archive/diagnostics/_diag3.py",
+    "code": "UP020",
+    "message": "Use builtin `open`",
+    "source": "    io.open(\"_diag2.txt\", \"w\", encoding=\"utf-8\").write(\"\\n\".join(out))"
+  },
+  {
+    "file": "archive/diagnostics/_prof.py",
+    "code": "UP020",
+    "message": "Use builtin `open`",
+    "source": "    io.open(\"_prof.txt\", \"w\").write(\"\\n\".join(out))"
+  },
+  {
+    "file": "archive/diagnostics/_speed.py",
+    "code": "UP020",
+    "message": "Use builtin `open`",
+    "source": "    io.open(\"_speed.txt\", \"w\", encoding=\"utf-8\").write(\"\\n\".join(out))"
+  },
+  {
+    "file": "archive/diagnostics/_trend.py",
+    "code": "UP020",
+    "message": "Use builtin `open`",
+    "source": "io.open(\"_trend.txt\", \"w\").write(\"\\n\".join(lines))"
+  },
+  {
+    "file": "scripts/run_backtest_mtf.py",
+    "code": "UP020",
+    "message": "Use builtin `open`",
+    "source": "    io.open(\"_mtf_report.txt\", \"w\", encoding=\"utf-8\").write(report)"
+  },
+  {
+    "file": "tests/integration/test_demo_live.py",
+    "code": "UP032",
+    "message": "Use f-string instead of `format` call",
+    "source": "        print(\"      -> Baisser SIGNAL_MIN_CONFIDENCE (actuellement: {:.2f})\".format(\n            settings.signals.min_confidence\n        ))"
+  },
+  {
+    "file": "src/arty_trading/application/market_context_builder.py",
+    "code": "UP035",
+    "message": "Import from `collections.abc` instead: `Awaitable`, `Callable`",
+    "source": "from typing import Any, Awaitable, Callable"
+  },
+  {
+    "file": "src/arty_trading/application/position_monitor.py",
+    "code": "UP035",
+    "message": "Import from `collections.abc` instead: `Awaitable`, `Callable`",
+    "source": "from typing import Any, Awaitable, Callable"
+  },
+  {
+    "file": "src/arty_trading/application/trade_orchestrator.py",
+    "code": "UP035",
+    "message": "Import from `collections.abc` instead: `Awaitable`, `Callable`",
+    "source": "from typing import Any, Awaitable, Callable"
+  },
+  {
+    "file": "src/arty_trading/core/interfaces.py",
+    "code": "UP035",
+    "message": "Import from `collections.abc` instead: `AsyncIterator`",
+    "source": "from typing import Any, AsyncIterator"
+  },
+  {
+    "file": "src/arty_trading/infrastructure/mt5/market_data.py",
+    "code": "UP035",
+    "message": "Import from `collections.abc` instead: `AsyncIterator`",
+    "source": "from typing import Any, AsyncIterator"
+  },
+  {
+    "file": "src/arty_trading/modules/ai/anthropic_provider.py",
+    "code": "UP035",
+    "message": "Import from `collections.abc` instead: `AsyncGenerator`",
+    "source": "from typing import AsyncGenerator"
+  },
+  {
+    "file": "src/arty_trading/modules/ai/openai_provider.py",
+    "code": "UP035",
+    "message": "Import from `collections.abc` instead: `AsyncGenerator`",
+    "source": "from typing import AsyncGenerator"
+  },
+  {
+    "file": "src/arty_trading/modules/execution/position_manager.py",
+    "code": "UP037",
+    "message": "Remove quotes from type annotation",
+    "source": "    def from_dict(cls, data: dict[str, Any]) -> \"_PositionState\":"
+  },
+  {
+    "file": "src/arty_trading/core/enums.py",
+    "code": "UP042",
+    "message": "Class Direction inherits from both `str` and `enum.Enum`",
+    "source": "class Direction(str, Enum):"
+  },
+  {
+    "file": "src/arty_trading/core/enums.py",
+    "code": "UP042",
+    "message": "Class LogCategory inherits from both `str` and `enum.Enum`",
+    "source": "class LogCategory(str, Enum):"
+  },
+  {
+    "file": "src/arty_trading/core/enums.py",
+    "code": "UP042",
+    "message": "Class MarketRegime inherits from both `str` and `enum.Enum`",
+    "source": "class MarketRegime(str, Enum):"
+  },
+  {
+    "file": "src/arty_trading/core/enums.py",
+    "code": "UP042",
+    "message": "Class NoTradeReason inherits from both `str` and `enum.Enum`",
+    "source": "class NoTradeReason(str, Enum):"
+  },
+  {
+    "file": "src/arty_trading/core/enums.py",
+    "code": "UP042",
+    "message": "Class OrderType inherits from both `str` and `enum.Enum`",
+    "source": "class OrderType(str, Enum):"
+  },
+  {
+    "file": "src/arty_trading/core/enums.py",
+    "code": "UP042",
+    "message": "Class SMCConcept inherits from both `str` and `enum.Enum`",
+    "source": "class SMCConcept(str, Enum):"
+  },
+  {
+    "file": "src/arty_trading/core/enums.py",
+    "code": "UP042",
+    "message": "Class SignalType inherits from both `str` and `enum.Enum`",
+    "source": "class SignalType(str, Enum):"
+  },
+  {
+    "file": "src/arty_trading/core/enums.py",
+    "code": "UP042",
+    "message": "Class StrategyType inherits from both `str` and `enum.Enum`",
+    "source": "class StrategyType(str, Enum):"
+  },
+  {
+    "file": "src/arty_trading/core/enums.py",
+    "code": "UP042",
+    "message": "Class TimeFrame inherits from both `str` and `enum.Enum`",
+    "source": "class TimeFrame(str, Enum):"
+  },
+  {
+    "file": "src/arty_trading/core/enums.py",
+    "code": "UP042",
+    "message": "Class TradingMode inherits from both `str` and `enum.Enum`",
+    "source": "class TradingMode(str, Enum):"
+  },
+  {
+    "file": "src/arty_trading/core/enums.py",
+    "code": "UP042",
+    "message": "Class TradingSession inherits from both `str` and `enum.Enum`",
+    "source": "class TradingSession(str, Enum):"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/setup_tracker.py",
+    "code": "UP042",
+    "message": "Class MarketPhaseType inherits from both `str` and `enum.Enum`",
+    "source": "class MarketPhaseType(str, Enum):"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/setup_tracker.py",
+    "code": "UP042",
+    "message": "Class SetupState inherits from both `str` and `enum.Enum`",
+    "source": "class SetupState(str, Enum):"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/setup_tracker.py",
+    "code": "UP042",
+    "message": "Class SetupType inherits from both `str` and `enum.Enum`",
+    "source": "class SetupType(str, Enum):"
+  },
+  {
+    "file": "examples/demo_trading_modes.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "    asyncio.run(main())"
+  },
+  {
+    "file": "scripts/run_bot.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "    main()"
+  },
+  {
+    "file": "src/arty_trading/api/routes/__init__.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "]"
+  },
+  {
+    "file": "src/arty_trading/api/routes/signals.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "    }"
+  },
+  {
+    "file": "src/arty_trading/api/routes/smc.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "    return {\"success\": True, \"enabled\": smc_detector.get_enabled_concepts()}"
+  },
+  {
+    "file": "src/arty_trading/application/candle_synchronizer.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "            logger.debug(\"Synchroniseur réinitialisé (tous symboles)\")"
+  },
+  {
+    "file": "src/arty_trading/application/market_context_builder.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "    return direction if direction in (\"bullish\", \"bearish\") else \"neutral\""
+  },
+  {
+    "file": "src/arty_trading/application/position_monitor.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "                logger.error(\"Erreur suivi position | ticket=%s | %s\", trade.ticket, exc)"
+  },
+  {
+    "file": "src/arty_trading/application/trade_orchestrator.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "        return trade"
+  },
+  {
+    "file": "src/arty_trading/infrastructure/cache/__init__.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "__all__ = [\"InMemoryCache\"]"
+  },
+  {
+    "file": "src/arty_trading/infrastructure/cache/memory_cache.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "        return True"
+  },
+  {
+    "file": "src/arty_trading/infrastructure/mt5/connector.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "        )"
+  },
+  {
+    "file": "src/arty_trading/infrastructure/mt5/market_data.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "        )"
+  },
+  {
+    "file": "src/arty_trading/modules/backtesting/__init__.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "__all__ = [\"BacktestEngine\", \"BacktestStats\", \"calculate_stats\"]"
+  },
+  {
+    "file": "src/arty_trading/modules/risk/__init__.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "__all__ = [\"RiskManager\"]"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/liquidity.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "        return detections"
+  },
+  {
+    "file": "src/arty_trading/modules/smc/sessions.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "        return False"
+  },
+  {
+    "file": "src/arty_trading/modules/strategies/__init__.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "]"
+  },
+  {
+    "file": "tests/integration/test_mt5_connect_demo.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "        print(\"RESULT: DONE\")"
+  },
+  {
+    "file": "tests/integration/test_mt5_live.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "    asyncio.run(main())"
+  },
+  {
+    "file": "tests/integration/test_mt5_live_trade.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "    asyncio.run(main())"
+  },
+  {
+    "file": "tests/integration/test_mt5_smc_trade.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "    asyncio.run(main())"
+  },
+  {
+    "file": "tests/test_backtesting.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "        assert summary[\"profit\"] == \"0\""
+  },
+  {
+    "file": "tests/test_candle_synchronizer.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "        assert sync.get_last_processed(\"EURUSD\") is None"
+  },
+  {
+    "file": "tests/test_execution.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "        assert result is None"
+  },
+  {
+    "file": "tests/test_market_context_builder.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "    assert len(smoke2) == h1_call_count_first"
+  },
+  {
+    "file": "tests/test_market_data.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "                assert args[0][3] == 1000  # 4ème argument positionnel = count"
+  },
+  {
+    "file": "tests/test_market_structure_engine.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "        assert \"no_trade_reasons\" in data"
+  },
+  {
+    "file": "tests/test_mt5_connector.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "                assert connector._connected is False"
+  },
+  {
+    "file": "tests/test_position_monitor.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "    assert \"t1\" in managed"
+  },
+  {
+    "file": "tests/test_smc.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "            assert not hasattr(d, \"take_profit\")"
+  },
+  {
+    "file": "tests/test_trade_orchestrator.py",
+    "code": "W292",
+    "message": "No newline at end of file",
+    "source": "    assert await orch.execute_trade(\"EURUSD\", _signal(), 0.1) is None"
+  }
+]

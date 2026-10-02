@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import Any
 
 from arty_trading.core.entities import Candle
-from arty_trading.core.enums import LogCategory, SMCConcept
+from arty_trading.core.enums import LogCategory
 from arty_trading.core.interfaces import ISMCDetector
 from arty_trading.logging.logger import get_logger
 from arty_trading.modules.smc.base import SMCDetection
@@ -96,7 +96,7 @@ class SMCDetector(ISMCDetector):
         """Retourne la liste des détecteurs activés."""
         return [name for name, d in self._detectors.items() if d.enabled]
 
-    async def detect(self, candles: list[Candle], symbol: str) -> list[dict]:
+    async def detect(self, candles: list[Candle], symbol: str) -> list[dict[str, Any]]:
         """
         Détecte tous les concepts SMC sur les bougies fournies.
 

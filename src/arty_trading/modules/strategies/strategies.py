@@ -82,8 +82,8 @@ class SMCTrendStrategy(BaseStrategy):
     async def analyze(
         self,
         candles: list[Candle],
-        smc_data: list[dict],
-        htf_smc_data: list[dict] | None = None,
+        smc_data: list[dict[str, Any]],
+        htf_smc_data: list[dict[str, Any]] | None = None,
         htf_trend: str | None = None,
         market_context: Any | None = None,
     ) -> Signal | None:
@@ -170,7 +170,7 @@ class SMCTrendStrategy(BaseStrategy):
         symbol: str,
         timeframe: TimeFrame,
         current_price: Decimal,
-        smc_data: list[dict],
+        smc_data: list[dict[str, Any]],
         candles: list[Candle],
         direction: Direction,
         *,
@@ -301,11 +301,11 @@ class SMCTrendStrategy(BaseStrategy):
                     }
                 )
                 continue
-            tracked, index = tracked_data
+            tracked, detection_index = tracked_data
             if not self.ob_tracker.is_registered(tracked):
-                history = self._candles_frame(candles[index + 1 : -1])
+                history = self._candles_frame(candles[detection_index + 1 : -1])
                 self.ob_tracker.register_with_history(tracked, history)
-            tracked_indices[tracked.ob_id] = index
+            tracked_indices[tracked.ob_id] = detection_index
 
         fresh_obs = [
             tracked
@@ -405,7 +405,7 @@ class SMCTrendStrategy(BaseStrategy):
             self._finish_tracker_update(candles)
             return None
 
-        best_ob, best_quality, best_index = max(qualified, key=lambda item: item[1].score)
+        best_ob, best_quality, _ = max(qualified, key=lambda item: item[1].score)
         if rejected:
             self.last_ob_rejection = {
                 "reason": "some_obs_rejected",
@@ -415,132 +415,23 @@ class SMCTrendStrategy(BaseStrategy):
                 "selected_score": best_quality.score,
             }
         if self.ob_config.require_m5_confirmation:
-            m5_structure = getattr(market_context, "ltf_smc_data", None) or smc_data
-            confirmation = self.m5_confirmation.check(
-                best_ob,
-                self._candles_frame(candles[best_index + 1 :]),
-                {"events": m5_structure},
-            )
-            if not confirmation.confirmed:
-                self.last_ob_rejection = {
-                    "reason": "no_m5_confirmation",
-                    "ob_id": best_ob.ob_id,
-                    "grade": best_quality.grade.value,
-                    "score": best_quality.score,
-                    "details": {
-                        "confirmation_type": (
-                            confirmation.type.value if confirmation.type is not None else None
-                        ),
-                        "confirmation": confirmation.details,
-                    },
-                }
-                self._finish_tracker_update(candles)
-                return None
-
-        self._finish_tracker_update(candles)
-        return best_ob, best_quality
-
-    def _diagnose_ob_rejection(self, quality: OrderBlockQuality) -> str:
-        """Retourne le premier critère qualité qui a rejeté l'OB."""
-        assert self.ob_config is not None
-        if quality.grade not in (OBGrade.A, OBGrade.B):
-            return "grade_c"
-        if quality.score < self.ob_config.min_score:
-            return "score_below_min"
-        if self.ob_config.require_fresh and not quality.is_fresh:
-            return "not_fresh"
-        if self.ob_config.require_htf_confluence and not quality.htf_confluence:
-            return "no_htf_confluence"
-        if self.ob_config.require_liquidity_sweep and not quality.has_liquidity_sweep:
-            return "no_liquidity_sweep"
-        return "unknown_rejection"
-        liquidity_sweeps = [d for d in smc_data if d.get("concept") == "liquidity_sweep"]
-        fvgs_m5 = [d for d in smc_data if d.get("concept") == "fair_value_gap"]
-        qualified: list[tuple[TrackedOB, OrderBlockQuality, int]] = []
-
-        for tracked in fresh_obs:
-            index = tracked_indices.get(tracked.ob_id)
-            if index is None:
-                index = next(
-                    (
-                        offset
-                        for offset, candle in enumerate(candles)
-                        if pd.Timestamp(candle.time) == pd.Timestamp(tracked.created_at)
-                    ),
-                    None,
-                )
-            if index is None:
-                rejected.append(
-                    {
-                        "ob_id": tracked.ob_id,
-                        "reason": "ob_candle_unavailable",
-                        "grade": tracked.grade,
-                        "score": None,
-                    }
-                )
-                continue
-            score_candles = self._candles_frame(candles[index + 1 : -1])
-            try:
-                quality = self.ob_scorer.score(
-                    ob_candle=self._candle_series(candles[index]),
-                    next_candles=score_candles,
-                    atr_value=atr_value,
-                    htf_obs=htf_obs,
-                    htf_fvgs=htf_fvgs,
-                    liquidity_sweeps=liquidity_sweeps,
-                    fvgs_m5=fvgs_m5,
-                )
-            except Exception as exc:
-                rejected.append(
-                    {
-                        "ob_id": tracked.ob_id,
-                        "reason": "ob_scoring_failed",
-                        "grade": tracked.grade,
-                        "score": None,
-                        "error": str(exc),
-                    }
-                )
-                continue
-            self.ob_tracker.set_grade(tracked.ob_id, quality.grade.value)
-
-            grade_ok = quality.grade in (OBGrade.A, OBGrade.B)
-            score_ok = quality.score >= self.ob_config.min_score
-            fresh_ok = not self.ob_config.require_fresh or quality.is_fresh
-            htf_ok = (
-                not self.ob_config.require_htf_confluence or quality.htf_confluence
-            )
-            sweep_ok = (
-                not self.ob_config.require_liquidity_sweep
-                or quality.has_liquidity_sweep
-            )
-            if grade_ok and score_ok and fresh_ok and htf_ok and sweep_ok:
-                qualified.append((tracked, quality, index))
+            m5_candles = getattr(market_context, "ltf_candles", None)
+            if m5_candles is None:
+                m5_candles = candles
+                m5_structure = smc_data
             else:
-                rejected.append(
-                    {
-                        "ob_id": tracked.ob_id,
-                        "reason": self._diagnose_ob_rejection(quality),
-                        "grade": quality.grade.value,
-                        "score": quality.score,
-                    }
-                )
-
-        if not qualified:
-            self.last_ob_rejection = {
-                "reason": "no_qualified_ob",
-                "rejected_obs": rejected,
-                "fresh_count": len(fresh_obs),
-            }
-            self._finish_tracker_update(candles)
-            return None
-
-        best_ob, best_quality, best_index = max(qualified, key=lambda item: item[1].score)
-        if self.ob_config.require_m5_confirmation:
-            m5_structure = getattr(market_context, "ltf_smc_data", None) or smc_data
+                m5_structure = getattr(market_context, "ltf_smc_data", [])
+            reference_timestamp = pd.to_datetime(best_ob.created_at, utc=True)
+            candles_after = self._candles_frame(m5_candles)
+            if not candles_after.empty:
+                candles_after = candles_after.set_index("timestamp")
+                candles_after.index = pd.to_datetime(candles_after.index, utc=True)
+                candles_after = candles_after.loc[candles_after.index > reference_timestamp]
             confirmation = self.m5_confirmation.check(
                 best_ob,
-                self._candles_frame(candles[best_index + 1 :]),
+                candles_after,
                 {"events": m5_structure},
+                reference_timestamp=reference_timestamp,
             )
             if not confirmation.confirmed:
                 self.last_ob_rejection = {
@@ -661,8 +552,8 @@ class BreakoutStrategy(BaseStrategy):
     async def analyze(
         self,
         candles: list[Candle],
-        smc_data: list[dict],
-        htf_smc_data: list[dict] | None = None,
+        smc_data: list[dict[str, Any]],
+        htf_smc_data: list[dict[str, Any]] | None = None,
         htf_trend: str | None = None,
     ) -> Signal | None:
         if not self._enabled or len(candles) < 10:
@@ -750,8 +641,8 @@ class MomentumStrategy(BaseStrategy):
     async def analyze(
         self,
         candles: list[Candle],
-        smc_data: list[dict],
-        htf_smc_data: list[dict] | None = None,
+        smc_data: list[dict[str, Any]],
+        htf_smc_data: list[dict[str, Any]] | None = None,
         htf_trend: str | None = None,
     ) -> Signal | None:
         if not self._enabled or len(candles) < 10:
@@ -832,8 +723,8 @@ class ReversalStrategy(BaseStrategy):
     async def analyze(
         self,
         candles: list[Candle],
-        smc_data: list[dict],
-        htf_smc_data: list[dict] | None = None,
+        smc_data: list[dict[str, Any]],
+        htf_smc_data: list[dict[str, Any]] | None = None,
         htf_trend: str | None = None,
     ) -> Signal | None:
         if not self._enabled or len(candles) < 10:
@@ -936,8 +827,8 @@ class ScalpingStrategy(BaseStrategy):
     async def analyze(
         self,
         candles: list[Candle],
-        smc_data: list[dict],
-        htf_smc_data: list[dict] | None = None,
+        smc_data: list[dict[str, Any]],
+        htf_smc_data: list[dict[str, Any]] | None = None,
         htf_trend: str | None = None,
     ) -> Signal | None:
         if not self._enabled or len(candles) < 5:
@@ -1017,8 +908,8 @@ class SwingStrategy(BaseStrategy):
     async def analyze(
         self,
         candles: list[Candle],
-        smc_data: list[dict],
-        htf_smc_data: list[dict] | None = None,
+        smc_data: list[dict[str, Any]],
+        htf_smc_data: list[dict[str, Any]] | None = None,
         htf_trend: str | None = None,
     ) -> Signal | None:
         if not self._enabled or len(candles) < 15:

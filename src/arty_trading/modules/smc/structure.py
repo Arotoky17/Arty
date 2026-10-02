@@ -30,8 +30,6 @@ informations de marché.
 
 from __future__ import annotations
 
-from decimal import Decimal
-
 from arty_trading.core.entities import Candle
 from arty_trading.core.enums import SMCConcept
 from arty_trading.modules.smc.base import (
@@ -124,7 +122,9 @@ class StructureDetector(BaseDetector):
                 if trend in ("bullish", "unknown"):
                     # BOS bullish — Internal ou External selon la force du swing
                     bos_concept = (
-                        SMCConcept.EXTERNAL_BOS if strength == "external" else SMCConcept.INTERNAL_BOS
+                        SMCConcept.EXTERNAL_BOS
+                        if strength == "external"
+                        else SMCConcept.INTERNAL_BOS
                     )
                     detections.append(
                         SMCDetection(
@@ -132,6 +132,7 @@ class StructureDetector(BaseDetector):
                             direction="bullish",
                             price=pending_high.price,
                             index=i,
+                            timestamp=candles[i].time,
                             details={
                                 "broken_level": float(pending_high.price),
                                 "broken_index": pending_high.index,
@@ -149,6 +150,7 @@ class StructureDetector(BaseDetector):
                             direction="bullish",
                             price=pending_high.price,
                             index=i,
+                            timestamp=candles[i].time,
                             details={
                                 "broken_level": float(pending_high.price),
                                 "broken_index": pending_high.index,
@@ -167,6 +169,7 @@ class StructureDetector(BaseDetector):
                             direction="bullish",
                             price=pending_high.price,
                             index=i,
+                            timestamp=candles[i].time,
                             details={
                                 "broken_level": float(pending_high.price),
                                 "broken_index": pending_high.index,
@@ -182,6 +185,7 @@ class StructureDetector(BaseDetector):
                             direction="bullish",
                             price=pending_high.price,
                             index=i,
+                            timestamp=candles[i].time,
                             details={
                                 "shift_from": "bearish",
                                 "shift_to": "bullish",
@@ -196,12 +200,18 @@ class StructureDetector(BaseDetector):
                 pending_high = None
 
             # Vérifier la cassure du swing low (bearish)
-            if pending_low is not None and candles[i].close < pending_low.price and i > pending_low.index:
+            if (
+                pending_low is not None
+                and candles[i].close < pending_low.price
+                and i > pending_low.index
+            ):
                 strength = pending_low.strength
                 if trend in ("bearish", "unknown"):
                     # BOS bearish — Internal ou External selon la force du swing
                     bos_concept = (
-                        SMCConcept.EXTERNAL_BOS if strength == "external" else SMCConcept.INTERNAL_BOS
+                        SMCConcept.EXTERNAL_BOS
+                        if strength == "external"
+                        else SMCConcept.INTERNAL_BOS
                     )
                     detections.append(
                         SMCDetection(
@@ -209,6 +219,7 @@ class StructureDetector(BaseDetector):
                             direction="bearish",
                             price=pending_low.price,
                             index=i,
+                            timestamp=candles[i].time,
                             details={
                                 "broken_level": float(pending_low.price),
                                 "broken_index": pending_low.index,
@@ -226,6 +237,7 @@ class StructureDetector(BaseDetector):
                             direction="bearish",
                             price=pending_low.price,
                             index=i,
+                            timestamp=candles[i].time,
                             details={
                                 "broken_level": float(pending_low.price),
                                 "broken_index": pending_low.index,
@@ -244,6 +256,7 @@ class StructureDetector(BaseDetector):
                             direction="bearish",
                             price=pending_low.price,
                             index=i,
+                            timestamp=candles[i].time,
                             details={
                                 "broken_level": float(pending_low.price),
                                 "broken_index": pending_low.index,
@@ -259,6 +272,7 @@ class StructureDetector(BaseDetector):
                             direction="bearish",
                             price=pending_low.price,
                             index=i,
+                            timestamp=candles[i].time,
                             details={
                                 "shift_from": "bullish",
                                 "shift_to": "bearish",

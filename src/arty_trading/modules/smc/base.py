@@ -78,6 +78,7 @@ class SMCDetection:
     price: Decimal
     index: int
     details: dict[str, Any] = field(default_factory=dict)
+    timestamp: datetime | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convertit la détection en dictionnaire."""
@@ -86,6 +87,7 @@ class SMCDetection:
             "direction": self.direction,
             "price": float(self.price),
             "index": self.index,
+            "timestamp": self.timestamp.isoformat() if self.timestamp is not None else None,
             "details": self.details,
         }
 
@@ -231,11 +233,23 @@ def find_swing_lows(candles: list[Candle], window: int = 2) -> list[SwingPoint]:
     return [sp for sp in find_swing_points(candles, window) if sp.type == "low"]
 
 
-def find_external_swing_points(candles: list[Candle], window: int = 2, external_window: int = 5) -> list[SwingPoint]:
+def find_external_swing_points(
+    candles: list[Candle], window: int = 2, external_window: int = 5
+) -> list[SwingPoint]:
     """Retourne uniquement les swing points externes (forts)."""
-    return [sp for sp in find_swing_points(candles, window, external_window) if sp.strength == "external"]
+    return [
+        sp
+        for sp in find_swing_points(candles, window, external_window)
+        if sp.strength == "external"
+    ]
 
 
-def find_internal_swing_points(candles: list[Candle], window: int = 2, external_window: int = 5) -> list[SwingPoint]:
+def find_internal_swing_points(
+    candles: list[Candle], window: int = 2, external_window: int = 5
+) -> list[SwingPoint]:
     """Retourne uniquement les swing points internes (faibles)."""
-    return [sp for sp in find_swing_points(candles, window, external_window) if sp.strength == "internal"]
+    return [
+        sp
+        for sp in find_swing_points(candles, window, external_window)
+        if sp.strength == "internal"
+    ]

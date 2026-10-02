@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from types import SimpleNamespace
 from typing import Any
 
 import pandas as pd
@@ -10,6 +11,7 @@ import pandas as pd
 from arty_trading.config.settings import OBQualitySettings
 from arty_trading.core.entities import Candle
 from arty_trading.core.enums import Direction, TimeFrame
+from arty_trading.modules.backtesting.engine import BacktestEngine
 from arty_trading.modules.smc.confirmation import (
     ConfirmationResult,
     M5ConfirmationChecker,
@@ -65,6 +67,7 @@ class FixedConfirmation(M5ConfirmationChecker):
         ob: Any,
         m5_candles_after_ob: pd.DataFrame,
         m5_structure: dict[str, Any],
+        reference_timestamp: pd.Timestamp | None = None,
     ) -> ConfirmationResult:
         return self.result
 
@@ -212,3 +215,51 @@ async def test_rr_min_adapts_to_grade() -> None:
     assert grade_a_signal.risk_reward_ratio >= 2.5
     assert grade_b_signal.risk_reward_ratio >= 2.0
     assert grade_a_signal.risk_reward_ratio > grade_b_signal.risk_reward_ratio
+
+
+async def test_backtest_timestamp_alignment_trade_count() -> None:
+    """A controlled XAUUSD replay admits one dated confirmation, no phantom trades."""
+    candles = make_candles()
+    # One OB at 01:10; the price first revisits it at the last available candle.
+    candles[17] = candles[16].model_copy(update={"time": candles[17].time})
+    candles.append(candles[-1].model_copy(update={"time": candles[-1].time + timedelta(minutes=5)}))
+    candles[19] = candles[18].model_copy(update={"time": candles[19].time})
+    data = make_smc_data()
+    data[1]["index"] = 14
+    start = candles[14].time
+    m5 = [
+        candles[20].model_copy(update={"time": start + timedelta(minutes=5 * (i + 1))})
+        for i in range(6)
+    ]
+    for timestamp, expected_trades in [
+        (start - timedelta(minutes=5), 0),
+        (start + timedelta(minutes=20), 1),
+        (start + timedelta(minutes=35), 0),
+    ]:
+        strategy = make_strategy(OBGrade.A)
+        strategy.m5_confirmation = M5ConfirmationChecker(False, True, False)
+        context = SimpleNamespace(
+            ltf_candles=m5,
+            ltf_smc_data=[
+                {"concept": "choch", "direction": "bullish", "index": 1, "timestamp": timestamp}
+            ],
+        )
+
+        class ReplayDetector:
+            async def detect(self, recent: list[Candle], symbol: str) -> list[dict[str, Any]]:
+                return data
+
+        class ReplayGenerator:
+            called = False
+
+            async def generate(
+                self, recent: list[Candle], smc_data: list[dict[str, Any]], **kwargs: Any
+            ) -> Any:
+                self.called = True
+                return await strategy.analyze(recent, smc_data, market_context=context)
+
+        generator = ReplayGenerator()
+        engine = BacktestEngine(symbol="XAUUSD")
+        stats = await engine.run_async(candles, generator, ReplayDetector())
+        assert generator.called
+        assert stats.total_trades == expected_trades, strategy.last_ob_rejection

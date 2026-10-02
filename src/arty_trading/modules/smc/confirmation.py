@@ -175,50 +175,36 @@ def _iter_structure_items(structure: Any) -> Iterator[Mapping[str, Any]]:
     - ``{"choch": [{...}, {...}]}`` — liste sous une clé connue ;
     - ``{"choch": {...}}`` — évènement unique sous une clé connue ;
     - ``{"detections": [...]}`` / ``{"events": [...]}`` ;
-    - ``{"concept": "choch", "index": 3, "direction": "bullish"}`` — évènement
+    - un événement daté : ``{"concept": "choch", "timestamp": "2024-01-01T00:05:00Z"}``
       directement à la racine ;
     - une liste mélangeant les formes ci-dessus.
     """
     if isinstance(structure, Mapping):
-        if "index" in structure or "concept" in structure or "type" in structure:
+        if any(key in structure for key in ("timestamp", "concept", "type", "index")):
             yield structure
         for key in STRUCTURE_KEYS:
             if key in structure:
-                yield from _iter_structure_items(structure[key])
+                for item in _iter_structure_items(structure[key]):
+                    if key in ("choch", "change_of_character", "latest_choch"):
+                        yield {"concept": "choch", **item}
+                    else:
+                        yield item
     elif isinstance(structure, Sequence) and not isinstance(structure, (str, bytes)):
         for item in structure:
             yield from _iter_structure_items(item)
 
 
-def _event_index(
-    event: Mapping[str, Any], frame: pd.DataFrame, time_column: pd.Series | None
-) -> int | None:
-    """Index (dans ``frame``) de l'évènement de structure, ou ``None``."""
-    raw_index = _to_float(event.get("index"))
-    if raw_index is not None:
-        return int(raw_index)
-
-    for key in ("timestamp", "time", "date", "datetime"):
-        if key not in event or time_column is None:
-            continue
-        try:
-            event_time = pd.Timestamp(event[key])
-        except (ValueError, TypeError):
-            continue
-        try:
-            positions = pd.to_datetime(time_column, errors="coerce", utc=False)
-        except (ValueError, TypeError):
-            return None
-        for offset, position in enumerate(positions.tolist()):
-            if position is None or position != position:  # None / NaT
-                continue
-            try:
-                if pd.Timestamp(position) >= event_time:
-                    return offset
-            except (ValueError, TypeError):
-                continue
+def _timestamp(value: Any) -> pd.Timestamp | None:
+    """Normalize explicit dates to UTC; numeric candle indices are never dates."""
+    if value is None or isinstance(value, (bool, int, float)):
         return None
-    return None
+    try:
+        result = pd.Timestamp(value)
+        if pd.isna(result):
+            return None
+        return result.tz_localize("UTC") if result.tzinfo is None else result.tz_convert("UTC")
+    except (TypeError, ValueError, OverflowError):
+        return None
 
 
 def _swing_indices(
@@ -247,9 +233,7 @@ def _swing_indices(
                 others = []
                 break
             others.append(other_value)
-        if others and all(
-            pivot > value if is_high else pivot < value for value in others
-        ):
+        if others and all(pivot > value if is_high else pivot < value for value in others):
             indices.append(index)
     return indices
 
@@ -322,9 +306,7 @@ class M5ConfirmationChecker:
             M5ConfirmationType.CHOCH: self._require_choch,
             M5ConfirmationType.REJECTION_CANDLE: self._require_rejection_candle,
         }
-        return tuple(
-            criterion for criterion in CONFIRMATION_PRIORITY if flags[criterion]
-        )
+        return tuple(criterion for criterion in CONFIRMATION_PRIORITY if flags[criterion])
 
     # ------------------------------------------------------------------
     # API publique
@@ -335,6 +317,7 @@ class M5ConfirmationChecker:
         ob: TrackedOB,
         m5_candles_after_ob: pd.DataFrame,
         m5_structure: dict[str, Any],
+        reference_timestamp: pd.Timestamp | None = None,
     ) -> ConfirmationResult:
         """Vérifie si l'OB est confirmé sur M5.
 
@@ -344,15 +327,21 @@ class M5ConfirmationChecker:
             m5_candles_after_ob: Bougies M5 (``open``, ``high``, ``low``,
                 ``close``) postérieures à l'OB, de la plus ancienne à la plus
                 récente. Peut être vide.
+            reference_timestamp: Date de création de l'OB. Si omise, utilise
+                ``ob.created_at`` et émet un warning pour les anciens appelants.
             m5_structure: Évènements de structure M5 (BOS/CHoCH) — dictionnaire
                 tolérant : ``{"choch": [...]}``, ``{"detections": [...]}``,
-                évènement direct ``{"concept": "choch", "index": 3}``, etc.
+                évènement direct ``{"concept": "choch", "timestamp": "2024-01-01T00:05:00Z"}``, etc.
 
         Returns:
             ``ConfirmationResult`` — ``confirmed`` est vrai si au moins un
             critère requis est satisfait. Le ``type`` suit la priorité
             ``MICRO_BOS > CHOCH > REJECTION_CANDLE``.
         """
+        if reference_timestamp is None:
+            logger.warning("m5_confirmation_missing_reference_timestamp ob_id=%s", ob.ob_id)
+            reference_timestamp = pd.Timestamp(ob.created_at)
+        reference = _timestamp(reference_timestamp)
         direction = _normalize_direction(ob.direction)
         details: dict[str, Any] = {
             "ob_id": ob.ob_id,
@@ -384,12 +373,31 @@ class M5ConfirmationChecker:
             details["need"] = swing_candle_count
             return self._reject(details, "insufficient_candles_for_swing")
 
-        frame = m5_candles_after_ob.reset_index(drop=True)
+        if reference is None:
+            return self._reject(details, "invalid_reference_timestamp")
+        frame = m5_candles_after_ob.copy()
+        if isinstance(frame.index, pd.DatetimeIndex):
+            raw_times = frame.index.tolist()
+        else:
+            time_column = _frame_timestamps(frame)
+            if time_column is None:
+                return self._reject(details, "missing_candle_timestamps")
+            raw_times = time_column.tolist()
+        times = [_timestamp(value) for value in raw_times]
+        if any(value is None for value in times):
+            return self._reject(details, "invalid_candle_timestamps")
+        frame.index = pd.DatetimeIndex(times)
+        if not frame.index.is_unique or not frame.index.is_monotonic_increasing:
+            return self._reject(details, "unordered_or_duplicate_candle_timestamps")
+        frame = frame.loc[frame.index > reference]
+        if len(frame) < max(self.min_candles_after_ob, swing_candle_count):
+            return self._reject(details, "insufficient_post_ob_candles")
         contact_index = self._find_contact_index(frame, ob)
         if contact_index is None:
             return self._reject(details, "no_contact_with_zone")
 
         details["contact_index"] = contact_index
+        details["contact_timestamp"] = frame.index[contact_index].isoformat()
         details["contact_open"] = _cell(frame, contact_index, "open")
         details["contact_close"] = _cell(frame, contact_index, "close")
 
@@ -402,7 +410,9 @@ class M5ConfirmationChecker:
                 satisfied[M5ConfirmationType.MICRO_BOS] = detail
 
         if self._require_choch:
-            ok, detail = self._check_choch(ob, direction, frame, contact_index, m5_structure)
+            ok, detail = self._check_choch(
+                ob, direction, frame, contact_index, m5_structure, reference
+            )
             details["choch"] = detail
             if ok:
                 satisfied[M5ConfirmationType.CHOCH] = detail
@@ -418,9 +428,7 @@ class M5ConfirmationChecker:
             (criterion for criterion in CONFIRMATION_PRIORITY if criterion in satisfied),
             None,
         )
-        details["reason"] = (
-            "confirmed" if confirmed_type is not None else "no_criterion_satisfied"
-        )
+        details["reason"] = "confirmed" if confirmed_type is not None else "no_criterion_satisfied"
 
         logger.debug(
             "[M5 CONFIRMATION] %s | %s | confirmed=%s | type=%s | satisfaits=%s",
@@ -467,10 +475,8 @@ class M5ConfirmationChecker:
         swing_column = "high" if is_bullish else "low"
         swings = [
             index
-            for index in _swing_indices(
-                frame, swing_column, self.swing_window, is_high=is_bullish
-            )
-            if index > contact_index
+            for index in _swing_indices(frame, swing_column, self.swing_window, is_high=is_bullish)
+            if frame.index[index] > frame.index[contact_index]
         ]
         if not swings:
             return False, {"reason": "no_post_contact_swing"}
@@ -480,7 +486,9 @@ class M5ConfirmationChecker:
         if swing_price is None:
             return False, {"reason": "invalid_swing_price", "swing_index": swing_index}
 
-        for index in range(swing_index + 1, len(frame)):
+        for index, break_timestamp in enumerate(frame.index):
+            if break_timestamp <= frame.index[swing_index]:
+                continue
             close = _cell(frame, index, "close")
             if close is None:
                 continue
@@ -491,6 +499,8 @@ class M5ConfirmationChecker:
                     "swing_price": swing_price,
                     "break_index": index,
                     "break_close": close,
+                    "swing_timestamp": frame.index[swing_index].isoformat(),
+                    "break_timestamp": break_timestamp.isoformat(),
                 }
 
         return False, {
@@ -506,35 +516,34 @@ class M5ConfirmationChecker:
         frame: pd.DataFrame,
         contact_index: int,
         structure: dict[str, Any],
+        reference_timestamp: pd.Timestamp,
     ) -> tuple[bool, dict[str, Any]]:
         """Accepte uniquement un CHoCH orienté comme le trade, après contact."""
-        time_column = _frame_timestamps(frame)
         for event in _iter_structure_items(structure):
-            concept = str(
-                event.get("concept", event.get("type", event.get("event", "")))
-            ).strip().lower().replace("-", "_").replace(" ", "_")
+            concept = (
+                str(event.get("concept", event.get("type", event.get("event", ""))))
+                .strip()
+                .lower()
+                .replace("-", "_")
+                .replace(" ", "_")
+            )
             if concept not in CHOCH_CONCEPTS:
                 continue
-            event_direction = _normalize_direction(
-                event.get("direction", event.get("bias"))
-            )
-            event_index = _event_index(event, frame, time_column)
-            if event_index is not None and not 0 <= event_index < len(frame):
+            event_direction = _normalize_direction(event.get("direction", event.get("bias")))
+            event_time = _timestamp(event.get("timestamp"))
+            if event_time is None or event_time <= reference_timestamp:
+                continue
+            if event_time not in frame.index:
                 choch_logger.warning(
-                    "choch_index_out_of_bounds",
-                    index=event_index,
-                    available=len(frame),
+                    "choch_timestamp_out_of_window",
+                    timestamp=event_time.isoformat(),
                     ob_id=event.get("ob_id") or ob.ob_id,
                 )
                 continue
-            if (
-                event_direction != direction
-                or event_index is None
-                or event_index <= contact_index
-            ):
+            if event_direction != direction or event_time <= frame.index[contact_index]:
                 continue
             return True, {
-                "event_index": event_index,
+                "event_timestamp": event_time.isoformat(),
                 "direction": event_direction,
                 "concept": concept,
             }

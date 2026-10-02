@@ -1,0 +1,509 @@
+{
+  "audit_coverage": {
+    "total_trades": 3,
+    "trades_with_ob_evidence": 0,
+    "trades_without_ob_evidence": 3
+  },
+  "audit_mode": "observational; does not remove legacy trades",
+  "audit_samples": [
+    {
+      "audit_reason": "missing_associated_order_block",
+      "confirmation_timestamp": null,
+      "confirmation_valid": false,
+      "direction": "sell",
+      "entry_price": 2040.465,
+      "entry_timestamp": "2024-01-03T21:20:00+00:00",
+      "exit_price": 2042.4535376377999,
+      "exit_timestamp": "2024-01-03T23:00:00+00:00",
+      "grade": "UNKNOWN",
+      "initial_risk_usd": 99.42688188998704,
+      "ob_high": null,
+      "ob_low": null,
+      "ob_timestamp": null,
+      "pips": -198.8537637799741,
+      "profit": -99.42688188998704,
+      "r_multiple": -1.0,
+      "rejection_candle_high": 2040.728,
+      "rejection_candle_low": 2040.298,
+      "signal_source": "legacy_strategy",
+      "smc_concepts": [
+        "FVG bearish",
+        "Order Block bearish",
+        "OTE bearish",
+        "Liquidity Sweep bearish",
+        "BOS bearish"
+      ],
+      "window_end": null,
+      "window_start": null,
+      "window_timestamps": [],
+      "zone_concept": null
+    },
+    {
+      "audit_reason": "missing_associated_order_block",
+      "confirmation_timestamp": null,
+      "confirmation_valid": false,
+      "direction": "sell",
+      "entry_price": 2043.215,
+      "entry_timestamp": "2024-01-04T19:10:00+00:00",
+      "exit_price": 2044.7602972135655,
+      "exit_timestamp": "2024-01-04T19:50:00+00:00",
+      "grade": "UNKNOWN",
+      "initial_risk_usd": 98.89902166818965,
+      "ob_high": null,
+      "ob_low": null,
+      "ob_timestamp": null,
+      "pips": -154.52972135654633,
+      "profit": -98.89902166818965,
+      "r_multiple": -1.0,
+      "rejection_candle_high": 2043.665,
+      "rejection_candle_low": 2043.195,
+      "signal_source": "legacy_strategy",
+      "smc_concepts": [
+        "FVG bearish",
+        "Order Block bearish",
+        "OTE bearish",
+        "Liquidity Sweep bearish",
+        "BOS bearish"
+      ],
+      "window_end": null,
+      "window_start": null,
+      "window_timestamps": [],
+      "zone_concept": null
+    },
+    {
+      "audit_reason": "missing_associated_order_block",
+      "confirmation_timestamp": null,
+      "confirmation_valid": false,
+      "direction": "sell",
+      "entry_price": 2042.925,
+      "entry_timestamp": "2024-01-04T23:30:00+00:00",
+      "exit_price": 2043.915957865402,
+      "exit_timestamp": "2024-01-04T23:35:00+00:00",
+      "grade": "UNKNOWN",
+      "initial_risk_usd": 98.1048286748168,
+      "ob_high": null,
+      "ob_low": null,
+      "ob_timestamp": null,
+      "pips": -99.095786540219,
+      "profit": -98.1048286748168,
+      "r_multiple": -1.0,
+      "rejection_candle_high": 2043.315,
+      "rejection_candle_low": 2042.785,
+      "signal_source": "legacy_strategy",
+      "smc_concepts": [
+        "FVG bearish",
+        "Order Block bearish",
+        "OTE bearish",
+        "Liquidity Sweep bearish",
+        "BOS bearish"
+      ],
+      "window_end": null,
+      "window_start": null,
+      "window_timestamps": [],
+      "zone_concept": null
+    }
+  ],
+  "audit_trades": [
+    {
+      "audit_reason": "missing_associated_order_block",
+      "confirmation_timestamp": null,
+      "confirmation_valid": false,
+      "direction": "sell",
+      "entry_price": 2040.465,
+      "entry_timestamp": "2024-01-03T21:20:00+00:00",
+      "exit_price": 2042.4535376377999,
+      "exit_timestamp": "2024-01-03T23:00:00+00:00",
+      "grade": "UNKNOWN",
+      "initial_risk_usd": 99.42688188998704,
+      "ob_high": null,
+      "ob_low": null,
+      "ob_timestamp": null,
+      "pips": -198.8537637799741,
+      "profit": -99.42688188998704,
+      "r_multiple": -1.0,
+      "rejection_candle_high": 2040.728,
+      "rejection_candle_low": 2040.298,
+      "signal_source": "legacy_strategy",
+      "smc_concepts": [
+        "FVG bearish",
+        "Order Block bearish",
+        "OTE bearish",
+        "Liquidity Sweep bearish",
+        "BOS bearish"
+      ],
+      "window_end": null,
+      "window_start": null,
+      "window_timestamps": [],
+      "zone_concept": null
+    },
+    {
+      "audit_reason": "missing_associated_order_block",
+      "confirmation_timestamp": null,
+      "confirmation_valid": false,
+      "direction": "sell",
+      "entry_price": 2043.215,
+      "entry_timestamp": "2024-01-04T19:10:00+00:00",
+      "exit_price": 2044.7602972135655,
+      "exit_timestamp": "2024-01-04T19:50:00+00:00",
+      "grade": "UNKNOWN",
+      "initial_risk_usd": 98.89902166818965,
+      "ob_high": null,
+      "ob_low": null,
+      "ob_timestamp": null,
+      "pips": -154.52972135654633,
+      "profit": -98.89902166818965,
+      "r_multiple": -1.0,
+      "rejection_candle_high": 2043.665,
+      "rejection_candle_low": 2043.195,
+      "signal_source": "legacy_strategy",
+      "smc_concepts": [
+        "FVG bearish",
+        "Order Block bearish",
+        "OTE bearish",
+        "Liquidity Sweep bearish",
+        "BOS bearish"
+      ],
+      "window_end": null,
+      "window_start": null,
+      "window_timestamps": [],
+      "zone_concept": null
+    },
+    {
+      "audit_reason": "missing_associated_order_block",
+      "confirmation_timestamp": null,
+      "confirmation_valid": false,
+      "direction": "sell",
+      "entry_price": 2042.925,
+      "entry_timestamp": "2024-01-04T23:30:00+00:00",
+      "exit_price": 2043.915957865402,
+      "exit_timestamp": "2024-01-04T23:35:00+00:00",
+      "grade": "UNKNOWN",
+      "initial_risk_usd": 98.1048286748168,
+      "ob_high": null,
+      "ob_low": null,
+      "ob_timestamp": null,
+      "pips": -99.095786540219,
+      "profit": -98.1048286748168,
+      "r_multiple": -1.0,
+      "rejection_candle_high": 2043.315,
+      "rejection_candle_low": 2042.785,
+      "signal_source": "legacy_strategy",
+      "smc_concepts": [
+        "FVG bearish",
+        "Order Block bearish",
+        "OTE bearish",
+        "Liquidity Sweep bearish",
+        "BOS bearish"
+      ],
+      "window_end": null,
+      "window_start": null,
+      "window_timestamps": [],
+      "zone_concept": null
+    }
+  ],
+  "audit_violations": [
+    {
+      "reasons": [
+        "missing_or_invalid_audit_evidence"
+      ],
+      "trade_index": 0
+    },
+    {
+      "reasons": [
+        "missing_or_invalid_audit_evidence"
+      ],
+      "trade_index": 1
+    },
+    {
+      "reasons": [
+        "missing_or_invalid_audit_evidence"
+      ],
+      "trade_index": 2
+    }
+  ],
+  "avg_pips_per_trade": -150.82642389224648,
+  "config_hash": "fd43c2c7bcbda1dab7b3b7a62973f86c804f7449944acf93b6f559e0cacc91e4",
+  "confirmation_diagnostics_scope": "executed trades with associated OB evidence",
+  "data_hash": "7354e15f6a2209b9b2d3cc24c26501372093c203d07f48f91a0ef78c8b61f127",
+  "data_provenance": {
+    "files": [
+      {
+        "bytes": 2231993,
+        "path": "data/historical/xauusd/bid/m1/xauusd_bid_m1_2024_01.csv",
+        "sha256": "7414d1cf6a02cf4fff5347e79602e9109549622cb73b152e5462188cc797135d",
+        "url": "https://raw.githubusercontent.com/3650326613-png/dukascopy_xauusd_1m_data/1d8e4c008fe177be455f6de05f5057ebdde901ae/xauusd/bid/m1/xauusd_bid_m1_2024_01.csv"
+      },
+      {
+        "bytes": 2087847,
+        "path": "data/historical/xauusd/bid/m1/xauusd_bid_m1_2024_02.csv",
+        "sha256": "45060c59ccfc0ef3d5f78b49d793b7e3f97757a7659c604b887850068346621f",
+        "url": "https://raw.githubusercontent.com/3650326613-png/dukascopy_xauusd_1m_data/1d8e4c008fe177be455f6de05f5057ebdde901ae/xauusd/bid/m1/xauusd_bid_m1_2024_02.csv"
+      },
+      {
+        "bytes": 2231983,
+        "path": "data/historical/xauusd/bid/m1/xauusd_bid_m1_2024_03.csv",
+        "sha256": "28c82e54e1bd7f586f5d22c0c39d9217618f62e8dfdd7eab94602c2c2bb81a14",
+        "url": "https://raw.githubusercontent.com/3650326613-png/dukascopy_xauusd_1m_data/1d8e4c008fe177be455f6de05f5057ebdde901ae/xauusd/bid/m1/xauusd_bid_m1_2024_03.csv"
+      },
+      {
+        "bytes": 2159936,
+        "path": "data/historical/xauusd/bid/m1/xauusd_bid_m1_2024_04.csv",
+        "sha256": "ce55b0d9acdf20c694c37e3c53233455cc8b772269eb39f60357808abe37b9c9",
+        "url": "https://raw.githubusercontent.com/3650326613-png/dukascopy_xauusd_1m_data/1d8e4c008fe177be455f6de05f5057ebdde901ae/xauusd/bid/m1/xauusd_bid_m1_2024_04.csv"
+      },
+      {
+        "bytes": 2232006,
+        "path": "data/historical/xauusd/bid/m1/xauusd_bid_m1_2024_05.csv",
+        "sha256": "18084ecf8e9d5cef352cc290a55de29f27f006653b5da24a6520f8a02488f4f6",
+        "url": "https://raw.githubusercontent.com/3650326613-png/dukascopy_xauusd_1m_data/1d8e4c008fe177be455f6de05f5057ebdde901ae/xauusd/bid/m1/xauusd_bid_m1_2024_05.csv"
+      },
+      {
+        "bytes": 2159852,
+        "path": "data/historical/xauusd/bid/m1/xauusd_bid_m1_2024_06.csv",
+        "sha256": "f7cad6452e9666b37f6f7830bb69a61439095919bb1609daa80839fdb3a8fd39",
+        "url": "https://raw.githubusercontent.com/3650326613-png/dukascopy_xauusd_1m_data/1d8e4c008fe177be455f6de05f5057ebdde901ae/xauusd/bid/m1/xauusd_bid_m1_2024_06.csv"
+      },
+      {
+        "bytes": 2231946,
+        "path": "data/historical/xauusd/ask/m1/xauusd_ask_m1_2024_01.csv",
+        "sha256": "a4ac5385c164b40a5760890279455228f64646180ea04bb6e45e633cafc024ae",
+        "url": "https://raw.githubusercontent.com/3650326613-png/dukascopy_xauusd_1m_data/1d8e4c008fe177be455f6de05f5057ebdde901ae/xauusd/ask/m1/xauusd_ask_m1_2024_01.csv"
+      },
+      {
+        "bytes": 2087789,
+        "path": "data/historical/xauusd/ask/m1/xauusd_ask_m1_2024_02.csv",
+        "sha256": "40706a4ec8abb07c6fe13e4c4562f7d07485c104226e42d36c57e06d36c1c167",
+        "url": "https://raw.githubusercontent.com/3650326613-png/dukascopy_xauusd_1m_data/1d8e4c008fe177be455f6de05f5057ebdde901ae/xauusd/ask/m1/xauusd_ask_m1_2024_02.csv"
+      },
+      {
+        "bytes": 2231876,
+        "path": "data/historical/xauusd/ask/m1/xauusd_ask_m1_2024_03.csv",
+        "sha256": "12ee5b98105d955b18b7a496120998f5f6647987cd16f706c94da6bd7541eb91",
+        "url": "https://raw.githubusercontent.com/3650326613-png/dukascopy_xauusd_1m_data/1d8e4c008fe177be455f6de05f5057ebdde901ae/xauusd/ask/m1/xauusd_ask_m1_2024_03.csv"
+      },
+      {
+        "bytes": 2159681,
+        "path": "data/historical/xauusd/ask/m1/xauusd_ask_m1_2024_04.csv",
+        "sha256": "ef4001235ec800174d32459174e2235d7cdaf9f67662108c78a962d1d4cb43c6",
+        "url": "https://raw.githubusercontent.com/3650326613-png/dukascopy_xauusd_1m_data/1d8e4c008fe177be455f6de05f5057ebdde901ae/xauusd/ask/m1/xauusd_ask_m1_2024_04.csv"
+      },
+      {
+        "bytes": 2231910,
+        "path": "data/historical/xauusd/ask/m1/xauusd_ask_m1_2024_05.csv",
+        "sha256": "54ffe9267ce4be51e68746c20eb0a3d5d77f46b0fc71c34af7eb8884d0af6588",
+        "url": "https://raw.githubusercontent.com/3650326613-png/dukascopy_xauusd_1m_data/1d8e4c008fe177be455f6de05f5057ebdde901ae/xauusd/ask/m1/xauusd_ask_m1_2024_05.csv"
+      },
+      {
+        "bytes": 2159912,
+        "path": "data/historical/xauusd/ask/m1/xauusd_ask_m1_2024_06.csv",
+        "sha256": "ec13944e0fa902394e6a48baf8e142696c3b1486d229d50603f5464085073c56",
+        "url": "https://raw.githubusercontent.com/3650326613-png/dukascopy_xauusd_1m_data/1d8e4c008fe177be455f6de05f5057ebdde901ae/xauusd/ask/m1/xauusd_ask_m1_2024_06.csv"
+      }
+    ],
+    "mirror": "https://github.com/3650326613-png/dukascopy_xauusd_1m_data",
+    "provider": "Dukascopy",
+    "revision": "1d8e4c008fe177be455f6de05f5057ebdde901ae"
+  },
+  "data_source": "csv",
+  "effective_config": {
+    "audit": true,
+    "broker": {
+      "commission_per_lot_round_trip": 0,
+      "contract_size": 100,
+      "currency": "USD",
+      "point": 0.01,
+      "slippage_points": 0,
+      "volume_min": 0.01,
+      "volume_step": 0.01
+    },
+    "effective_settings": {
+      "decision": {
+        "allow_counter_trend": false,
+        "atr_multiplier": 1.0,
+        "atr_period": 14,
+        "context_timeframe": "H4",
+        "enable_atr_filter": true,
+        "enable_kill_zone": false,
+        "enable_mtf": true,
+        "enable_news_filter": true,
+        "enable_premium_discount": true,
+        "enable_spread_filter": true,
+        "enabled": false,
+        "entry_timeframe": "M5",
+        "htf_timeframe": "H1",
+        "master_trend_enabled": true,
+        "max_atr": 999999.0,
+        "maximum_spread": 20,
+        "min_atr": 0.0,
+        "minimum_risk_reward": 2.0,
+        "minimum_score": 70,
+        "use_bos": true,
+        "use_choch": true,
+        "use_fvg": true,
+        "use_ifvg": true,
+        "use_liquidity": true,
+        "use_mss": true,
+        "use_ob": true,
+        "use_premium_discount": true
+      },
+      "gold": {
+        "atr_period": 14,
+        "context_timeframe": "H4",
+        "displacement_atr_mult": 1.2,
+        "displacement_confirmation_bars": 2,
+        "entry_timeframe": "M5",
+        "htf_timeframe": "H1",
+        "max_mitigations": 2,
+        "max_ob_atr_mult": 3.0,
+        "max_sl_atr_mult": 4.0,
+        "max_spread_points": 200,
+        "max_zone_age_bars": 25,
+        "min_confluence_count": 2,
+        "min_fvg_atr": 0.25,
+        "min_risk_reward": 2.0,
+        "min_sl_atr_mult": 0.4,
+        "momentum_body_atr_mult": 1.0,
+        "rejection_wick_body_ratio": 1.5,
+        "retest_atr_mult": 1.5,
+        "sl_buffer_atr_mult": 0.8,
+        "sweep_displacement_atr_mult": 1.0,
+        "sweep_min_rejection_ratio": 0.5,
+        "symbol": "XAUUSD"
+      },
+      "ob_quality": {
+        "confluence_lookback_bars": 30,
+        "displacement_reference_atr": 1.2,
+        "enabled": false,
+        "grade_a_threshold": 85,
+        "grade_b_threshold": 70,
+        "grade_c_threshold": 50,
+        "m5_confirmation_lookback_bars": 30,
+        "m5_displacement_atr_mult": 1.0,
+        "m5_min_rejection_ratio": 0.5,
+        "m5_require_displacement": true,
+        "max_zone_age_bars": 25,
+        "max_zone_height_atr": 3.0,
+        "min_grade": "B",
+        "min_score": 0.55,
+        "min_zone_height_atr": 0.15,
+        "require_fresh": true,
+        "require_htf_confluence": false,
+        "require_liquidity_sweep": false,
+        "require_m5_confirmation": true,
+        "rr_min_grade_a": 2.5,
+        "rr_min_grade_b": 2.0,
+        "use_ob_quality_filter": false,
+        "weight_confluence": 20.0,
+        "weight_displacement": 25.0,
+        "weight_freshness": 10.0,
+        "weight_mitigation": 10.0,
+        "weight_premium_discount": 10.0,
+        "weight_trend": 15.0,
+        "weight_zone_height": 10.0
+      },
+      "risk": {
+        "max_consecutive_losses": 3,
+        "max_daily_risk": 0.03,
+        "max_drawdown": 0.1,
+        "max_open_positions": 3,
+        "max_spread": 200,
+        "max_spread_by_symbol": {
+          "XAUUSD": 200
+        },
+        "one_trade_per_symbol": true,
+        "risk_per_trade": 0.01
+      },
+      "validator": {
+        "excellent_score": 80,
+        "max_spread": 20,
+        "min_confluence_count": 2,
+        "min_risk_reward": 1.5,
+        "min_score": 70,
+        "require_htf_alignment": true,
+        "require_news_filter": true,
+        "watch_score": 60
+      }
+    },
+    "entry_timeframe": "M5",
+    "history_directory": "data/historical",
+    "history_file": null,
+    "initial_balance": 10000,
+    "macro_timeframe": "H4",
+    "min_confidence": 0.3,
+    "min_risk_reward": 2.0,
+    "minimum_trades": 20,
+    "risk": {
+      "MAX_CONSECUTIVE_LOSSES": 3,
+      "MAX_DAILY_RISK": 0.03,
+      "MAX_DRAWDOWN": 0.1,
+      "MAX_OPEN_POSITIONS": 3,
+      "MAX_SPREAD_POINTS": 200,
+      "ONE_TRADE_PER_SYMBOL": true,
+      "RISK_PER_TRADE": 0.01
+    },
+    "seed": 42,
+    "source": "csv",
+    "structure_timeframe": "H1",
+    "symbol": "XAUUSD",
+    "terminal_path": "C:\\Program Files\\MetaTrader 5\\terminal64.exe",
+    "use_ob_quality_filter": false,
+    "windows": {
+      "H1": 300,
+      "H4": 100,
+      "M5": 120
+    }
+  },
+  "execution_assumptions": {
+    "broker": {
+      "commission_per_lot_round_trip": 0,
+      "contract_size": 100,
+      "currency": "USD",
+      "point": 0.01,
+      "slippage_points": 0,
+      "volume_min": 0.01,
+      "volume_step": 0.01
+    },
+    "historical_news": "not available",
+    "intrabar": "SL before TP",
+    "swap": "not modelled"
+  },
+  "expectancy_r": -1.0,
+  "final_risk_state": {
+    "consecutive_losses": 3,
+    "current_drawdown_pct": 2.96,
+    "daily_loss": "0",
+    "max_consecutive_losses": 3,
+    "max_daily_risk_pct": 3.0,
+    "max_drawdown_pct": 10.0,
+    "max_open_positions": 3,
+    "one_trade_per_symbol": true,
+    "open_positions": 0,
+    "risk_per_trade_pct": 1.0
+  },
+  "max_drawdown_pct": 2.964307322329935,
+  "period": "2024-01-01 to 2024-06-30",
+  "profit_factor": 0.0,
+  "quality_filter": false,
+  "rejections_by_reason": {
+    "choch_out_of_bounds": 0,
+    "insufficient_candles": 0,
+    "m5_confirmation_missing": 65,
+    "neutral_or_blocked_regime": 48,
+    "no_contact_with_ob": 0,
+    "no_signal": 285,
+    "risk_circuit_breaker": 34395,
+    "risk_guard": 41,
+    "validator_rejected": 29
+  },
+  "removed_unchanged_flat_minutes": 85965,
+  "seed": 42,
+  "symbol": "XAUUSD",
+  "total_trades": 3,
+  "trades_par_grade": {
+    "UNKNOWN": 3
+  },
+  "validation_error": "Insufficient trades: 3 < 20",
+  "validation_status": "failed",
+  "volume_available": false,
+  "win_rate": 0.0
+}

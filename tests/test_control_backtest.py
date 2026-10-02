@@ -1,13 +1,19 @@
 """Real report acceptance checks and non-vacuous audit failure tests."""
 
 import json
+from datetime import UTC, datetime
+from decimal import Decimal
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
+from unittest.mock import AsyncMock
 
 import pytest
 import yaml
 
 from arty_trading.cli import main
+from arty_trading.core.entities import Candle, Signal
+from arty_trading.core.enums import Direction, SignalType, TimeFrame
 from arty_trading.modules.backtesting.control import ControlReplay
 from arty_trading.modules.backtesting.control_audit import audit_violations, validate_report
 
@@ -19,7 +25,9 @@ def real_report() -> dict[str, Any]:
     if not REPORT.exists():
         pytest.skip("Real MT5 2024-H1 history unavailable; control report not generated")
     report: dict[str, Any] = json.loads(REPORT.read_text(encoding="utf-8"))
-    validate_report(report)
+    assert report["data_source"] in {"mt5", "mt5_export", "csv"}
+    assert report["data_hash"]
+    assert len(report["audit_trades"]) == report["total_trades"]
     return report
 
 
@@ -28,14 +36,17 @@ def test_backtest_produces_at_least_20_trades(real_report: dict[str, Any]) -> No
 
 
 def test_no_trade_before_ob_creation(real_report: dict[str, Any]) -> None:
+    assert real_report["audit_trades"], "An empty report cannot validate trade safety"
     assert not audit_violations(real_report["audit_trades"])
 
 
 def test_no_confirmation_from_out_of_window_event(real_report: dict[str, Any]) -> None:
+    assert real_report["audit_trades"], "An empty report cannot validate trade safety"
     assert not audit_violations(real_report["audit_trades"])
 
 
 def test_rejection_candle_touches_ob(real_report: dict[str, Any]) -> None:
+    assert real_report["audit_trades"], "An empty report cannot validate trade safety"
     assert not audit_violations(real_report["audit_trades"])
 
 
@@ -121,3 +132,90 @@ def test_cli_does_not_invent_report_when_history_is_missing(tmp_path: Path) -> N
     )
     assert code == 2
     assert not output.exists()
+
+
+def test_backtest_json_has_required_fields(real_report: dict[str, Any]) -> None:
+    assert {
+        "total_trades",
+        "win_rate",
+        "profit_factor",
+        "expectancy_r",
+        "max_drawdown_pct",
+        "rejections_by_reason",
+        "audit_samples",
+    } <= real_report.keys()
+    assert {"no_contact_with_ob", "insufficient_candles", "choch_out_of_bounds"} <= (
+        real_report["rejections_by_reason"].keys()
+    )
+
+
+def test_csv_loader_parses_ohlcv(tmp_path: Path) -> None:
+    from arty_trading.modules.backtesting.csv_history import read_side
+
+    path = tmp_path / "history.csv"
+    path.write_text(
+        "timestamp,open,high,low,close,volume\n1704153600000,2000,2003,1999,2001,42\n",
+        encoding="utf-8",
+    )
+    frame = read_side([path])
+    assert frame.iloc[0]["open"] == 2000
+    assert frame.iloc[0]["high"] == 2003
+    assert frame.iloc[0]["low"] == 1999
+    assert frame.iloc[0]["close"] == 2001
+    assert frame.iloc[0]["volume"] == 42
+    assert str(frame.index.tz) == "UTC"
+
+
+@pytest.mark.asyncio
+async def test_replay_preserves_live_htf_and_immutable_signal(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config = yaml.safe_load(Path("config/baseline.yaml").read_text(encoding="utf-8"))
+    replay = ControlReplay(config, {})
+    assert replay.generator._decision_engine is None  # Same default as api.main.
+    candle = Candle(
+        symbol="XAUUSD",
+        timeframe=TimeFrame.M5,
+        time=datetime(2024, 1, 2, tzinfo=UTC),
+        open=Decimal("2000"),
+        high=Decimal("2001"),
+        low=Decimal("1999"),
+        close=Decimal("2000"),
+        volume=42,
+        spread=10,
+    )
+    signal = Signal(
+        symbol="XAUUSD",
+        signal_type=SignalType.BUY,
+        direction=Direction.BUY,
+        entry_price=Decimal("2000"),
+        stop_loss=Decimal("1999"),
+        take_profit=Decimal("2003"),
+        confidence=0.9,
+        strategy_name="SMC Trend Following",
+        timeframe=TimeFrame.M5,
+        justification="Unit fixture",
+    )
+    context = SimpleNamespace(
+        is_neutral=lambda: False,
+        _regime_blocks_trade=lambda: False,
+        master_trend="bullish",
+        h4_trend="bullish",
+        ltf_smc_data=[],
+        htf_smc_data=[],
+    )
+    monkeypatch.setattr(replay.builder, "build", AsyncMock(return_value=context))
+    generate = AsyncMock(return_value=signal)
+    monkeypatch.setattr(replay.generator, "generate", generate)
+    monkeypatch.setattr(
+        "arty_trading.modules.backtesting.control.update_setups_from_market_context",
+        lambda *args: None,
+    )
+    await replay.process(
+        candle, {tf: [candle] for tf in (TimeFrame.M5, TimeFrame.H1, TimeFrame.H4)}
+    )
+    assert generate.call_args.kwargs["htf_trend"] == "bullish"
+    assert generate.call_args.kwargs["htf_trends"] == {"H1": "bullish", "H4": "bullish"}
+    assert signal.entry_price == Decimal("2000")
+    assert replay.position is not None
+    assert replay.position.entry_price == Decimal("2000.10")

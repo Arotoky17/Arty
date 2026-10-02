@@ -3,7 +3,8 @@ seed: 42
 symbol: XAUUSD
 source: mt5
 history_file: null
-terminal_path: null
+terminal_path: 'C:\Program Files\MetaTrader 5\terminal64.exe'
+history_directory: data/historical
 macro_timeframe: H4
 structure_timeframe: H1
 entry_timeframe: M5

@@ -24,7 +24,7 @@ def validate_history(
     start: datetime,
     end: datetime,
 ) -> dict[TimeFrame, list[Candle]]:
-    if raw.get("source") not in ("mt5", "mt5_export") or raw.get("symbol") != symbol:
+    if raw.get("source") not in ("mt5", "mt5_export", "csv") or raw.get("symbol") != symbol:
         raise ValueError("Expected a real MT5 snapshot for the requested symbol")
     history: dict[TimeFrame, list[Candle]] = {}
     for tf in (TimeFrame.M5, TimeFrame.H1, TimeFrame.H4):
@@ -69,7 +69,11 @@ def obtain_history(
     end: datetime,
 ) -> tuple[dict[str, Any], dict[TimeFrame, list[Candle]]]:
     path = config.get("history_file")
-    if path:
+    if config.get("source") == "csv":
+        from arty_trading.modules.backtesting.csv_history import load_csv_history
+
+        raw = load_csv_history(Path(config["history_directory"]), float(config["broker"]["point"]))
+    elif path:
         raw = json.loads(Path(path).read_text(encoding="utf-8"))
     else:
         import MetaTrader5 as mt5  # noqa: N813 - broker convention

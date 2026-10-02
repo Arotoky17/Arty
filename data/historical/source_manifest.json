@@ -1,0 +1,79 @@
+{
+  "files": [
+    {
+      "bytes": 2231993,
+      "path": "data/historical/xauusd/bid/m1/xauusd_bid_m1_2024_01.csv",
+      "sha256": "7414d1cf6a02cf4fff5347e79602e9109549622cb73b152e5462188cc797135d",
+      "url": "https://raw.githubusercontent.com/3650326613-png/dukascopy_xauusd_1m_data/1d8e4c008fe177be455f6de05f5057ebdde901ae/xauusd/bid/m1/xauusd_bid_m1_2024_01.csv"
+    },
+    {
+      "bytes": 2087847,
+      "path": "data/historical/xauusd/bid/m1/xauusd_bid_m1_2024_02.csv",
+      "sha256": "45060c59ccfc0ef3d5f78b49d793b7e3f97757a7659c604b887850068346621f",
+      "url": "https://raw.githubusercontent.com/3650326613-png/dukascopy_xauusd_1m_data/1d8e4c008fe177be455f6de05f5057ebdde901ae/xauusd/bid/m1/xauusd_bid_m1_2024_02.csv"
+    },
+    {
+      "bytes": 2231983,
+      "path": "data/historical/xauusd/bid/m1/xauusd_bid_m1_2024_03.csv",
+      "sha256": "28c82e54e1bd7f586f5d22c0c39d9217618f62e8dfdd7eab94602c2c2bb81a14",
+      "url": "https://raw.githubusercontent.com/3650326613-png/dukascopy_xauusd_1m_data/1d8e4c008fe177be455f6de05f5057ebdde901ae/xauusd/bid/m1/xauusd_bid_m1_2024_03.csv"
+    },
+    {
+      "bytes": 2159936,
+      "path": "data/historical/xauusd/bid/m1/xauusd_bid_m1_2024_04.csv",
+      "sha256": "ce55b0d9acdf20c694c37e3c53233455cc8b772269eb39f60357808abe37b9c9",
+      "url": "https://raw.githubusercontent.com/3650326613-png/dukascopy_xauusd_1m_data/1d8e4c008fe177be455f6de05f5057ebdde901ae/xauusd/bid/m1/xauusd_bid_m1_2024_04.csv"
+    },
+    {
+      "bytes": 2232006,
+      "path": "data/historical/xauusd/bid/m1/xauusd_bid_m1_2024_05.csv",
+      "sha256": "18084ecf8e9d5cef352cc290a55de29f27f006653b5da24a6520f8a02488f4f6",
+      "url": "https://raw.githubusercontent.com/3650326613-png/dukascopy_xauusd_1m_data/1d8e4c008fe177be455f6de05f5057ebdde901ae/xauusd/bid/m1/xauusd_bid_m1_2024_05.csv"
+    },
+    {
+      "bytes": 2159852,
+      "path": "data/historical/xauusd/bid/m1/xauusd_bid_m1_2024_06.csv",
+      "sha256": "f7cad6452e9666b37f6f7830bb69a61439095919bb1609daa80839fdb3a8fd39",
+      "url": "https://raw.githubusercontent.com/3650326613-png/dukascopy_xauusd_1m_data/1d8e4c008fe177be455f6de05f5057ebdde901ae/xauusd/bid/m1/xauusd_bid_m1_2024_06.csv"
+    },
+    {
+      "bytes": 2231946,
+      "path": "data/historical/xauusd/ask/m1/xauusd_ask_m1_2024_01.csv",
+      "sha256": "a4ac5385c164b40a5760890279455228f64646180ea04bb6e45e633cafc024ae",
+      "url": "https://raw.githubusercontent.com/3650326613-png/dukascopy_xauusd_1m_data/1d8e4c008fe177be455f6de05f5057ebdde901ae/xauusd/ask/m1/xauusd_ask_m1_2024_01.csv"
+    },
+    {
+      "bytes": 2087789,
+      "path": "data/historical/xauusd/ask/m1/xauusd_ask_m1_2024_02.csv",
+      "sha256": "40706a4ec8abb07c6fe13e4c4562f7d07485c104226e42d36c57e06d36c1c167",
+      "url": "https://raw.githubusercontent.com/3650326613-png/dukascopy_xauusd_1m_data/1d8e4c008fe177be455f6de05f5057ebdde901ae/xauusd/ask/m1/xauusd_ask_m1_2024_02.csv"
+    },
+    {
+      "bytes": 2231876,
+      "path": "data/historical/xauusd/ask/m1/xauusd_ask_m1_2024_03.csv",
+      "sha256": "12ee5b98105d955b18b7a496120998f5f6647987cd16f706c94da6bd7541eb91",
+      "url": "https://raw.githubusercontent.com/3650326613-png/dukascopy_xauusd_1m_data/1d8e4c008fe177be455f6de05f5057ebdde901ae/xauusd/ask/m1/xauusd_ask_m1_2024_03.csv"
+    },
+    {
+      "bytes": 2159681,
+      "path": "data/historical/xauusd/ask/m1/xauusd_ask_m1_2024_04.csv",
+      "sha256": "ef4001235ec800174d32459174e2235d7cdaf9f67662108c78a962d1d4cb43c6",
+      "url": "https://raw.githubusercontent.com/3650326613-png/dukascopy_xauusd_1m_data/1d8e4c008fe177be455f6de05f5057ebdde901ae/xauusd/ask/m1/xauusd_ask_m1_2024_04.csv"
+    },
+    {
+      "bytes": 2231910,
+      "path": "data/historical/xauusd/ask/m1/xauusd_ask_m1_2024_05.csv",
+      "sha256": "54ffe9267ce4be51e68746c20eb0a3d5d77f46b0fc71c34af7eb8884d0af6588",
+      "url": "https://raw.githubusercontent.com/3650326613-png/dukascopy_xauusd_1m_data/1d8e4c008fe177be455f6de05f5057ebdde901ae/xauusd/ask/m1/xauusd_ask_m1_2024_05.csv"
+    },
+    {
+      "bytes": 2159912,
+      "path": "data/historical/xauusd/ask/m1/xauusd_ask_m1_2024_06.csv",
+      "sha256": "ec13944e0fa902394e6a48baf8e142696c3b1486d229d50603f5464085073c56",
+      "url": "https://raw.githubusercontent.com/3650326613-png/dukascopy_xauusd_1m_data/1d8e4c008fe177be455f6de05f5057ebdde901ae/xauusd/ask/m1/xauusd_ask_m1_2024_06.csv"
+    }
+  ],
+  "mirror": "https://github.com/3650326613-png/dukascopy_xauusd_1m_data",
+  "provider": "Dukascopy",
+  "revision": "1d8e4c008fe177be455f6de05f5057ebdde901ae"
+}

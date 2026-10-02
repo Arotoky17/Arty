@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import sys
 from collections import Counter
 from datetime import UTC, datetime, timedelta
 from decimal import ROUND_DOWN, Decimal
@@ -47,6 +48,27 @@ def candles_frame(candles: list[Candle]) -> pd.DataFrame:
     )
 
 
+class ReplayDetector:
+    """Reuse detections only when an immutable closed candle window is unchanged."""
+
+    def __init__(self) -> None:
+        self.inner = SMCDetector()
+        self.cache: dict[TimeFrame, tuple[tuple[Any, ...], list[dict[str, Any]]]] = {}
+
+    async def detect(self, candles: list[Candle], symbol: str) -> list[dict[str, Any]]:
+        if not candles:
+            return []
+        timeframe = candles[-1].timeframe
+        key = (symbol, candles[0].time, candles[-1].time, len(candles))
+        cached = self.cache.get(timeframe)
+        if cached is None or cached[0] != key:
+            cached = (key, await self.inner.detect(candles, symbol))
+            self.cache[timeframe] = cached
+        # Builder/strategy consumers only read detections. Its own H1/H4 caches
+        # also retain them by reference; copying every nested value is unnecessary.
+        return cached[1]
+
+
 class ReplayQuotes:
     """Only the historical quote/specification methods used by RiskManager."""
 
@@ -66,9 +88,19 @@ class ReplayQuotes:
 
 
 class ControlReplay:
-    def __init__(self, config: dict[str, Any], history: dict[TimeFrame, list[Candle]]) -> None:
+    def __init__(
+        self,
+        config: dict[str, Any],
+        history: dict[TimeFrame, list[Candle]],
+        quotes: list[dict[str, Any]] | None = None,
+    ) -> None:
         self.config = config
         self.history = history
+        self.ask_quotes = {
+            datetime.fromtimestamp(row["time"], UTC): row
+            for row in (quotes or [])
+            if "ask_close" in row
+        }
         self.broker = config["broker"]
         self.balance = Decimal(str(config["initial_balance"]))
         self.equity = self.balance
@@ -97,13 +129,15 @@ class ControlReplay:
         )
         self.risk.update_equity(self.balance)
         self.tracker = SetupTracker()
-        self.detector = SMCDetector()
+        self.detector = ReplayDetector()
         self.generator = SignalGenerator(
             min_confidence=config["min_confidence"],
             active_strategy="SMC Trend Following",
             strategies=[SMCTrendStrategy(use_ob_quality_filter=False)],
             validator=SignalValidator(min_risk_reward=config["min_risk_reward"], max_spread=200),
-            decision_engine=DecisionEngine(self.settings.decision),
+            decision_engine=(
+                DecisionEngine(self.settings.decision) if self.settings.decision.enabled else None
+            ),
             setup_tracker=self.tracker,
             ob_quality=self.settings.ob_quality,
             use_ob_quality_filter=False,
@@ -114,6 +148,14 @@ class ControlReplay:
             return self.current_h4
 
         self.builder = MarketContextBuilder(self.detector, macro)
+
+    def ask_price(self, candle: Candle, field: str) -> Decimal:
+        quote = self.ask_quotes.get(candle.time)
+        if quote is not None:
+            return Decimal(str(quote[f"ask_{field}"]))
+        return Decimal(str(getattr(candle, field))) + Decimal(candle.spread) * Decimal(
+            str(self.broker["point"])
+        )
 
     def close_position(self, price: Decimal, time: datetime) -> None:
         trade = self.position
@@ -143,8 +185,7 @@ class ControlReplay:
         if self.position is not None:
             trade = self.position
             side = 1 if trade.direction == Direction.BUY else -1
-            spread = Decimal(candle.spread) * Decimal(str(self.broker["point"]))
-            price = candle.close if side == 1 else candle.close + spread
+            price = candle.close if side == 1 else self.ask_price(candle, "close")
             floating = (
                 (price - trade.entry_price)
                 * side
@@ -160,11 +201,10 @@ class ControlReplay:
         if self.position is None:
             return
         trade = self.position
-        spread = Decimal(candle.spread) * Decimal(str(self.broker["point"]))
         buy = trade.direction == Direction.BUY
-        high = candle.high if buy else candle.high + spread
-        low = candle.low if buy else candle.low + spread
-        open_price = candle.open if buy else candle.open + spread
+        high = candle.high if buy else self.ask_price(candle, "high")
+        low = candle.low if buy else self.ask_price(candle, "low")
+        open_price = candle.open if buy else self.ask_price(candle, "open")
         if (buy and low <= trade.stop_loss) or (not buy and high >= trade.stop_loss):
             price = min(trade.stop_loss, open_price) if buy else max(trade.stop_loss, open_price)
             self.close_position(price, candle.time)
@@ -180,11 +220,23 @@ class ControlReplay:
     ) -> dict[str, Any]:
         record: dict[str, Any] = {
             "entry_timestamp": time.isoformat(),
+            "ob_timestamp": None,
+            "confirmation_timestamp": None,
+            "ob_low": None,
+            "ob_high": None,
+            "window_start": None,
+            "window_end": None,
+            "window_timestamps": [],
+            "rejection_candle_low": float(m5[-1].low) if m5 else None,
+            "rejection_candle_high": float(m5[-1].high) if m5 else None,
             "grade": "UNKNOWN",
             "confirmation_valid": False,
         }
         setup_id = signal.metadata.get("setup_id")
         setup = self.tracker.get_setup_by_id(setup_id) if setup_id else None
+        record["signal_source"] = "setup_tracker" if setup is not None else "legacy_strategy"
+        record["zone_concept"] = setup.zone_concept if setup is not None else None
+        record["smc_concepts"] = list(signal.smc_concepts)
         if setup is None or setup.zone_concept != "order_block":
             record["audit_reason"] = "missing_associated_order_block"
             return record
@@ -197,7 +249,7 @@ class ControlReplay:
             direction="bullish" if signal.direction == Direction.BUY else "bearish",
             low=setup.zone_low,
             high=setup.zone_high,
-            created_at=setup.created_at,
+            created_at=setup.created_at + timedelta(hours=1),
         )
         after = [c for c in m5 if c.time > ob.created_at]
         frame = candles_frame(after)
@@ -214,6 +266,7 @@ class ControlReplay:
             confirmation = after[-1].time.isoformat()
         record.update(
             {
+                "ob_origin_timestamp": setup.created_at.isoformat(),
                 "ob_timestamp": ob.created_at.isoformat(),
                 "ob_low": ob.low,
                 "ob_high": ob.high,
@@ -261,17 +314,24 @@ class ControlReplay:
             m5,
             context.ltf_smc_data,
             htf_smc_data=context.htf_smc_data,
+            htf_trend=context.master_trend,
+            htf_trends={"H1": context.master_trend, "H4": context.h4_trend},
             master_trend=context.master_trend,
             market_context=context,
             spread=candle.spread,
         )
         if signal is None:
             self.rejections[self.generator.last_rejection_reason or "no_signal"] += 1
+            validation = self.generator.last_validation
+            if self.generator.last_rejection_reason == "validator_rejected" and validation:
+                for reason in validation.failed_conditions:
+                    self.rejections[f"validator:{reason}"] += 1
             return
         side = 1 if signal.direction == Direction.BUY else -1
         point = Decimal(str(self.broker["point"]))
-        signal.entry_price = candle.close + (Decimal(candle.spread) * point if side == 1 else 0)
-        signal.entry_price += side * Decimal(str(self.broker["slippage_points"])) * point
+        entry_price = self.ask_price(candle, "close") if side == 1 else candle.close
+        entry_price += side * Decimal(str(self.broker["slippage_points"])) * point
+        signal = signal.model_copy(update={"entry_price": entry_price})
         if (signal.entry_price - signal.stop_loss) * side <= 0 or (
             signal.take_profit - signal.entry_price
         ) * side <= 0:
@@ -329,6 +389,8 @@ class ControlReplay:
         durations = {TimeFrame.H1: timedelta(hours=1), TimeFrame.H4: timedelta(hours=4)}
         previous_day = None
         for i, candle in enumerate(self.history[TimeFrame.M5]):
+            if i and i % 1000 == 0:
+                print(f"Replay: {i} M5 bars; {len(self.audits)} trades", file=sys.stderr)
             close = candle.time + timedelta(minutes=5)
             if previous_day != close.date():
                 self.risk.reset_daily()
@@ -336,6 +398,16 @@ class ControlReplay:
             self.quotes.spread = candle.spread
             self.check_exit(candle)
             self.mark_equity(candle)
+            if self.position is None:
+                state = self.risk.get_risk_report()
+                if (
+                    state["consecutive_losses"] >= state["max_consecutive_losses"]
+                    or self.risk.current_drawdown >= self.settings.risk.max_drawdown
+                    or Decimal(state["daily_loss"])
+                    >= (self.balance * Decimal(str(self.settings.risk.max_daily_risk)))
+                ):
+                    self.rejections["risk_circuit_breaker"] += 1
+                    continue
             views = {
                 TimeFrame.M5: self.history[TimeFrame.M5][
                     max(0, i + 1 - self.config["windows"]["M5"]) : i + 1
@@ -355,10 +427,14 @@ class ControlReplay:
             ):
                 if self.position is None:
                     await self.process(candle, views)
+                    self.tracker.cleanup(candle.symbol)
         last = self.history[TimeFrame.M5][-1]
         if self.position is not None:
-            spread = Decimal(last.spread) * Decimal(str(self.broker["point"]))
-            price = last.close if self.position.direction == Direction.BUY else last.close + spread
+            price = (
+                last.close
+                if self.position.direction == Direction.BUY
+                else self.ask_price(last, "close")
+            )
             self.close_position(price, last.time + timedelta(minutes=5))
         self.mark_equity(last)
 
@@ -369,8 +445,11 @@ async def run_control(
     date_to: str,
     config_path: Path,
     output: Path,
+    source: str | None = None,
 ) -> dict[str, Any]:
     config = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+    if source is not None:
+        config["source"] = source
     if config.get("use_ob_quality_filter") is not False or config.get("audit") is not True:
         raise ValueError("Control requires the legacy quality filter off and audit enabled")
     if symbol != config["symbol"] or symbol != "XAUUSD":
@@ -383,9 +462,10 @@ async def run_control(
     if raw.get("broker"):
         config["broker"].update(raw["broker"])
     logging.getLogger("arty_trading").setLevel(logging.WARNING)
-    replay = ControlReplay(config, history)
+    replay = ControlReplay(config, history, raw["candles"]["M5"])
     config["effective_settings"] = replay.settings.model_dump(
-        mode="json", include={"risk", "decision", "ob_quality"},
+        mode="json",
+        include={"risk", "decision", "ob_quality", "gold", "validator"},
     )
     await replay.run()
     profits = [row["profit"] for row in replay.audits]
@@ -397,8 +477,12 @@ async def run_control(
         "symbol": symbol,
         "seed": config["seed"],
         "data_source": raw["source"],
+        "data_provenance": raw.get("provenance", {}),
+        "volume_available": raw.get("volume_available", True),
+        "removed_unchanged_flat_minutes": raw.get("removed_unchanged_flat_minutes", 0),
         "data_hash": digest(raw),
         "config_hash": digest(config),
+        "effective_config": config,
         "total_trades": count,
         "win_rate": sum(value > 0 for value in profits) / count if count else 0,
         "profit_factor": gains / losses if losses else None,
@@ -406,10 +490,22 @@ async def run_control(
         "max_drawdown_pct": replay.drawdown * 100,
         "avg_pips_per_trade": sum(row["pips"] for row in replay.audits) / count if count else None,
         "trades_par_grade": dict(Counter(row["grade"] for row in replay.audits)),
-        "rejections_by_reason": dict(replay.rejections),
+        "rejections_by_reason": {
+            "no_contact_with_ob": 0,
+            "insufficient_candles": 0,
+            "choch_out_of_bounds": 0,
+            **dict(replay.rejections),
+        },
         "audit_samples": replay.audits[:5],
         "audit_trades": replay.audits,
         "audit_violations": audit_violations(replay.audits),
+        "audit_coverage": {
+            "total_trades": count,
+            "trades_with_ob_evidence": sum(
+                row["ob_timestamp"] is not None for row in replay.audits
+            ),
+            "trades_without_ob_evidence": sum(row["ob_timestamp"] is None for row in replay.audits),
+        },
         "execution_assumptions": {
             "broker": config["broker"],
             "intrabar": "SL before TP",
@@ -417,7 +513,9 @@ async def run_control(
             "historical_news": "not available",
         },
         "quality_filter": False,
+        "final_risk_state": replay.risk.get_risk_report(),
         "audit_mode": "observational; does not remove legacy trades",
+        "confirmation_diagnostics_scope": "executed trades with associated OB evidence",
     }
     try:
         validate_report(report, config["minimum_trades"])

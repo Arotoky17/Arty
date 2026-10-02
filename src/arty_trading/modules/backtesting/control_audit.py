@@ -49,8 +49,8 @@ def audit_violations(trades: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 def validate_report(report: dict[str, Any], minimum_trades: int = 20) -> None:
     """Raise for missing history, incomplete audits, low count or any violation."""
-    if report.get("data_source") not in ("mt5", "mt5_export"):
-        raise ValueError("The control report must use real MT5 historical data")
+    if report.get("data_source") not in ("mt5", "mt5_export", "csv"):
+        raise ValueError("The control report must use real MT5 or CSV historical data")
     if not report.get("data_hash"):
         raise ValueError("Missing historical data fingerprint")
     trades = report.get("audit_trades")

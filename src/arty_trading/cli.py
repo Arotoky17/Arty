@@ -36,6 +36,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     subparsers.add_parser("version", help="Afficher la version")
     backtest = subparsers.add_parser("backtest", help="Contrôle historique MT5 H4/H1/M5")
     backtest.add_argument("--symbol", required=True)
+    backtest.add_argument("--source", choices=("mt5", "csv"), default=None)
     backtest.add_argument("--from", dest="date_from", required=True)
     backtest.add_argument("--to", dest="date_to", required=True)
     backtest.add_argument("--config", type=Path, required=True)
@@ -58,6 +59,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                     args.date_to,
                     args.config,
                     args.output,
+                    source=args.source,
                 )
             )
         except (ValueError, RuntimeError, OSError) as exc:

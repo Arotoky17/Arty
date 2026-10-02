@@ -49,52 +49,38 @@ le champ technique vaut zéro et `volume_available=false` le signale expliciteme
 La configuration n'établit pas les commissions et swaps du broker réel ; les
 métriques ne constituent donc pas une validation complète de rentabilité.
 
-## Résultat du contrôle réel
+## Résultat après réarmement du circuit breaker
 
-Le rapport `data/backtests/baseline_post_fixes_2024H1.json` est un résultat
-**d'échec du contrôle**, pas un baseline validé :
+Le baseline `data/backtests/baseline_post_fixes_2024H1.json` produit désormais
+57 trades sur les 35 231 bougies M5 réelles, contre 3 avant correction.
+Le diagnostic avec limite de série hors d'atteinte produit 35 trades ; le
+blocage permanent des pertes consécutives était donc le blocage principal.
+Le cooldown de 24 h utilise le temps historique et préserve les autres gardes.
 
-- 35 231 bougies M5, 2 939 H1 et 796 H4 issues des données réelles agrégées ;
-- 3 trades, tous perdants : win rate 0, PF 0, expectancy -1 R ;
-- drawdown maximal aux clôtures M5 : environ 2,9643 % ;
-- moyenne : environ -150,8264 pips par trade (pip XAUUSD = 0,01) ;
-- circuit breaker actif après trois pertes consécutives, sans reprise automatique.
+Deux replays finaux produisent des JSON identiques octet par octet.
+SHA-256 : `d62573ab7f8e23404ad7f69b20861202c93aee15c3ab27cb93ab2972b366a63d`.
+Le rapport enregistre huit réarmements du breaker.
 
-`RiskManager.reset_daily()` efface les pertes monétaires du jour mais conserve
-les pertes consécutives. Le replay préserve cette politique ; il ne la desserre
-pas pour atteindre les vingt trades demandés. Après blocage, le compteur
-`risk_circuit_breaker` compte les bougies sur lesquelles aucun nouvel ordre
-ne peut être ouvert. Les autres compteurs concernent les étapes effectivement
-atteintes avant blocage, pas des rejets hypothétiques après l'arrêt des signaux.
+Le win rate est 28,07 %, le PF 0,774, l'expectancy -0,158 R et le drawdown
+10,71 %. Le baseline reste déficitaire. Le drawdown finit par arrêter les
+ouvertures ; le garde n'empêche pas une position déjà ouverte de dépasser 10 %.
 
-Les trois signaux proviennent du chemin legacy de la stratégie, sans identifiant
-de setup/OB ni événement de confirmation traçable. Le rapport conserve les
-timestamps d'entrée et les OHLC de la dernière bougie, mais les champs OB et
-confirmation sont explicitement `null`. Il signale trois preuves d'audit
-manquantes. Les grades sont `UNKNOWN` ; aucun OB n'est attribué par supposition.
-Les zéros `no_contact_with_ob` et `choch_out_of_bounds` ne valident pas la sécurité :
-aucun contrôle OB n'a pu être réalisé sur ces trois signaux. Les échantillons
-sont limités aux trois trades réellement exécutés ; aucun quatrième/cinquième
-trade n'est inventé.
+Le critère de volume (au moins 20 trades) est satisfait. Les preuves OB restent
+absentes des 57 trades legacy ; le rapport et son exit CLI restent en échec de
+validation d'audit. Cette limite du fallback est documentée dans
+[Limites du legacy](legacy-limitations.md), avec les politiques, compteurs,
+contrôles synthétiques et tests en attente de la Tâche 4.
 
-Le replay respecte maintenant le câblage live : transmission du biais H1 au
-validateur, moteur DecisionEngine injecté uniquement si activé, et copie du
-Signal immuable pour appliquer le prix d'exécution bid/ask. Ces corrections
-portent sur l'adaptateur de backtest ; les seuils et la logique live restent
-ceux existants.
+Les anciennes assertions d'audit sont sautées uniquement lorsque le rapport
+est entièrement legacy sans preuves OB. Elles restent actives pour un rapport
+avec traces. Le skip `test_baseline_ob_traces_pending` rappelle explicitement
+la Tâche 4. Les tests unitaires de violations d'audit continuent de vérifier
+les entrées prématurées, les fenêtres et le contact avec l'OB.
 
-Les quatre tests d'acceptation échouent volontairement sur ce rapport : nombre
-insuffisant et preuves OB absentes. Les assertions ne sont pas neutralisées
-par un skip de données réelles ni par un changement de seuil. La source n'est
-plus bloquante ; il reste à décider la politique de reprise du circuit breaker
-et à rendre traçable le parcours legacy avant de pouvoir valider ce contrôle.
-
-Deux lancements finaux ont produit des fichiers identiques octet par octet,
-sur cet environnement Windows. SHA-256 du rapport :
-`9a9e409dcce3889e9050cbc3c20aca0182ef721f03def55c8e070d8fa6f0f99e`.
-Les CSV bruts sont conservés localement dans `data/historical` et sont ignorés
-par Git ; le manifeste versionné et le script de téléchargement permettent
-de récupérer exactement la révision utilisée.
+Le replay respecte le câblage live : biais H1 transmis au validateur,
+DecisionEngine injecté uniquement si activé, et copie du Signal immuable pour
+appliquer les prix d'exécution bid/ask. Les CSV bruts restent locaux et ignorés
+par Git ; manifeste et script permettent de récupérer la révision utilisée.
 
 Un export JSON doit contenir `source: "mt5_export"`, `symbol: "XAUUSD"`,
 `candles: {"M5": [...], "H1": [...], "H4": [...]}`. Chaque bougie contient
@@ -118,8 +104,9 @@ enregistrée, mais le replay ne tire aucune valeur aléatoire.
 
 Exit 2 : données indisponibles ou configuration invalide, sans rapport inventé.
 Exit 1 : rapport réel créé, mais moins de 20 trades ou violation d'audit.
-Exit 0 : contrôle réussi. Les quatre tests d'acceptation du rapport sont sautés
-explicitement en son absence ; les tests unitaires de détection des violations
-restent exécutés. Le précédent `_mtf_report.txt` utilise des données synthétiques
+Exit 0 : contrôle complet réussi (volume et audit). Les tests nécessitant un
+rapport réel sont sautés en son absence ; les tests unitaires de violations
+restent exécutés. Le fallback legacy n'obtient pas cet exit 0 sans preuve OB.
+Le précédent `_mtf_report.txt` utilise des données synthétiques
 et une autre hiérarchie temporelle : ses zéro trades ne sont pas une comparaison
 de performance sur les mêmes données réelles.

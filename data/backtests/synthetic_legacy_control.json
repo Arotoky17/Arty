@@ -1,0 +1,55 @@
+{
+  "bars": {
+    "H1": 450,
+    "H4": 112,
+    "M5": 5400
+  },
+  "data_source": "synthetic",
+  "effective_risk": {
+    "CONSECUTIVE_LOSS_COOLDOWN_HOURS": 24,
+    "MAX_CONSECUTIVE_LOSSES": 3,
+    "MAX_DAILY_RISK": 0.03,
+    "MAX_DRAWDOWN": 0.1,
+    "MAX_OPEN_POSITIONS": 3,
+    "MAX_SPREAD_POINTS": 200,
+    "ONE_TRADE_PER_SYMBOL": true,
+    "RISK_PER_TRADE": 0.01
+  },
+  "final_risk_state": {
+    "consecutive_loss_breaker_active": false,
+    "consecutive_loss_breaker_rearms": 2,
+    "consecutive_loss_breaker_until": null,
+    "consecutive_loss_cooldown_hours": 24.0,
+    "consecutive_losses": 0,
+    "current_drawdown_pct": 2.37,
+    "daily_loss": "0",
+    "max_consecutive_losses": 3,
+    "max_daily_risk_pct": 3.0,
+    "max_drawdown_pct": 10.0,
+    "max_open_positions": 3,
+    "one_trade_per_symbol": true,
+    "open_positions": 0,
+    "risk_per_trade_pct": 1.0
+  },
+  "legacy_ob_detected": 174,
+  "max_drawdown_pct": 6.179900207762542,
+  "purpose": "pipeline control only; not real-history acceptance or profitability evidence",
+  "rejections_by_reason": {
+    "circuit_breaker:consecutive_losses": 576,
+    "circuit_breaker:daily_loss": 383,
+    "circuit_breaker:drawdown": 0,
+    "confidence": 0,
+    "m5_confirmation_missing": 94,
+    "neutral_or_blocked_regime": 2316,
+    "no_signal": 1795,
+    "risk:risk_reward": 79,
+    "risk_circuit_breaker": 576,
+    "validator:session_authorized": 0,
+    "validator:spread_acceptable": 0,
+    "validator_rejected": 64,
+    "zone_not_retested_after_creation": 9
+  },
+  "seed": 42,
+  "signals_generated": 90,
+  "trades_executed": 11
+}

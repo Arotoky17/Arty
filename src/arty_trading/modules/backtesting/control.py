@@ -54,6 +54,7 @@ class ReplayDetector:
     def __init__(self) -> None:
         self.inner = SMCDetector()
         self.cache: dict[TimeFrame, tuple[tuple[Any, ...], list[dict[str, Any]]]] = {}
+        self.ob_seen: set[tuple[Any, ...]] = set()
 
     async def detect(self, candles: list[Candle], symbol: str) -> list[dict[str, Any]]:
         if not candles:
@@ -64,6 +65,18 @@ class ReplayDetector:
         if cached is None or cached[0] != key:
             cached = (key, await self.inner.detect(candles, symbol))
             self.cache[timeframe] = cached
+            for detection in cached[1]:
+                if detection.get("concept") == "order_block":
+                    index = detection.get("index")
+                    if isinstance(index, int) and 0 <= index < len(candles):
+                        self.ob_seen.add(
+                            (
+                                symbol,
+                                timeframe.value,
+                                candles[index].time,
+                                detection.get("direction"),
+                            )
+                        )
         # Builder/strategy consumers only read detections. Its own H1/H4 caches
         # also retain them by reference; copying every nested value is unnecessary.
         return cached[1]
@@ -108,7 +121,18 @@ class ControlReplay:
         self.drawdown = 0.0
         self.position: Trade | None = None
         self.audits: list[dict[str, Any]] = []
-        self.rejections: Counter[str] = Counter()
+        self.rejections: Counter[str] = Counter(
+            {
+                "circuit_breaker:consecutive_losses": 0,
+                "circuit_breaker:daily_loss": 0,
+                "circuit_breaker:drawdown": 0,
+                "validator:spread_acceptable": 0,
+                "validator:session_authorized": 0,
+                "confidence": 0,
+            }
+        )
+        self.signals_generated = 0
+        self.replay_time = datetime(1970, 1, 1, tzinfo=UTC)
         self.quotes = ReplayQuotes(self.broker)
         environment: dict[str, Any] = {"_env_file": None}
         risk_settings = RiskSettings(**environment, **config["risk"])
@@ -126,6 +150,7 @@ class ControlReplay:
             min_confidence=config["min_confidence"],
             min_risk_reward=config["min_risk_reward"],
             market_data=cast(IMarketDataProvider, self.quotes),
+            clock=lambda: self.replay_time,
         )
         self.risk.update_equity(self.balance)
         self.tracker = SetupTracker()
@@ -322,11 +347,14 @@ class ControlReplay:
         )
         if signal is None:
             self.rejections[self.generator.last_rejection_reason or "no_signal"] += 1
+            if self.generator.last_rejection_stage == "confidence":
+                self.rejections["confidence"] += 1
             validation = self.generator.last_validation
             if self.generator.last_rejection_reason == "validator_rejected" and validation:
                 for reason in validation.failed_conditions:
                     self.rejections[f"validator:{reason}"] += 1
             return
+        self.signals_generated += 1
         side = 1 if signal.direction == Direction.BUY else -1
         point = Decimal(str(self.broker["point"]))
         entry_price = self.ask_price(candle, "close") if side == 1 else candle.close
@@ -347,7 +375,7 @@ class ControlReplay:
         if not await self.risk.can_open_trade(candle.symbol) or not await self.risk.validate_signal(
             signal, account
         ):
-            self.rejections["risk_guard"] += 1
+            self.rejections[f"risk:{self.risk.last_rejection_reason or 'position_limit'}"] += 1
             return
         raw_volume = await self.risk.calculate_position_size(signal, account)
         step = Decimal(str(self.broker["volume_step"]))
@@ -392,6 +420,7 @@ class ControlReplay:
             if i and i % 1000 == 0:
                 print(f"Replay: {i} M5 bars; {len(self.audits)} trades", file=sys.stderr)
             close = candle.time + timedelta(minutes=5)
+            self.replay_time = close
             if previous_day != close.date():
                 self.risk.reset_daily()
                 previous_day = close.date()
@@ -401,12 +430,20 @@ class ControlReplay:
             if self.position is None:
                 state = self.risk.get_risk_report()
                 if (
-                    state["consecutive_losses"] >= state["max_consecutive_losses"]
+                    state["consecutive_loss_breaker_active"]
                     or self.risk.current_drawdown >= self.settings.risk.max_drawdown
                     or Decimal(state["daily_loss"])
                     >= (self.balance * Decimal(str(self.settings.risk.max_daily_risk)))
                 ):
                     self.rejections["risk_circuit_breaker"] += 1
+                    if state["consecutive_loss_breaker_active"]:
+                        self.rejections["circuit_breaker:consecutive_losses"] += 1
+                    if self.risk.current_drawdown >= self.settings.risk.max_drawdown:
+                        self.rejections["circuit_breaker:drawdown"] += 1
+                    if Decimal(state["daily_loss"]) >= (
+                        self.balance * Decimal(str(self.settings.risk.max_daily_risk))
+                    ):
+                        self.rejections["circuit_breaker:daily_loss"] += 1
                     continue
             views = {
                 TimeFrame.M5: self.history[TimeFrame.M5][
@@ -468,6 +505,12 @@ async def run_control(
         include={"risk", "decision", "ob_quality", "gold", "validator"},
     )
     await replay.run()
+    print(
+        f"Replay diagnostics: OB={len(replay.detector.ob_seen)}; "
+        f"signals={replay.signals_generated}; trades={len(replay.audits)}; "
+        f"rejections={dict(replay.rejections)}",
+        file=sys.stderr,
+    )
     profits = [row["profit"] for row in replay.audits]
     gains = sum(value for value in profits if value > 0)
     losses = -sum(value for value in profits if value < 0)
@@ -484,6 +527,15 @@ async def run_control(
         "config_hash": digest(config),
         "effective_config": config,
         "total_trades": count,
+        "signals_generated": replay.signals_generated,
+        "trades_executed": count,
+        "legacy_ob_detected": len(replay.detector.ob_seen),
+        "legacy_ob_count_scope": "unique timeframe/origin/direction in reached detector windows",
+        "signal_count_scope": "signals returned by generator, before execution and risk guards",
+        "rejection_count_scope": (
+            "reached stages only; circuit-breaker counts are blocked M5 bars; "
+            "validator subreasons can overlap; confirmation reasons are observational audits"
+        ),
         "win_rate": sum(value > 0 for value in profits) / count if count else 0,
         "profit_factor": gains / losses if losses else None,
         "expectancy_r": sum(row["r_multiple"] for row in replay.audits) / count if count else None,

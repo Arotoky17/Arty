@@ -4,6 +4,8 @@ Gestionnaire de risque — implémente IRiskManager.
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 from arty_trading.config.settings import RiskSettings, get_settings
@@ -25,11 +27,16 @@ class RiskManager(IRiskManager):
         min_confidence: float = 0.3,
         min_risk_reward: float = 1.0,
         market_data: IMarketDataProvider | None = None,
+        clock: Callable[[], datetime] | None = None,
     ) -> None:
         self._settings = settings or get_settings().risk
         self._min_confidence = min_confidence
         self._min_rr = min_risk_reward
         self._market_data = market_data
+        self._clock = clock or (lambda: datetime.now(UTC))
+        self._loss_breaker_until: datetime | None = None
+        self._loss_breaker_rearms = 0
+        self.last_rejection_reason: str | None = None
         self._open_trades: list[Trade] = []
         self._daily_loss: Decimal = Decimal("0")
         self._consecutive_losses: int = 0
@@ -71,36 +78,42 @@ class RiskManager(IRiskManager):
 
     async def validate_signal(self, signal: Signal, account: TradingAccount) -> bool:
         """Valide si un signal respecte toutes les règles de risque."""
+        self.last_rejection_reason = None
         if signal.stop_loss == signal.entry_price:
-            return False
+            return self._reject("invalid_stop_loss")
         if signal.take_profit == signal.entry_price:
-            return False
+            return self._reject("invalid_take_profit")
         if signal.confidence < self._min_confidence:
-            return False
+            return self._reject("confidence")
         # Blocage si le spread est trop élevé (conditions de marché dégradées).
         if not await self._spread_within_limit(signal.symbol):
-            return False
+            return self._reject("spread")
         rr = signal.risk_reward_ratio
         if rr < self._min_rr:
-            return False
+            return self._reject("risk_reward")
         if len(self._open_trades) >= self._settings.max_open_positions:
-            return False
+            return self._reject("max_open_positions")
         max_daily = float(account.balance) * self._settings.max_daily_risk
         if float(self._daily_loss) >= max_daily:
-            return False
+            return self._reject("daily_loss")
         if self._current_drawdown >= self._settings.max_drawdown:
-            return False
-        if self._consecutive_losses >= self._settings.max_consecutive_losses:
-            return False
+            return self._reject("drawdown")
+        if self.consecutive_loss_breaker_active():
+            return self._reject("consecutive_losses")
         if self._settings.one_trade_per_symbol:
             for trade in self._open_trades:
                 if trade.symbol == signal.symbol:
-                    return False
+                    return self._reject("one_trade_per_symbol")
         logger.info(
             "Signal validé | %s | %s | confiance=%.2f | R/R=%.2f",
             signal.symbol, signal.direction.value, signal.confidence, rr,
         )
         return True
+
+    def _reject(self, reason: str) -> bool:
+        self.last_rejection_reason = reason
+        logger.info("Risk rejection | reason=%s", reason)
+        return False
 
     async def calculate_position_size(
         self,
@@ -219,20 +232,41 @@ class RiskManager(IRiskManager):
 
     def close_trade(self, trade: Trade, profit: Decimal) -> None:
         """Ferme un trade et met à jour les compteurs de risque."""
+        self.consecutive_loss_breaker_active()
         self._open_trades = [t for t in self._open_trades if t.id != trade.id]
         if profit < 0:
             self._daily_loss += abs(profit)
             self._consecutive_losses += 1
+            if (
+                self._consecutive_losses >= self._settings.max_consecutive_losses
+                and self._loss_breaker_until is None
+            ):
+                self._loss_breaker_until = self._clock() + timedelta(
+                    hours=self._settings.consecutive_loss_cooldown_hours
+                )
             logger.warning(
                 "Perte | %s | profit=%s | pertes consécutives=%d",
                 trade.symbol, profit, self._consecutive_losses,
             )
         else:
             self._consecutive_losses = 0
+            self._loss_breaker_until = None
             logger.info(
                 "Gain | %s | profit=%s | pertes consécutives réinitialisées",
                 trade.symbol, profit,
             )
+
+    def consecutive_loss_breaker_active(self) -> bool:
+        """Rearm after cooldown using UTC live time or the injected replay clock.
+
+        Daily loss and drawdown limits remain independent of this reset.
+        """
+        if self._loss_breaker_until is not None and self._clock() >= self._loss_breaker_until:
+            self._consecutive_losses = 0
+            self._loss_breaker_until = None
+            self._loss_breaker_rearms += 1
+            logger.info("Circuit breaker rearmed after consecutive-loss cooldown")
+        return self._consecutive_losses >= self._settings.max_consecutive_losses
 
     def update_equity(self, equity: Decimal) -> None:
         """Met à jour l'équité et calcule le drawdown courant."""
@@ -255,7 +289,14 @@ class RiskManager(IRiskManager):
 
     def get_risk_report(self) -> dict:
         """Retourne un rapport de l'état du risque."""
+        active = self.consecutive_loss_breaker_active()
         return {
+            "consecutive_loss_breaker_active": active,
+            "consecutive_loss_breaker_rearms": self._loss_breaker_rearms,
+            "consecutive_loss_breaker_until": (
+                self._loss_breaker_until.isoformat() if self._loss_breaker_until else None
+            ),
+            "consecutive_loss_cooldown_hours": self._settings.consecutive_loss_cooldown_hours,
             "open_positions": len(self._open_trades),
             "max_open_positions": self._settings.max_open_positions,
             "daily_loss": str(self._daily_loss),

@@ -47,6 +47,9 @@ class RiskSettings(BaseSettings):
     max_drawdown: float = Field(default=0.10, alias="MAX_DRAWDOWN")
     max_open_positions: int = Field(default=3, alias="MAX_OPEN_POSITIONS")
     max_consecutive_losses: int = Field(default=3, alias="MAX_CONSECUTIVE_LOSSES")
+    consecutive_loss_cooldown_hours: float = Field(
+        default=24.0, gt=0, alias="CONSECUTIVE_LOSS_COOLDOWN_HOURS"
+    )
     one_trade_per_symbol: bool = Field(default=True, alias="ONE_TRADE_PER_SYMBOL")
     max_spread: int = Field(
         default=200,

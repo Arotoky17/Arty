@@ -1,4 +1,5 @@
-# Fixed control configuration. No synthetic fallback and no threshold tuning.
+# Diagnosis only: consecutive-loss limit unreachable on the 2024-H1 dataset.
+# Daily loss, drawdown and acceptance thresholds stay unchanged; never use live.
 seed: 42
 symbol: XAUUSD
 source: mt5
@@ -19,8 +20,7 @@ risk:
   MAX_DAILY_RISK: 0.03
   MAX_DRAWDOWN: 0.10
   MAX_OPEN_POSITIONS: 3
-  MAX_CONSECUTIVE_LOSSES: 3
-  CONSECUTIVE_LOSS_COOLDOWN_HOURS: 24
+  MAX_CONSECUTIVE_LOSSES: 1000000
   ONE_TRADE_PER_SYMBOL: true
   MAX_SPREAD_POINTS: 200
 broker:
@@ -35,3 +35,4 @@ windows:
   H4: 100
   H1: 300
   M5: 120
+

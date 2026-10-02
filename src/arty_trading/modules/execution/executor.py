@@ -9,7 +9,8 @@ Le mode LIVE est désactivé par défaut pour la sécurité.
 from __future__ import annotations
 
 import asyncio
-from decimal import Decimal, ROUND_DOWN
+from decimal import ROUND_DOWN, Decimal
+from math import isfinite
 from typing import Any
 
 from arty_trading.config.settings import get_settings
@@ -21,11 +22,11 @@ from arty_trading.logging.logger import get_logger
 logger = get_logger(LogCategory.EXECUTION)
 
 try:
-    import MetaTrader5 as mt5
+    import MetaTrader5 as mt5  # noqa: N813 - broker module convention
 
     MT5_AVAILABLE = True
 except ImportError:
-    mt5 = None  # type: ignore[assignment]
+    mt5 = None
     MT5_AVAILABLE = False
 
 # Erreurs MT5 transitoires -> retry automatique.
@@ -99,6 +100,7 @@ class OrderExecutor(IOrderExecutor):
         # Paramètres d'exécution MT5 (démo/live).
         self._max_deviation: int = 20
         self._magic_number: int = 123456
+        self._order_send_timeout: float | None = None
         # Métriques d'exécution pour le monitoring.
         self._execution_metrics: dict[str, Any] = {
             "total_attempts": 0,
@@ -121,6 +123,21 @@ class OrderExecutor(IOrderExecutor):
     def execution_metrics(self) -> dict[str, Any]:
         """Métriques d'exécution pour le monitoring."""
         return dict(self._execution_metrics)
+
+    @property
+    def order_send_timeout(self) -> float | None:
+        """Maximum wait in seconds for an order response; None disables it.
+
+        A timeout stops waiting, but cannot cancel the broker operation in
+        the worker thread. It is propagated without an automatic order retry.
+        """
+        return self._order_send_timeout
+
+    @order_send_timeout.setter
+    def order_send_timeout(self, timeout: float | None) -> None:
+        if timeout is not None and (not isfinite(timeout) or timeout <= 0):
+            raise ValueError("order_send_timeout must be finite and positive, or None")
+        self._order_send_timeout = timeout
 
     # =========================================================================
     # IOrderExecutor
@@ -197,9 +214,13 @@ class OrderExecutor(IOrderExecutor):
         if not 0 < fraction < 1:
             raise ValueError("La fraction de clôture doit être entre 0 et 1")
         requested_volume = trade.volume * Decimal(str(fraction))
-        closed_volume, skip_reason = self._normalize_partial_volume(trade, requested_volume)
+        closed_volume, skip_reason = await asyncio.to_thread(
+            self._normalize_partial_volume, trade, requested_volume
+        )
         if skip_reason is not None:
-            volume_min, volume_step = self._partial_volume_constraints(trade.symbol)
+            volume_min, volume_step = await asyncio.to_thread(
+                self._partial_volume_constraints, trade.symbol
+            )
             logger.warning(
                 "[PARTIAL PROFIT SKIPPED] %s | ticket=%s | position_volume=%s | "
                 "requested_volume=%s | volume_min=%s | volume_step=%s | reason=%s",
@@ -268,11 +289,11 @@ class OrderExecutor(IOrderExecutor):
         if self._mock_mode or not MT5_AVAILABLE:
             return list(self._mock_trades.values())
 
-        if not mt5.initialize():
+        if not await asyncio.to_thread(mt5.initialize):
             logger.warning("MT5 initialize() a échoué - réconciliation vide")
             return []
 
-        raw_positions = mt5.positions_get()
+        raw_positions = await asyncio.to_thread(mt5.positions_get)
         if raw_positions is None:
             return []
 
@@ -560,10 +581,17 @@ class OrderExecutor(IOrderExecutor):
     # MT5 Implementation (quand MT5 disponible)
     # =========================================================================
 
+    async def _send_order(self, request: dict[str, Any]) -> Any:
+        """Send an MT5 request off the event loop, preserving results and errors."""
+        send = asyncio.to_thread(mt5.order_send, request)
+        if self._order_send_timeout is None:
+            return await send
+        return await asyncio.wait_for(send, timeout=self._order_send_timeout)
+
     async def _mt5_open_order(self, signal: Signal, volume: float) -> Trade:
         """Ouvre un ordre via MT5."""
         # Vérifier que MT5 est initialisé
-        if not mt5.initialize():
+        if not await asyncio.to_thread(mt5.initialize):
             logger.error("MT5 initialize() a échoué")
             raise MT5OrderError("MT5 non initialisé")
 
@@ -587,7 +615,7 @@ class OrderExecutor(IOrderExecutor):
             "type_filling": mt5.ORDER_FILLING_FOK,
         }
 
-        result = mt5.order_send(request)
+        result = await self._send_order(request)
 
         if result is None or result.retcode != mt5.TRADE_RETCODE_DONE:
             retcode = result.retcode if result else "None"
@@ -657,12 +685,12 @@ class OrderExecutor(IOrderExecutor):
 
     async def _mt5_close_order(self, trade: Trade) -> Trade:
         """Ferme un ordre via MT5."""
-        if not mt5.initialize():
+        if not await asyncio.to_thread(mt5.initialize):
             logger.error("MT5 initialize() a échoué")
             raise MT5OrderError("MT5 non initialisé")
 
         # Récupérer la position
-        positions = mt5.positions_get(ticket=trade.ticket)
+        positions = await asyncio.to_thread(mt5.positions_get, ticket=trade.ticket)
         if not positions:
             logger.warning("Position %d introuvable", trade.ticket)
             raise MT5PositionNotFoundError(f"Position {trade.ticket} introuvable")
@@ -670,10 +698,12 @@ class OrderExecutor(IOrderExecutor):
         pos = positions[0]
         if trade.direction == Direction.BUY:
             close_type = mt5.ORDER_TYPE_SELL
-            close_price = mt5.symbol_info_tick(trade.symbol).bid
+            tick = await asyncio.to_thread(mt5.symbol_info_tick, trade.symbol)
+            close_price = tick.bid
         else:
             close_type = mt5.ORDER_TYPE_BUY
-            close_price = mt5.symbol_info_tick(trade.symbol).ask
+            tick = await asyncio.to_thread(mt5.symbol_info_tick, trade.symbol)
+            close_price = tick.ask
 
         request = {
             "action": mt5.TRADE_ACTION_DEAL,
@@ -689,7 +719,7 @@ class OrderExecutor(IOrderExecutor):
             "type_filling": mt5.ORDER_FILLING_FOK,
         }
 
-        result = mt5.order_send(request)
+        result = await self._send_order(request)
 
         if result is None or result.retcode != mt5.TRADE_RETCODE_DONE:
             retcode = result.retcode if result else "None"
@@ -772,13 +802,13 @@ class OrderExecutor(IOrderExecutor):
         take_profit: float | None = None,
     ) -> Trade:
         """Modifie un ordre via MT5 (TRADE_ACTION_SLTP)."""
-        if not mt5.initialize():
+        if not await asyncio.to_thread(mt5.initialize):
             logger.error("MT5 initialize() a échoué")
             raise MT5OrderError("MT5 non initialisé")
 
         # 1. Position réelle : confirmer que le ticket est bien une POSITION
         #    MT5 ouverte (et non un order ticket).
-        positions = mt5.positions_get(ticket=trade.ticket)
+        positions = await asyncio.to_thread(mt5.positions_get, ticket=trade.ticket)
         if not positions:
             logger.error(
                 "MT5 modify_order : position introuvable | ticket=%s | symbol=%s",
@@ -789,8 +819,8 @@ class OrderExecutor(IOrderExecutor):
         pos_type_buy = int(pos.type) == int(getattr(mt5, "POSITION_TYPE_BUY", 0))
 
         # 2. Infos symbole + tick courant (normalisation / distances).
-        info = mt5.symbol_info(trade.symbol)
-        tick = mt5.symbol_info_tick(trade.symbol)
+        info = await asyncio.to_thread(mt5.symbol_info, trade.symbol)
+        tick = await asyncio.to_thread(mt5.symbol_info_tick, trade.symbol)
         if info is not None:
             digits = int(info.digits)
             point = Decimal(str(info.point))
@@ -867,7 +897,7 @@ class OrderExecutor(IOrderExecutor):
             digits, point, tick_size, stops_level, freeze_level, request,
         )
         try:
-            check = mt5.order_check(request)
+            check = await asyncio.to_thread(mt5.order_check, request)
             if check is not None:
                 logger.info(
                     "[MT5 SLTP CHECK] retcode=%s | comment=%s | request=%s",
@@ -878,7 +908,7 @@ class OrderExecutor(IOrderExecutor):
         except Exception as exc:  # noqa: BLE001 - diagnostic non bloquant
             logger.warning("order_check indisponible : %s", exc)
 
-        result = mt5.order_send(request)
+        result = await self._send_order(request)
 
         if result is None or result.retcode != mt5.TRADE_RETCODE_DONE:
             retcode = result.retcode if result else "None"

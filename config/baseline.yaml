@@ -1,0 +1,35 @@
+# Fixed control configuration. No synthetic fallback and no threshold tuning.
+seed: 42
+symbol: XAUUSD
+source: mt5
+history_file: null
+terminal_path: null
+macro_timeframe: H4
+structure_timeframe: H1
+entry_timeframe: M5
+use_ob_quality_filter: false
+audit: true
+minimum_trades: 20
+initial_balance: 10000
+min_confidence: 0.30
+min_risk_reward: 2.0
+risk:
+  RISK_PER_TRADE: 0.01
+  MAX_DAILY_RISK: 0.03
+  MAX_DRAWDOWN: 0.10
+  MAX_OPEN_POSITIONS: 3
+  MAX_CONSECUTIVE_LOSSES: 3
+  ONE_TRADE_PER_SYMBOL: true
+  MAX_SPREAD_POINTS: 200
+broker:
+  currency: USD
+  contract_size: 100
+  point: 0.01
+  volume_min: 0.01
+  volume_step: 0.01
+  commission_per_lot_round_trip: 0
+  slippage_points: 0
+windows:
+  H4: 100
+  H1: 300
+  M5: 120

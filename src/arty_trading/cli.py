@@ -3,15 +3,17 @@ CLI - Interface en ligne de commande.
 """
 
 import argparse
+import asyncio
 import sys
 from collections.abc import Sequence
+from pathlib import Path
 
 import uvicorn
 
 from arty_trading import __version__
 from arty_trading.config import get_settings
-from arty_trading.logging import setup_logging, get_logger
 from arty_trading.core.enums import LogCategory
+from arty_trading.logging import get_logger, setup_logging
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -32,12 +34,37 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     subparsers.add_parser("info", help="Afficher la configuration")
     subparsers.add_parser("version", help="Afficher la version")
+    backtest = subparsers.add_parser("backtest", help="Contrôle historique MT5 H4/H1/M5")
+    backtest.add_argument("--symbol", required=True)
+    backtest.add_argument("--from", dest="date_from", required=True)
+    backtest.add_argument("--to", dest="date_to", required=True)
+    backtest.add_argument("--config", type=Path, required=True)
+    backtest.add_argument("--output", type=Path, required=True)
 
     args = parser.parse_args(list(argv) if argv is not None else None)
 
     if args.command is None:
         parser.print_help()
         return 1
+
+    if args.command == "backtest":
+        from arty_trading.modules.backtesting.control import run_control
+
+        try:
+            report = asyncio.run(
+                run_control(
+                    args.symbol,
+                    args.date_from,
+                    args.date_to,
+                    args.config,
+                    args.output,
+                )
+            )
+        except (ValueError, RuntimeError, OSError) as exc:
+            print(f"Backtest impossible: {exc}", file=sys.stderr)
+            return 2
+        print(f"{report['total_trades']} trades; validation={report['validation_status']}")
+        return 0 if report["validation_status"] == "passed" else 1
 
     settings = get_settings()
     setup_logging(level=settings.log_level, logs_dir=settings.logs_dir, app_env=settings.app_env)

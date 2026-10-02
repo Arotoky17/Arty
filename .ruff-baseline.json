@@ -2262,12 +2262,6 @@
     "source": "from datetime import datetime, timedelta, timezone"
   },
   {
-    "file": "src/arty_trading/cli.py",
-    "code": "F401",
-    "message": "`sys` imported but unused",
-    "source": "import sys"
-  },
-  {
     "file": "src/arty_trading/core/enums.py",
     "code": "F401",
     "message": "`enum.IntEnum` imported but unused",
@@ -2908,12 +2902,6 @@
     "code": "I001",
     "message": "Import block is un-sorted or un-formatted",
     "source": "from __future__ import annotations\n\nfrom decimal import Decimal\nfrom datetime import datetime\nfrom typing import Any\n\nfrom arty_trading.core.entities import Signal, Trade\nfrom arty_trading.core.enums import TradingMode"
-  },
-  {
-    "file": "src/arty_trading/cli.py",
-    "code": "I001",
-    "message": "Import block is un-sorted or un-formatted",
-    "source": "import argparse\nimport sys\nfrom collections.abc import Sequence\n\nimport uvicorn\n\nfrom arty_trading import __version__\nfrom arty_trading.config import get_settings\nfrom arty_trading.logging import setup_logging, get_logger\nfrom arty_trading.core.enums import LogCategory"
   },
   {
     "file": "src/arty_trading/core/__init__.py",

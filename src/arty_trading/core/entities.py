@@ -29,6 +29,9 @@ class Candle(BaseModel):
     close: Decimal
     volume: int = 0
     spread: int = 0
+    non_tradable: bool = False
+    entry_blocked: bool = False
+    available_at: datetime | None = None
 
     @computed_field  # type: ignore[prop-decorator]
     @property

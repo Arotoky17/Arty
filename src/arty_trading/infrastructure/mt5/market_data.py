@@ -15,7 +15,7 @@ Implémente le port ``IMarketDataProvider`` et fournit :
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Any, AsyncIterator
 
@@ -150,6 +150,23 @@ class MT5MarketDataProvider(IMarketDataProvider):
         """
         symbol = symbol.upper()
         end = end or datetime.now(timezone.utc)
+        from arty_trading.config.operational import definitions
+
+        if symbol == "XAUUSD" and timeframe == TimeFrame.D1:
+            daily = definitions()["daily_bars"]
+            source = TimeFrame(daily["source_timeframe"])
+            raw = await self.get_historical(
+                symbol, source, start - timedelta(days=daily["source_history_padding_days"]), end
+            )
+            if raw.empty:
+                return raw
+            from arty_trading.validation.daily_context import daily_bars
+
+            frame = raw.set_index(pd.DatetimeIndex(pd.to_datetime(raw.time, utc=True)))
+            bars = daily_bars(frame, source.minutes, end)
+            bars = bars.loc[bars.index >= start].copy()
+            bars["time"] = bars.index
+            return bars.reset_index(drop=True)
 
         # Clé de cache
         cache_key = f"hist:{symbol}:{timeframe.value}:{start.isoformat()}:{end.isoformat()}"
@@ -215,6 +232,25 @@ class MT5MarketDataProvider(IMarketDataProvider):
         """
         symbol = symbol.upper()
         count = max(1, min(count, 1000))  # Limiter entre 1 et 1000
+        if symbol == "XAUUSD" and timeframe == TimeFrame.D1:
+            from arty_trading.config.operational import definitions
+            from arty_trading.validation.daily_context import daily_candles
+
+            daily = definitions()["daily_bars"]
+            source = TimeFrame(daily["source_timeframe"])
+            cutoff = datetime.now(UTC)
+            # Range retrieval avoids the 1000-bar latest-H1 cap.
+            raw = await self.get_historical(
+                symbol, source,
+                cutoff - timedelta(days=(
+                    count * daily["source_calendar_days_per_bar"]
+                    + daily["source_history_padding_days"]
+                )), cutoff,
+            )
+            if raw.empty:
+                return []
+            frame = raw.set_index(pd.DatetimeIndex(pd.to_datetime(raw.time, utc=True)))
+            return daily_candles(frame, symbol, source.minutes, cutoff)[-count:]
 
         # Clé de cache
         cache_key = f"latest:{symbol}:{timeframe.value}:{count}"

@@ -3,9 +3,15 @@ setup_id: setup_1_bos_retest_ob_fvg_v1
 phase: development_baseline
 approval:
   status: pending_user_validation
+  holdout_status: pending_user_validation
   approved_by: null
   approved_at_utc: null
   configuration_sha256: null
+visual_review:
+  status: pending_user_validation
+  correct_counts: {swing: null, displacement: null, FVG: null, OB: null}
+  required_types: [swing, displacement, OB, FVG]
+  timeframe: M5
 data:
   status: missing_2020_2026
   audit_report: reports/data_audit/audit_data.json
@@ -18,6 +24,24 @@ strategy:
   zone_priority: [OB, FVG]
   zone_selection: newest_eligible_confirmed_zone_at_BOS_close
   entry_zone_fraction: 0.5
+  bos_swing_strength: external
+  bos_break_mode: close
+  require_bos_displacement: true
+  require_full_atr_warmup: true
+  zone_tie_break: confirmation_newest_origin_newest_lower_price
+  freshness_start: after_all_confirmation_bars_close
+  ob_confirmation: consecutive_directional_bodies_sum_exceeds_ob_origin_atr
+  zone_direction_matches_bos: true
+  retest_definition: first_post_bos_cross_of_limit
+  zone_age_origin: first_zone_candle
+  fvg_mitigation: full_gap_fill
+  order_type: limit
+  cancel_on_opposite_structure_break: true
+  maximum_holding_market_bars: 48
+  intrabar_stop_target_priority: stop
+  pending_orders_max: 1
+  overnight_positions: false
+  rounding: broker_volume_step_down
   stop_buffer_atr: 0.1
   reward_risk: 2.0
   risk_fraction: 0.01
@@ -28,13 +52,36 @@ strategy:
   confluence_sizing: false
 validation:
   variants_planned: 1
+  maximum_trials_total: 3
+  maximum_dev_trials: 2
+  maximum_holdout_trials: 1
+  news_variant_partition: dev_only_diagnostic
+  # The news diagnostic is cancelled when the dev reference fails its blocking criteria.
+  news_variant_cancelled_if_dev_reference_fails: true
+  stress_1_5_expectancy_min_exclusive: 0.0
+  visual_minimum_correct_fraction: 0.8
+  # Dev reference uses point estimate AND the bootstrap lower bound (blocking).
   expectancy_net_r_min_exclusive: 0.0
   bootstrap_lower_bound_min_exclusive: 0.0
   bootstrap_confidence: 0.95
   bootstrap_method: percentile_weekly_calendar_blocks
   bootstrap_replicates: 10000
   bootstrap_seed: 20261002
+  # Hold-out decision uses the point estimate only: expectancy > 0, PF net > 1.2,
+  # >= 100 filled trades. The bootstrap interval is reported but NOT blocking.
+  holdout_decision_basis: point_estimate
+  holdout_bootstrap_lower_bound_blocking: false
   profit_factor_net_min_exclusive: 1.2
   minimum_dev_trades: 100
   minimum_holdout_trades: 100
   failure_policy: delete_setup_no_retuning
+statistical_power:
+  status: planning_assumptions_not_measured
+  expected_dev_trades: 250
+  expected_holdout_trades: 100
+  assumed_trade_r_standard_deviation: 1.5
+  assumed_design_effect: 2.0
+  power: 0.8
+  confidence: 0.95
+  minimum_sample_per_phase: 100
+  rule: two_sided_normal_approximation_not_bootstrap_guarantee

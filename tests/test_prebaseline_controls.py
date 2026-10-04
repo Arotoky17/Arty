@@ -46,7 +46,7 @@ def frame(count: int = 121) -> pd.DataFrame:
 
 def test_frozen_purge_is_ten_business_days_and_rejected(tmp_path: Path) -> None:
     split = DataSplit(TrialRegistry(tmp_path / "registry.sqlite"))
-    assert split.purge == (datetime(2025, 1, 1, tzinfo=UTC), datetime(2025, 1, 16, tzinfo=UTC))
+    assert split.purge == (datetime(2025, 1, 1, tzinfo=UTC), datetime(2025, 1, 15, tzinfo=UTC))
     assert split.holdout[0] == split.purge[1]
     with pytest.raises(HoldoutAccessError):
         split.assert_period_development(split.purge[0], split.purge[1])

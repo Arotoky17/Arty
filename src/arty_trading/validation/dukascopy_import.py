@@ -4,18 +4,21 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import http.client
 import io
 import json
 import lzma
 import math
 import os
+import random
 import sqlite3
+import ssl
 import struct
 import time
 import urllib.error
 import urllib.request
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime, timedelta
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Any
 
@@ -116,7 +119,17 @@ def decode_m1(
 ) -> tuple[bytes, dict[str, Any]]:
     """BI5 big-endian: seconds, open, close, low, high, volume; zero-based URL month."""
     unpacker = struct.Struct(cfg["record_format"])
-    decoded = lzma.decompress(payload) if payload else b""
+    if not payload:
+        raise ValueError("Empty Dukascopy BI5 response")
+    try:
+        decoder = lzma.LZMADecompressor()
+        decoded = decoder.decompress(payload)
+        if not decoder.eof or decoder.unused_data:
+            raise ValueError("Truncated or trailing data in Dukascopy LZMA stream")
+    except lzma.LZMAError as error:
+        raise ValueError("Invalid or truncated Dukascopy LZMA stream") from error
+    if not decoded:
+        raise ValueError("Empty decoded Dukascopy day")
     if len(decoded) % unpacker.size:
         raise ValueError("Truncated Dukascopy candle record")
     buffer = io.StringIO(newline="")
@@ -138,9 +151,6 @@ def decode_m1(
             raise ValueError("Invalid Dukascopy volume")
         opened = day + timedelta(seconds=seconds)
         closed = opened + timedelta(seconds=cfg["source_bar_seconds"])
-        if closed > cutoff:
-            # Preserve source BI5, but never expose an unfinished/future M1 candle.
-            continue
         prices = {name: row[name] / divisor for name in ("open", "high", "low", "close")}
         if not (
             0
@@ -150,6 +160,9 @@ def decode_m1(
             <= prices["high"]
         ):
             raise ValueError("Invalid Dukascopy OHLC bounds / price divisor")
+        if closed > cutoff:
+            # Validate source records, but never expose an unfinished/future candle.
+            continue
         writer.writerow(
             [
                 int(opened.timestamp() * 1000),
@@ -159,46 +172,196 @@ def decode_m1(
         )
         count += 1
         last = closed.isoformat()
+    if not count:
+        raise ValueError("No closed M1 rows in Dukascopy response")
     return buffer.getvalue().encode(), {"rows": count, "last_closed_at": last}
 
 
+def retry_delay(cfg: dict[str, Any], attempt: int, header: str = "") -> float:
+    """Seconds to wait before retrying ONE file.
+
+    Exponential from retry_base_seconds (30 s) doubling to backoff_cap_seconds
+    (900 s) with symmetric jitter. An explicit Retry-After is never shortened.
+    """
+    jitter = float(cfg.get("retry_jitter_fraction", 0.0))
+    delay = float(cfg["retry_base_seconds"]) * random.uniform(1.0 - jitter, 1.0 + jitter)
+    for _ in range(attempt):
+        delay *= float(cfg["retry_multiplier"])
+        if delay >= cfg["backoff_cap_seconds"]:
+            delay = float(cfg["backoff_cap_seconds"])
+            break
+    delay = min(delay, float(cfg["backoff_cap_seconds"]))
+    if header:
+        try:
+            try:
+                requested = float(header)
+            except ValueError:
+                deadline = parsedate_to_datetime(header)
+                if deadline.tzinfo is None:
+                    deadline = deadline.replace(tzinfo=UTC)
+                requested = (deadline.astimezone(UTC) - utc_now()).total_seconds()
+        except (ValueError, TypeError, OverflowError):
+            return float(delay)  # Malformed provider header: use configured backoff.
+        if not math.isfinite(requested) or requested < 0:
+            return float(delay)
+        # A long provider Retry-After is respected by stopping, never shortened.
+        if requested > cfg["backoff_cap_seconds"]:
+            raise RuntimeError("Retry-After exceeds cap; stop and resume after provider deadline")
+        delay = max(delay, requested)
+    return float(max(0.0, delay))
+
+
 def fetch_bytes(url: str, cfg: dict[str, Any]) -> bytes | None:
+    if not isinstance(cfg["max_attempts"], int) or cfg["max_attempts"] < 1:
+        raise ValueError("max_attempts must be a positive integer")
+    for key in (
+        "timeout_seconds",
+        "backoff_cap_seconds",
+        "retry_base_seconds",
+        "retry_multiplier",
+        "request_delay_min_seconds",
+        "request_delay_max_seconds",
+    ):
+        if not math.isfinite(cfg[key]) or cfg[key] < 0:
+            raise ValueError(f"Invalid download setting: {key}")
+    if (
+        cfg["timeout_seconds"] <= 0
+        or cfg["retry_multiplier"] < 1
+        or (cfg["request_delay_min_seconds"] > cfg["request_delay_max_seconds"])
+    ):
+        raise ValueError("Invalid timeout, retry multiplier or request delay range")
     for attempt in range(cfg["max_attempts"]):
         try:
-            request = urllib.request.Request(url, headers={"User-Agent": "Arty-data-audit/1.0"})
+            time.sleep(
+                random.uniform(cfg["request_delay_min_seconds"], cfg["request_delay_max_seconds"])
+            )
+            request = urllib.request.Request(
+                url, headers={"User-Agent": str(cfg.get("user_agent", "Arty-data-audit/1.0"))}
+            )
             with urllib.request.urlopen(request, timeout=cfg["timeout_seconds"]) as response:
-                return bytes(response.read())
+                payload = bytes(response.read())
+                if not payload:
+                    # Emptiness is judged per day, not here; return it unchanged.
+                    return b""
+                length = response.headers.get("Content-Length")
+                if length is not None and len(payload) != int(length):
+                    raise http.client.IncompleteRead(payload, int(length) - len(payload))
+                return payload
         except urllib.error.HTTPError as error:
+            header = error.headers.get("Retry-After", "") if error.headers else ""
+            error.close()
             if error.code == 404:
                 return None  # Journal unavailability; never assume missing means market closed.
             if error.code not in (429, 500, 502, 503, 504):
                 raise
+            error.retry_after = header  # Honoured again by the file-level backoff.
             if attempt + 1 == cfg["max_attempts"]:
                 raise
-            wait = cfg["retry_seconds"] * (attempt + 1)
-            header = error.headers.get("Retry-After", "")
-            if header.isdigit():
-                wait = max(wait, int(header))
-            if wait > cfg["max_retry_after_seconds"]:
-                raise RuntimeError(
-                    "Provider requests long backoff; stop and resume later"
-                ) from error
-            time.sleep(wait)
-        except (TimeoutError, urllib.error.URLError):
+            time.sleep(retry_delay(cfg, attempt, header))
+        except (
+            TimeoutError,
+            ConnectionError,
+            http.client.IncompleteRead,
+            urllib.error.URLError,
+        ) as error:
+            if isinstance(getattr(error, "reason", error), ssl.SSLCertVerificationError):
+                raise  # Never bypass TLS verification or retry a certificate defect.
             if attempt + 1 == cfg["max_attempts"]:
                 raise
-            time.sleep(cfg["retry_seconds"] * (attempt + 1))
+            time.sleep(retry_delay(cfg, attempt))
     raise RuntimeError("Unreachable download retry state")
 
 
-def fetch_day(
-    day: datetime, side: str, cutoff: datetime, output: Path, cfg: dict[str, Any]
+def apply_request_delay(cfg: dict[str, Any], base: float) -> dict[str, Any]:
+    """Inter-request delay from a base value plus the configured jitter fraction."""
+    result = dict(cfg)
+    jitter = float(result.get("request_jitter_fraction", 0.0))
+    result["request_delay_base_seconds"] = float(base)
+    result["request_delay_min_seconds"] = max(0.0, float(base) * (1.0 - jitter))
+    result["request_delay_max_seconds"] = float(base) * (1.0 + jitter)
+    return result
+
+
+def throughput(
+    verified: int, attempted: int, started: float, sides: int = 2
 ) -> dict[str, Any]:
-    symbol = cfg["symbol"]
-    url = (
-        f"{cfg['endpoint']}/{symbol}/{day.year}/{day.month - 1:02d}/{day.day:02d}/"
+    """Debit journal: days per hour and observed error rate."""
+    elapsed = max(time.monotonic() - started, 1e-9)
+    return {
+        "elapsed_seconds": round(elapsed, 3),
+        "attempted_sides": attempted,
+        "verified_sides": verified,
+        "days_per_hour": round((verified / max(1, sides)) / elapsed * 3600.0, 3),
+        "error_rate": round((attempted - verified) / attempted, 6) if attempted else 0.0,
+    }
+
+
+def fetch_day_with_backoff(
+    day: datetime,
+    side: str,
+    cutoff: datetime,
+    output: Path,
+    cfg: dict[str, Any],
+    calendar: Any = None,
+) -> dict[str, Any]:
+    """Retry one file with the long backoff, then defer it and continue.
+
+    A failing file never aborts the session: after file_attempts it is
+    journalled as "failed" and listed at the end for a later resume.
+    """
+    attempts = max(1, int(cfg["file_attempts"]))
+    last: Exception | None = None
+    for attempt in range(attempts):
+        try:
+            return fetch_day(day, side, cutoff, output, cfg, calendar)
+        except Exception as error:  # noqa: BLE001 - one file must never stop the run
+            last = error
+            if attempt + 1 >= attempts:
+                break
+            header = getattr(error, "retry_after", "") or ""
+            time.sleep(retry_delay(cfg, attempt, str(header)))
+    return {
+        "date": day.date().isoformat(),
+        "side": side,
+        "status": "failed",
+        "error": str(last),
+        "error_type": type(last).__name__ if last is not None else None,
+        "url": day_url(day, side, cfg),
+        "endpoint": cfg["endpoint"],
+        "http_status": last.code if isinstance(last, urllib.error.HTTPError) else None,
+        "attempts": attempts,
+        "retry_after_seen": getattr(last, "retry_after", None),
+        "deferred_for_resume": True,
+        "retrieved_at": utc_now().isoformat(),
+    }
+
+
+def day_url(day: datetime, side: str, cfg: dict[str, Any]) -> str:
+    if side not in cfg["sides"] or day.tzinfo is None or day.utcoffset() != timedelta(0):
+        raise ValueError("Dukascopy day requires configured BID/ASK side and explicit UTC")
+    if any((day.hour, day.minute, day.second, day.microsecond)):
+        raise ValueError("Dukascopy daily URL requires UTC midnight")
+    return (
+        f"{cfg['endpoint']}/{cfg['symbol']}/{day.year}/{day.month - 1:02d}/{day.day:02d}/"
         f"{side.upper()}_candles_min_1.bi5"
     )
+
+
+def fetch_day(
+    day: datetime,
+    side: str,
+    cutoff: datetime,
+    output: Path,
+    cfg: dict[str, Any],
+    calendar: Any = None,
+) -> dict[str, Any]:
+    from arty_trading.validation.market_calendar import MarketCalendar
+
+    if calendar is None:
+        calendar = MarketCalendar()
+    closed = calendar.day_is_closed(day.date())
+    symbol = cfg["symbol"]
+    url = day_url(day, side, cfg)
     stem = day.date().isoformat()
     if day.date() == cutoff.date():
         stem += "_asof_" + cutoff.strftime("%Y%m%dT%H%M%SZ")
@@ -213,8 +376,19 @@ def fetch_day(
         "retrieved_at": utc_now().isoformat(),
         "snapshot_cutoff": cutoff.isoformat(),
     }
+    if not payload and closed:
+        # No provider file is required on a day with no tradable minute:
+        # journal it as expected, never as an error to retry.
+        return {
+            **entry,
+            "status": "empty_expected",
+            "rows": 0,
+            "reason": "no provider file for an expected-closed day",
+        }
     if payload is None:
         return {**entry, "status": "not_available", "rows": 0}
+    if not payload:
+        raise ValueError("Empty Dukascopy HTTP response")
     csv_bytes, info = decode_m1(payload, day, cutoff, cfg)
     staging = Path(cfg["staging"])
     binary_sha = publish_immutable(binary, payload, staging)
@@ -258,13 +432,19 @@ def freeze_available_end(
             last = datetime.fromtimestamp(max(common) / 1000, UTC) + timedelta(seconds=seconds)
             break
     split = yaml.safe_load(split_path.read_text(encoding="utf-8"))
+    validate_import_period(split, cutoff)
     if last is not None and last > cutoff:
         raise ValueError("Imported holdout would contain future candles")
     start = datetime.fromisoformat(split["holdout"]["start"])
-    split["holdout"]["end"] = last.isoformat() if last is not None and last > start else None
-    split["holdout"]["status"] = (
-        "frozen_from_import" if last and last > start else "unavailable_until_import"
+    frozen = (
+        split["holdout"]["status"] == "frozen_from_import" and split["holdout"]["end"] is not None
     )
+    if not frozen:
+        split["holdout"]["end"] = last.isoformat() if last is not None and last > start else None
+    if not frozen:
+        split["holdout"]["status"] = (
+            "frozen_from_import" if last and last > start else "unavailable_until_import"
+        )
     split["holdout"]["end_policy"] = "last_available_common_closed_m1_bar"
     split["availability"] = {
         "snapshot_utc": cutoff.isoformat(),
@@ -275,11 +455,28 @@ def freeze_available_end(
     return last
 
 
-def run_fetch(output: Path | None = None, *, now: datetime | None = None) -> dict[str, Any]:
-    cfg = load_config("data_import.yaml")
+def run_fetch(
+    output: Path | None = None,
+    *,
+    now: datetime | None = None,
+    until: datetime | None = None,
+    max_runtime: timedelta | float | None = None,
+    cfg: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    cfg = cfg or load_config("data_import.yaml")
+    if cfg["workers"] != 1:
+        raise ValueError("Dukascopy import requires concurrency 1")
+    if cfg["sides"] != ["bid", "ask"]:
+        raise ValueError("Dukascopy import requires both configured BID and ASK sides")
     cutoff = (now or utc_now()).replace(second=0, microsecond=0)
     split = load_config("split.yaml")
     validate_import_period(split, cutoff)
+    if until is not None:
+        if until.tzinfo is None or until.utcoffset() != timedelta(0) or until > cutoff:
+            raise ValueError("--until must be explicit UTC, not a future date")
+        if until > datetime.fromisoformat(split["development"]["end"]):
+            raise ValueError("Bounded import must end within development; no holdout access")
+        cutoff = until
     start = datetime.fromisoformat(cfg["start"])
     if start > cutoff:
         raise ValueError("Import start is in the future")
@@ -298,54 +495,77 @@ def run_fetch(output: Path | None = None, *, now: datetime | None = None) -> dic
         entries = read_manifest(manifest, recover=True)
         days: list[tuple[datetime, str]] = []
         day = start
-        while day <= cutoff:
+        while day < cutoff:
             days.extend((day, side) for side in cfg["sides"])
             day += timedelta(days=1)
+        from arty_trading.validation.market_calendar import MarketCalendar
+
+        calendar = MarketCalendar()
+        closed_days = {day.date() for day, _ in days if calendar.day_is_closed(day.date())}
         for entry in entries:
             if entry["status"] == "verified":
+                if (
+                    until is not None
+                    and datetime.fromisoformat(entry["date"]).replace(tzinfo=UTC) >= cutoff
+                ):
+                    continue  # Do not open any out-of-scope existing raw object.
                 for path_key, hash_key in (("path", "sha256"), ("binary_path", "binary_sha256")):
+                    if path_key not in entry:
+                        continue  # External CSV ingest carries no binary object.
                     path = Path(entry[path_key])
                     if not path.exists() or digest(path.read_bytes()) != entry[hash_key]:
                         raise ValueError(f"Imported object missing or checksum changed: {path}")
         # Existing objects are decoded/rechecked by fetch_day on every resume.
         failures = []
-        with (
-            manifest.open("a", encoding="utf-8") as journal,
-            ThreadPoolExecutor(max_workers=cfg["workers"]) as pool,
-        ):
-            futures = {
-                pool.submit(fetch_day, day, side, cutoff, output, cfg): (day, side)
-                for day, side in days
-            }
-            for number, future in enumerate(as_completed(futures), 1):
-                try:
-                    entry = future.result()
-                except Exception as error:
-                    day, side = futures[future]
-                    entry = {
-                        "date": day.date().isoformat(),
-                        "side": side,
-                        "status": "error",
-                        "error": str(error),
-                        "retrieved_at": utc_now().isoformat(),
-                    }
-                    failures.append(entry)
-                    # Cancel pending requests: do not hammer an unavailable provider.
-                    for pending in futures:
-                        pending.cancel()
+        deferred: list[dict[str, Any]] = []
+        attempted = 0
+        verified_here = 0
+        started = time.monotonic()
+        runtime_exhausted = False
+        budget: float | None = None
+        if max_runtime is not None:
+            budget = (
+                max_runtime.total_seconds()
+                if isinstance(max_runtime, timedelta)
+                else float(max_runtime)
+            )
+            if budget <= 0:
+                raise ValueError("max_runtime must be positive")
+        with manifest.open("a", encoding="utf-8") as journal:
+            for number, (day, side) in enumerate(days, 1):
+                if budget is not None and time.monotonic() - started >= budget:
+                    # Bounded session: stop cleanly and report what is left.
+                    runtime_exhausted = True
+                    break
+                attempted += 1
+                # A failing file is deferred, never fatal to the remaining files.
+                entry = fetch_day_with_backoff(day, side, cutoff, output, cfg, calendar)
                 journal.write(json.dumps(entry) + "\n")
                 journal.flush()
                 os.fsync(journal.fileno())
                 entries.append(entry)
-                if failures:
-                    break
-                if number % cfg["progress_every"] == 0:
+                if entry["status"] == "verified":
+                    verified_here += 1
+                elif entry["status"] in {"failed", "error"}:
+                    deferred.append(entry)
+                if attempted % cfg["progress_every"] == 0:
+                    rate = throughput(verified_here, attempted, started, len(cfg["sides"]))
                     print(
-                        f"Dukascopy: {number}/{len(days)} daily sides verified/journaled",
+                        f"Dukascopy: {number}/{len(days)} sides | "
+                        f"{rate['days_per_hour']:.1f} days/h | "
+                        f"errors {rate['error_rate']:.1%} | deferred {len(deferred)}",
                         flush=True,
                     )
-        verified = [entry for entry in entries if entry["status"] == "verified"]
+        requested = {(day.date().isoformat(), side) for day, side in days}
+        verified = list(
+            {
+                entry["path"]: entry
+                for entry in entries
+                if entry["status"] == "verified" and (entry["date"], entry["side"]) in requested
+            }.values()
+        )
         unavailable = [entry for entry in entries if entry["status"] == "not_available"]
+        empty_expected = [entry for entry in entries if entry["status"] == "empty_expected"]
         if not failures and not any(entry["rows"] for entry in verified):
             failures.append({"status": "error", "error": "No M1 source rows available"})
         summary = {
@@ -358,12 +578,88 @@ def run_fetch(output: Path | None = None, *, now: datetime | None = None) -> dic
             "manifest": str(manifest),
             "verified_daily_sides": len(verified),
             "unavailable_daily_sides": len(unavailable),
+            "empty_expected_daily_sides": len(empty_expected),
+            "expected_closed_days": len(closed_days),
             "coverage_validated": False,
+            "deferred_files": [
+                {
+                    "date": row["date"],
+                    "side": row["side"],
+                    "status": row["status"],
+                    "error": row.get("error"),
+                }
+                for row in deferred
+            ],
+            "throughput": throughput(verified_here, attempted, started, len(cfg["sides"])),
+            "runtime_exhausted": runtime_exhausted,
+            "resume_required": bool(deferred) or runtime_exhausted,
         }
-        if not failures:
+        validated = {(entry["date"], entry["side"]) for entry in verified}
+        summary["missing_files"] = [
+            {"date": day.date().isoformat(), "side": side}
+            for day, side in days
+            if (day.date().isoformat(), side) not in validated
+            and day.date() not in closed_days
+        ]
+        if summary["missing_files"] and not failures:
+            failures.append(
+                {
+                    "status": "error",
+                    "error": (
+                        "Required daily resources unavailable; "
+                        "HTTP 404 does not establish market closure"
+                    ),
+                }
+            )
+            summary["status"] = "failed"
+        if runtime_exhausted:
+            # A bounded session ends by design: resumable, not a hard failure.
+            failures = []
+            summary["failures"] = []
+            summary["status"] = "runtime_budget_exhausted"
+        summary["scope"] = "development_only" if until is not None else "full_requested_period"
+        summary["bid_ask_pairing_validated"] = False
+        if not failures and not runtime_exhausted:
+            # Compare UTC timestamps and OHLC quotes for both sides before any freeze.
+            latest = {
+                (row["date"], row["side"]): row for row in entries if row["status"] == "verified"
+            }
+            try:
+                for day, _ in days[:: len(cfg["sides"])]:
+                    if day.date() in closed_days:
+                        continue  # No provider file is required on a closed day.
+                    paired = []
+                    for side in cfg["sides"]:
+                        with Path(latest[(day.date().isoformat(), side)]["path"]).open(
+                            newline="", encoding="utf-8"
+                        ) as stream:
+                            paired.append(list(csv.DictReader(stream)))
+                    if [r["timestamp"] for r in paired[0]] != [r["timestamp"] for r in paired[1]]:
+                        raise ValueError(f"BID/ASK timestamp mismatch: {day.date()}")
+                    if any(
+                        float(ask[key]) < float(bid[key])
+                        for bid, ask in zip(*paired, strict=True)
+                        for key in ("open", "high", "low", "close")
+                    ):
+                        raise ValueError(f"BID/ASK crossed OHLC quotes: {day.date()}")
+                summary["bid_ask_pairing_validated"] = True
+            except ValueError as error:
+                failures.append({"status": "error", "error": str(error)})
+                summary["status"] = "failed"
+        if not failures and not runtime_exhausted and until is None:
             from arty_trading.config.operational import CONFIG_ROOT
+            from arty_trading.validation.trial_registry import TrialRegistry
 
+            split_before = yaml.safe_load((CONFIG_ROOT / "split.yaml").read_text(encoding="utf-8"))
             last = freeze_available_end(CONFIG_ROOT / "split.yaml", entries, cutoff)
+            split_after = yaml.safe_load((CONFIG_ROOT / "split.yaml").read_text(encoding="utf-8"))
+            if split_before != split_after:
+                TrialRegistry().record_rule_change(
+                    "split.yaml",
+                    split_before,
+                    split_after,
+                    "Freeze first common closed bid/ask holdout end after successful import",
+                )
             summary["last_common_closed_bar"] = last.isoformat() if last else None
             validation_path = CONFIG_ROOT / "validation.yaml"
             validation = yaml.safe_load(validation_path.read_text(encoding="utf-8"))

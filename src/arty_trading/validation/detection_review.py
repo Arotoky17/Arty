@@ -27,8 +27,8 @@ from arty_trading.core.enums import TimeFrame
 from arty_trading.modules.smc import SMCDetector
 from arty_trading.modules.smc.base import find_swing_points
 from arty_trading.utils.helpers import calculate_atr
+from arty_trading.validation.market_calendar import MarketCalendar
 from arty_trading.validation.market_data import (
-    OHLC,
     index_utc,
     resample_closed_bars,
     safe_output,
@@ -66,11 +66,9 @@ def dev_candles(directory: Path, symbol: str) -> tuple[list[Candle], dict[str, A
             (frame.index >= pd.Timestamp(split["development"]["start"]))
             & (frame.index < pd.Timestamp(split["development"]["end"]))
         ].copy()
-    bid, ask = sides["bid"], sides["ask"]
+    bid = sides["bid"]
     # Match the production reader's derived view, retaining immutable source hashes.
-    unchanged = bid[OHLC].eq(bid.close.shift(), axis=0).all(axis=1) & ask[OHLC].eq(
-        ask.close.shift(), axis=0
-    ).all(axis=1)
+    unchanged = MarketCalendar().annotate(bid).non_tradable
     bid = bid.loc[~unchanged]
     if bid.empty:
         raise ValueError("No dev observations")
@@ -89,7 +87,7 @@ def dev_candles(directory: Path, symbol: str) -> tuple[list[Candle], dict[str, A
         )
         for time, row in bars.iterrows()
     ]
-    provenance["removed_unchanged_flat_m1_rows_in_derived_view"] = int(unchanged.sum())
+    provenance["removed_non_tradable_m1_rows_in_derived_view"] = int(unchanged.sum())
     provenance["bars"] = len(candles)
     return candles, provenance
 

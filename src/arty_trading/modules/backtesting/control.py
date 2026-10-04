@@ -129,13 +129,17 @@ class ControlReplay:
 
         # Actual bid/ask spread is charged by historical quotes, never twice.
         self.cost_model = CostModel(
-            spread_pips=0,
-            slippage_pips=(
-                float(self.broker["slippage_points"])
-                * float(self.broker["point"])
-                / float(get_pip_size(config["symbol"]))
-            ),
-            commission_per_lot_side=float(self.broker["commission_per_lot_round_trip"]) / 2,
+            **{
+                **load_config("execution.yaml")["cost"],
+                "spread_mode": "configured",
+                "spread_calibration_path": None,
+                "spread_unit": "pips",
+                "hourly_spread_pips": {},
+                "session_hours_utc": {},
+                "session_spread_pips": {},
+                "spread_pips": 0,
+                "commission_per_lot_side": float(self.broker["commission_per_lot_round_trip"]) / 2,
+            },
         )
         self._authorized_history: dict[TimeFrame, tuple[str, ...]] | None = None
         self.balance = Decimal(str(config["initial_balance"]))
@@ -148,6 +152,7 @@ class ControlReplay:
         self._stress_equity: list[float] = [float(self.balance)]
         self._stress_costs: list[float] = [0.0]
         self.cost_sensitivity: list[dict[str, Any]] = []
+        self.xauusd_diagnostics: dict[str, Any] = {}
         self.audits: list[dict[str, Any]] = []
         self.rejections: Counter[str] = Counter(
             {
@@ -210,11 +215,11 @@ class ControlReplay:
             str(self.broker["point"])
         )
 
-    def close_position(self, price: Decimal, time: datetime) -> None:
+    def close_position(self, price: Decimal, time: datetime, *, exit_kind: str = "market") -> None:
         trade = self.position
         assert trade is not None
         side = 1 if trade.direction == Direction.BUY else -1
-        slip = Decimal(str(self.cost_model.slippage_pips)) * get_pip_size(trade.symbol)
+        slip = Decimal(str(self.cost_model.slippage_price(exit_kind, trade.symbol)))
         exit_price = price - side * slip
         profit = (exit_price - trade.entry_price) * side * trade.volume * Decimal(
             str(self.broker["contract_size"])
@@ -229,7 +234,8 @@ class ControlReplay:
                 self.ask_price(self._current_candle, "close") - self._current_candle.close
             )
         roundtrip_cost = float(trade.volume) * (
-            ((entry_spread + exit_spread) / 2 + 2 * float(slip))
+            ((entry_spread + exit_spread) / 2
+             + self.cost_model.slippage_price("market", trade.symbol) + float(slip))
             * float(self.broker["contract_size"])
             + 2 * self.cost_model.commission_per_lot_side
         )
@@ -241,6 +247,7 @@ class ControlReplay:
                 "profit": float(profit),
                 "roundtrip_cost_usd": roundtrip_cost,
                 "r_multiple": float(profit) / audit["initial_risk_usd"],
+                "costs_over_initial_r": roundtrip_cost / audit["initial_risk_usd"],
                 "pips": float((exit_price - trade.entry_price) * side / get_pip_size(trade.symbol)),
             }
         )
@@ -275,9 +282,9 @@ class ControlReplay:
         open_price = candle.open if buy else self.ask_price(candle, "open")
         if (buy and low <= trade.stop_loss) or (not buy and high >= trade.stop_loss):
             price = min(trade.stop_loss, open_price) if buy else max(trade.stop_loss, open_price)
-            self.close_position(price, candle.time)
+            self.close_position(price, candle.time, exit_kind="stop")
         elif (buy and high >= trade.take_profit) or (not buy and low <= trade.take_profit):
-            self.close_position(trade.take_profit, candle.time)
+            self.close_position(trade.take_profit, candle.time, exit_kind="limit")
 
     def audit_signal(
         self,
@@ -405,7 +412,7 @@ class ControlReplay:
         side = 1 if signal.direction == Direction.BUY else -1
         entry_price = self.ask_price(candle, "close") if side == 1 else candle.close
         entry_price += (
-            side * Decimal(str(self.cost_model.slippage_pips)) * get_pip_size(candle.symbol)
+            side * Decimal(str(self.cost_model.slippage_price("market", candle.symbol)))
         )
         signal = signal.model_copy(update={"entry_price": entry_price})
         if (signal.entry_price - signal.stop_loss) * side <= 0 or (
@@ -428,6 +435,15 @@ class ControlReplay:
         raw_volume = await self.risk.calculate_position_size(signal, account)
         step = Decimal(str(self.broker["volume_step"]))
         volume = (Decimal(str(raw_volume)) / step).to_integral_value(rounding=ROUND_DOWN) * step
+        from arty_trading.config.operational import definitions
+        from arty_trading.modules.execution.risk_limits import permitted_volume
+        from arty_trading.utils.helpers import calculate_atr
+
+        volume_float, limits = permitted_volume(
+            float(volume), float(signal.entry_price), float(signal.stop_loss),
+            float(calculate_atr(m5, definitions()["atr_period"])), float(self.equity),
+        )
+        volume = (Decimal(str(volume_float)) / step).to_integral_value(rounding=ROUND_DOWN) * step
         if volume < Decimal(str(self.broker["volume_min"])):
             self.rejections["volume_below_minimum"] += 1
             return
@@ -443,6 +459,7 @@ class ControlReplay:
                 "initial_risk_usd": float(risk),
                 "direction": signal.direction.value,
                 "entry_spread_price": float(self.ask_price(candle, "close") - candle.close),
+                **limits,
             }
         )
         self.audits.append(record)
@@ -501,6 +518,9 @@ class ControlReplay:
             bars[-1].time.isoformat() if bars else None,
             partition,
         )
+        from arty_trading.validation.market_calendar import tradable_candles
+
+        self.history = {tf: tradable_candles(batch) for tf, batch in self.history.items()}
         await self._run_replay()
         self.cost_sensitivity = cost_sensitivity(
             [
@@ -521,12 +541,34 @@ class ControlReplay:
             max_drawdown=self.drawdown,
             fill_rate=len(profits) / self.signals_generated if self.signals_generated else 0.0,
         )
+        # Share of executed trades whose volume was reduced by the leverage/margin ceilings.
+        scored = [row for row in self.audits if row.get("initial_risk_usd")]
+        stats.volume_capped_trades = sum(1 for row in scored if row.get("capped"))
+        stats.leverage_capped_trades = sum(
+            1 for row in scored if row.get("capped_by_leverage")
+        )
+        stats.margin_capped_trades = sum(
+            1 for row in scored if row.get("capped_by_margin")
+        )
+        stats.volume_capped_share = (
+            stats.volume_capped_trades / len(scored) if scored else 0.0
+        )
         # Trade-level Sharpe, unannualized (same frequency as registry R outcomes).
         if len(results) > 1:
             import statistics
 
             std = statistics.stdev(results)
             stats.sharpe_ratio = statistics.mean(results) / std if std else 0.0
+        from arty_trading.validation.xauusd_diagnostics import diagnostics
+
+        self.xauusd_diagnostics = diagnostics(
+            [{"entry_time": row["entry_timestamp"], "direction": row["direction"],
+              "r": row["r_multiple"]} for row in self.audits],
+            self.history.get(TimeFrame.M5, []), self.cost_model,
+            float(self.config["initial_balance"]), float(self.settings.risk.risk_per_trade),
+            self.config["symbol"],
+        )
+        self.registry.record_diagnostics(trial_id, self.xauusd_diagnostics)
         self.registry.finish(trial_id, stats, sum(results) / len(results) if results else 0.0)
 
     async def _run_replay(self) -> None:
@@ -580,7 +622,15 @@ class ControlReplay:
                 and len(views[TimeFrame.H4]) >= 5
                 and len(views[TimeFrame.M5]) >= 20
             ):
-                if self.position is None:
+                from arty_trading.validation.market_calendar import entry_allowed
+                from arty_trading.validation.xauusd_diagnostics import news_blocked
+
+                if (
+                    self.position is None and entry_allowed(candle)
+                    and not news_blocked(
+                        candle.time, self.cost_model, self.config.get("news_exclusion", False)
+                    )
+                ):
                     await self.process(candle, views)
                     self.tracker.cleanup(candle.symbol)
         last = self.history[TimeFrame.M5][-1]
@@ -658,6 +708,7 @@ async def run_control(
         "profit_factor": gains / losses if losses else None,
         "expectancy_r": sum(row["r_multiple"] for row in replay.audits) / count if count else None,
         "cost_sensitivity": replay.cost_sensitivity,
+        "xauusd_diagnostics": replay.xauusd_diagnostics,
         "cost_sensitivity_assumptions": {
             "method": "fixed_path_repricing",
             "spread": "historical bid/ask half spread at each side; not synthetic session spread",

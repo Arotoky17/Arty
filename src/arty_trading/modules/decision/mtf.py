@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import UTC, datetime
 
 from arty_trading.core.entities import Candle
 from arty_trading.core.enums import SMCConcept, TimeFrame
 from arty_trading.core.interfaces import IMarketDataProvider, ISMCDetector
+from arty_trading.validation.daily_context import candle_close_time, previous_day_levels
 
 MTF_HIERARCHY = (
     TimeFrame.D1,
@@ -25,6 +27,7 @@ class MultiTimeframeAnalysis:
     candles: dict[TimeFrame, list[Candle]]
     detections: dict[TimeFrame, list[dict]]
     trends: dict[str, str]
+    previous_day_levels: dict[str, object] | None = None
 
 
 class MultiTimeframeAnalyzer:
@@ -39,8 +42,11 @@ class MultiTimeframeAnalyzer:
         candles_by_tf: dict[TimeFrame, list[Candle]] = {}
         detections_by_tf: dict[TimeFrame, list[dict]] = {}
         trends: dict[str, str] = {}
+        at = datetime.now(UTC)
         for timeframe in MTF_HIERARCHY:
             candles = await self._market_data.get_latest_candles(symbol, timeframe, count)
+            if timeframe == TimeFrame.D1:
+                candles = [c for c in candles if candle_close_time(c) <= at]
             candles_by_tf[timeframe] = candles
             detections = await self._detector.detect(candles, symbol) if candles else []
             detections_by_tf[timeframe] = detections
@@ -48,7 +54,10 @@ class MultiTimeframeAnalyzer:
                 trend = self._derive_trend(detections)
                 if trend is not None:
                     trends[timeframe.value] = trend
-        return MultiTimeframeAnalysis(candles_by_tf, detections_by_tf, trends)
+        d1 = [c for c in candles_by_tf.get(TimeFrame.D1, []) if candle_close_time(c) <= at]
+        return MultiTimeframeAnalysis(
+            candles_by_tf, detections_by_tf, trends, previous_day_levels(d1, at)
+        )
 
     @staticmethod
     def _derive_trend(detections: list[dict]) -> str | None:

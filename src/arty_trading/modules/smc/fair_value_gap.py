@@ -65,6 +65,9 @@ class FairValueGapDetector(BaseDetector):
         4. IFVG : vérifier si un FVG précédent a été rempli puis inversé
         5. Filtrer les zones trop anciennes (MAX_ZONE_AGE bougies)
         """
+        from arty_trading.validation.market_calendar import tradable_candles
+
+        candles = tradable_candles(candles)
         if not self._enabled or len(candles) < 3:
             return []
 

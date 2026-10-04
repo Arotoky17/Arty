@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from arty_trading.config.operational import load_config
+
 
 def drawdown(equity: list[float]) -> float:
     peak = 0.0
@@ -25,6 +27,7 @@ def cost_sensitivity(
     if len(equity) != len(accrued_costs):
         raise ValueError("Equity and accrued costs must have matching timestamps")
     scenarios = []
+    cfg = load_config("execution.yaml")["cost"]
     for factor in multipliers:
         profits = [net - (factor - 1) * cost for net, cost, _ in trades]
         gains = sum(p for p in profits if p > 0)
@@ -44,6 +47,11 @@ def cost_sensitivity(
                 "max_drawdown": drawdown(stressed_equity),
                 "final_equity": stressed_equity[-1] if stressed_equity else None,
                 "method": "fixed_path_repricing_no_resizing_or_signal_rerun",
+                "fragile": (
+                    factor == cfg["fragility_multiplier"]
+                    and bool(returns)
+                    and sum(returns) / len(returns) < cfg["fragility_expectancy_r"]
+                ),
             }
         )
     return scenarios

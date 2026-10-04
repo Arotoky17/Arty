@@ -340,7 +340,9 @@ class SignalGenerator:
         Returns:
             Le meilleur signal validé ou ``None`` (NO_SIGNAL)
         """
-        if not candles:
+        from arty_trading.validation.market_calendar import entry_allowed
+
+        if not candles or not entry_allowed(candles[-1]):
             logger.debug("Aucune bougie fournie → NO_SIGNAL")
             self._last_rejection_stage = "no_data"
             self._last_rejection_reason = "no_candles"
@@ -593,7 +595,9 @@ class SignalGenerator:
         Returns:
             Liste triée par confiance décroissante.
         """
-        if not candles:
+        from arty_trading.validation.market_calendar import entry_allowed
+
+        if not candles or not entry_allowed(candles[-1]):
             return []
 
         signals: list[Signal] = []

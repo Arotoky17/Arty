@@ -103,6 +103,9 @@ class OrderBlockDetector(BaseDetector):
         5. Breaker : un OB dont le prix a cassé le niveau opposé
         6. Mitigation : vérifier si le prix est revenu mitigier l'OB
         """
+        from arty_trading.validation.market_calendar import tradable_candles
+
+        candles = tradable_candles(candles)
         if not self._enabled or len(candles) < 5:
             return []
 

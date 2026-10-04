@@ -129,6 +129,8 @@ async def run_one(symbol: str, candles: list[Candle], cfg: Config) -> dict[str, 
         "expectancy": stats.expectancy,
         "cost_sensitivity": stats.cost_sensitivity,
         "cost_assumptions": stats.cost_assumptions,
+        "xauusd_diagnostics": stats.xauusd_diagnostics,
+        "execution_audit": stats.execution_audit,
         "consec_wins": stats.max_consecutive_wins,
         "consec_losses": stats.max_consecutive_losses,
         # Phase 3F : breakdown par type de setup / direction.

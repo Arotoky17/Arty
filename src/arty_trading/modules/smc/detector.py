@@ -20,6 +20,7 @@ from arty_trading.modules.smc.order_blocks import OrderBlockDetector
 from arty_trading.modules.smc.premium_discount import PremiumDiscountDetector
 from arty_trading.modules.smc.sessions import SessionDetector
 from arty_trading.modules.smc.structure import StructureDetector
+from arty_trading.validation.market_calendar import tradable_candles
 
 logger = get_logger(LogCategory.SMC)
 
@@ -112,6 +113,7 @@ class SMCDetector(ISMCDetector):
             logger.warning("Aucune bougie à analyser | %s", symbol)
             return []
 
+        candles = tradable_candles(candles)
         all_detections: list[SMCDetection] = []
 
         for name, detector in self._detectors.items():
@@ -156,6 +158,7 @@ class SMCDetector(ISMCDetector):
         Returns:
             Liste des détections SMC (objets SMCDetection)
         """
+        candles = tradable_candles(candles)
         all_detections: list[SMCDetection] = []
 
         for detector in self._detectors.values():

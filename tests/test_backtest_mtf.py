@@ -83,7 +83,7 @@ def test_dataset_b_regimes_spans():
 # Agrégation (anti look-ahead)
 # ---------------------------------------------------------------------------
 
-def _mk_m5_series(n, start="2024-01-01T00:00:00"):
+def _mk_m5_series(n, start="2024-01-04T00:00:00"):
     t0 = datetime.fromisoformat(start).replace(tzinfo=UTC)
     candles = []
     price = 2000.0

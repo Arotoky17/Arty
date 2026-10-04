@@ -1,8 +1,23 @@
 cost:
+  spread_mode: calibrated_p75
+  spread_calibration_path: spread_calibration.yaml
+  spread_unit: fraction_price
+  annual_calibration_paths: {}
+  annual_recalibration_policy: previous_calendar_year_quotes_only_frozen_before_run
+  broker_spread_multiplier: 1.0
+  calibration_quantiles: {median: 0.5, p75: 0.75, p90: 0.9}
   # Illustrative values: calibrate on broker bid/ask before preregistration.
   spread_pips: 1.0
   hourly_spread_pips: {0: 2.0, 23: 2.0}
-  slippage_pips: 0.2
+  pip_usd: 0.01
+  # Limit ENTRY: no slippage cost, because the fill crossing (fill.crossing_usd =
+  # 0.10 USD) already prices the adverse excursion. Prevents double counting.
+  entry_limit_slippage_usd: 0.0
+  # Limit (take-profit) EXIT slippage, unchanged at 0.10 USD.
+  limit_slippage_usd: 0.10
+  # Market and stop exits, unchanged at 0.30 USD.
+  market_stop_slippage_usd: 0.30
+  slippage_status: pending_broker_confirmation
   commission_per_lot_side: 3.5
   session_hours_utc:
     asia: [0, 1, 2, 3, 4, 5, 6]
@@ -19,9 +34,21 @@ cost:
   news_calendar_path: news_calendar.csv
   news_events: []
   sensitivity_multipliers: [1.0, 1.5, 2.0]
+  fragility_multiplier: 1.5
+  fragility_expectancy_r: 0.0
 fill:
   mode: crossed
-  crossing_pips: 0.1
+  crossing_pips: 10.0
+  crossing_usd: 0.10
+  stress_crossing_usd: 0.30
+  stop_on_fill_bar: true
   probability: 1.0
   seed: 0
   expiry_bars: 10
+risk_limits:
+  maximum_gross_leverage: 10.0
+  broker_margin_leverage: 20.0
+  maximum_margin_fraction: 0.5
+  volume_step: 0.01
+  minimum_volume: 0.01
+  status: proposed_pending_broker_confirmation

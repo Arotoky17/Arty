@@ -28,6 +28,34 @@ class TrialRegistry:
             db.execute("""CREATE TABLE IF NOT EXISTS holdout_access (
                 id INTEGER PRIMARY KEY, timestamp TEXT NOT NULL, setup_id TEXT NOT NULL,
                 reason TEXT NOT NULL, override_reason TEXT)""")
+            db.execute("""CREATE TABLE IF NOT EXISTS rule_changes (
+                id INTEGER PRIMARY KEY, timestamp TEXT NOT NULL, scope TEXT NOT NULL,
+                before_json TEXT NOT NULL, after_json TEXT NOT NULL, reason TEXT NOT NULL)""")
+            db.execute("""CREATE TABLE IF NOT EXISTS diagnostics (
+                trial_id INTEGER PRIMARY KEY REFERENCES trials(id), report_json TEXT NOT NULL)""")
+
+    def record_rule_change(self, scope: str, before: Any, after: Any, reason: str) -> None:
+        if not reason.strip():
+            raise ValueError("Every rule change requires a reason")
+        with self.connect() as db:
+            db.execute(
+                "INSERT INTO rule_changes(timestamp,scope,before_json,after_json,reason) "
+                "VALUES (?,?,?,?,?)",
+                (
+                    datetime.now(UTC).isoformat(),
+                    scope,
+                    json.dumps(before, sort_keys=True),
+                    json.dumps(after, sort_keys=True),
+                    reason,
+                ),
+            )
+
+    def record_diagnostics(self, trial_id: int, report: dict[str, Any]) -> None:
+        with self.connect() as db:
+            db.execute(
+                "INSERT INTO diagnostics(trial_id,report_json) VALUES (?,?)",
+                (trial_id, json.dumps(report, allow_nan=False)),
+            )
 
     def connect(self) -> sqlite3.Connection:
         return sqlite3.connect(self.path, timeout=30)
@@ -44,6 +72,24 @@ class TrialRegistry:
         encoded = json.dumps(parameters, sort_keys=True, separators=(",", ":"), allow_nan=False)
         digest = hashlib.sha256(encoded.encode()).hexdigest()
         with self.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            from arty_trading.config.operational import load_config
+
+            setup = load_config("setup1_preregistration.yaml")
+            if setup_id == setup["setup_id"]:
+                limits = setup["validation"]
+                total = db.execute(
+                    "SELECT COUNT(*) FROM trials WHERE setup_id=?", (setup_id,)
+                ).fetchone()[0]
+                per_partition = db.execute(
+                    "SELECT COUNT(*) FROM trials WHERE setup_id=? AND partition=?",
+                    (setup_id, partition),
+                ).fetchone()[0]
+                limit = limits[
+                    "maximum_holdout_trials" if partition == "holdout" else "maximum_dev_trials"
+                ]
+                if total >= limits["maximum_trials_total"] or per_partition >= limit:
+                    raise PermissionError("Preregistered maximum trials exhausted; no retuning")
             cursor = db.execute(
                 "INSERT INTO trials (timestamp,setup_id,parameter_hash,parameters,timeframe,"
                 "period_start,period_end,partition,status) VALUES (?,?,?,?,?,?,?,?,?)",

@@ -195,12 +195,14 @@ async def test_replay_preserves_live_htf_and_immutable_signal(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     config = yaml.safe_load(Path("config/baseline.yaml").read_text(encoding="utf-8"))
+    from datetime import timedelta
+
     replay = ControlReplay(config, {})
     assert replay.generator._decision_engine is None  # Same default as api.main.
     candle = Candle(
         symbol="XAUUSD",
         timeframe=TimeFrame.M5,
-        time=datetime(2024, 1, 2, tzinfo=UTC),
+        time=datetime(2024, 1, 4, 12, tzinfo=UTC),
         open=Decimal("2000"),
         high=Decimal("2001"),
         low=Decimal("1999"),
@@ -213,8 +215,8 @@ async def test_replay_preserves_live_htf_and_immutable_signal(
         signal_type=SignalType.BUY,
         direction=Direction.BUY,
         entry_price=Decimal("2000"),
-        stop_loss=Decimal("1999"),
-        take_profit=Decimal("2003"),
+        stop_loss=Decimal("1998"),
+        take_profit=Decimal("2006"),
         confidence=0.9,
         strategy_name="SMC Trend Following",
         timeframe=TimeFrame.M5,
@@ -236,13 +238,15 @@ async def test_replay_preserves_live_htf_and_immutable_signal(
         lambda *args: None,
     )
     await replay.process(
-        candle, {tf: [candle] for tf in (TimeFrame.M5, TimeFrame.H1, TimeFrame.H4)}
+        candle, {tf: [candle.model_copy(update={"time": candle.time - timedelta(minutes=5 * i)})
+                     for i in reversed(range(15))]
+                 for tf in (TimeFrame.M5, TimeFrame.H1, TimeFrame.H4)}
     )
     assert generate.call_args.kwargs["htf_trend"] == "bullish"
     assert generate.call_args.kwargs["htf_trends"] == {"H1": "bullish", "H4": "bullish"}
     assert signal.entry_price == Decimal("2000")
-    assert replay.position is not None
-    assert replay.position.entry_price == Decimal("2000.10")
+    assert replay.position is not None, replay.rejections
+    assert replay.position.entry_price == Decimal("2000.40")
 
 
 @pytest.mark.skip(reason="OB signal traceability pending Task 4 (legacy fallback)")
@@ -277,7 +281,7 @@ async def test_replay_rearms_with_historical_clock(monkeypatch: pytest.MonkeyPat
     from datetime import timedelta
 
     config = yaml.safe_load(Path("config/baseline.yaml").read_text(encoding="utf-8"))
-    start = datetime(2024, 1, 1, tzinfo=UTC)
+    start = datetime(2024, 1, 4, tzinfo=UTC)
 
     def bars(tf: TimeFrame, minutes: int, count: int) -> list[Candle]:
         return [
@@ -296,9 +300,9 @@ async def test_replay_rearms_with_historical_clock(monkeypatch: pytest.MonkeyPat
         ]
 
     history = {
-        TimeFrame.M5: bars(TimeFrame.M5, 5, 1000),
-        TimeFrame.H1: bars(TimeFrame.H1, 60, 84),
-        TimeFrame.H4: bars(TimeFrame.H4, 240, 21),
+        TimeFrame.M5: bars(TimeFrame.M5, 5, 1600),
+        TimeFrame.H1: bars(TimeFrame.H1, 60, 134),
+        TimeFrame.H4: bars(TimeFrame.H4, 240, 34),
     }
     replay = ControlReplay(config, history)
     context = SimpleNamespace(
@@ -314,8 +318,8 @@ async def test_replay_rearms_with_historical_clock(monkeypatch: pytest.MonkeyPat
         signal_type=SignalType.BUY,
         direction=Direction.BUY,
         entry_price=Decimal("2000"),
-        stop_loss=Decimal("1999"),
-        take_profit=Decimal("2004"),
+        stop_loss=Decimal("1998"),
+        take_profit=Decimal("2006"),
         confidence=0.9,
         strategy_name="fixture",
         timeframe=TimeFrame.M5,
@@ -328,7 +332,7 @@ async def test_replay_rearms_with_historical_clock(monkeypatch: pytest.MonkeyPat
         lambda *args: None,
     )
     await replay.run()
-    assert len(replay.audits) > 3
+    assert len(replay.audits) > 3, replay.rejections
     assert replay.risk.get_risk_report()["consecutive_loss_breaker_rearms"] >= 1
     assert replay.rejections["circuit_breaker:consecutive_losses"] > 0
     entries = [datetime.fromisoformat(row["entry_timestamp"]) for row in replay.audits]

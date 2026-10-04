@@ -136,6 +136,9 @@ def calculate_atr(candles: list[Candle], period: int = 14) -> Decimal:
     Returns:
         Valeur ATR en prix (pas en pips)
     """
+    from arty_trading.validation.market_calendar import tradable_candles
+
+    candles = tradable_candles(candles)
     if len(candles) < period + 1:
         return Decimal("0")
 
@@ -178,6 +181,9 @@ def calculate_atr_sliding(candles: list[Candle], period: int = 14) -> Decimal:
     Returns:
         Valeur ATR en prix (moyenne simple), ou ``0`` si impossible.
     """
+    from arty_trading.validation.market_calendar import tradable_candles
+
+    candles = tradable_candles(candles)
     if len(candles) < 2:
         return Decimal("0")
     ranges = []

@@ -2,7 +2,7 @@
 
 Predominantly (a): unchanged flat grid rows decay ATR artificially. No observed timestamp misalignment. Remaining paired large moves are candidates, not proven corruption; compare original ticks before rejecting.
 
-{'bid': {'legacy_count': 135, 'corrected_count': 7, 'padding_atr_false_positives': 128, 'absolute_return_flags': 0, 'absolute_range_flags': 0}, 'ask': {'legacy_count': 136, 'corrected_count': 7, 'padding_atr_false_positives': 129, 'absolute_return_flags': 0, 'absolute_range_flags': 0}}
+{'bid': {'legacy_count': 135, 'corrected_count': 12, 'padding_atr_false_positives': 123, 'absolute_return_flags': 0, 'absolute_range_flags': 0}, 'ask': {'legacy_count': 136, 'corrected_count': 12, 'padding_atr_false_positives': 124, 'absolute_return_flags': 0, 'absolute_range_flags': 0}}
 
 UTC | côté | open | high | low | close
 ---|---|---:|---:|---:|---:
@@ -17,6 +17,6 @@ UTC | côté | open | high | low | close
 2024-01-08T23:00:00+00:00 | bid | 2028.045 | 2028.248 | 2027.848 | 2027.948
 2024-01-08T23:00:00+00:00 | ask | 2028.635 | 2028.875 | 2028.435 | 2028.535
 
-Freeze ATR observation clock on unchanged flat OHLC equal to previous close; retain all raw rows, old flags and absolute 2% checks. No price interpolation.
+Exclude calendar-closed bars from the ATR observation clock; retain all raw rows, old flags and absolute 2% checks. No price interpolation.
 
 Aucun P&L ni changement des données brutes.

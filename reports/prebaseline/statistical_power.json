@@ -1,0 +1,25 @@
+{
+  "assumptions": {
+    "status": "planning_assumptions_not_measured",
+    "expected_dev_trades": 250,
+    "expected_holdout_trades": 100,
+    "assumed_trade_r_standard_deviation": 1.5,
+    "assumed_design_effect": 2.0,
+    "power": 0.8,
+    "confidence": 0.95,
+    "minimum_sample_per_phase": 100,
+    "rule": "two_sided_normal_approximation_not_bootstrap_guarantee"
+  },
+  "estimates": {
+    "dev": {
+      "assumed_trades": 250,
+      "minimum_detectable_expectancy_r": 0.37587209954755024
+    },
+    "holdout": {
+      "assumed_trades": 100,
+      "minimum_detectable_expectancy_r": 0.5943059717399016
+    }
+  },
+  "pnl_inspected": false,
+  "limitation": "Planning approximation, not a measured trade count or bootstrap guarantee"
+}

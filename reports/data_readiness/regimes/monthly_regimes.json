@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-02T18:19:43.032919+00:00",
+  "generated_at": "2026-10-04T06:55:01.451165+00:00",
   "symbol": "XAUUSD",
   "pnl_inspected": false,
   "holdout_setup_access_consumed": false,
@@ -27,14 +27,14 @@
       "end": "2025-01-01T00:00:00+00:00"
     },
     "holdout": {
-      "start": "2025-01-16T00:00:00+00:00",
+      "start": "2025-01-15T00:00:00+00:00",
       "end": null,
       "status": "unavailable_until_import",
       "end_policy": "last_available_common_closed_m1_bar"
     },
     "purge": {
       "start": "2025-01-01T00:00:00+00:00",
-      "end": "2025-01-16T00:00:00+00:00",
+      "end": "2025-01-15T00:00:00+00:00",
       "business_days": 10,
       "weekdays": [
         0,
@@ -43,114 +43,144 @@
         3,
         4
       ],
-      "holidays": [
-        "2025-01-01"
-      ],
-      "convention": "UTC weekdays excluding explicitly listed exchange holidays"
+      "holidays": [],
+      "convention": "UTC Monday-Friday, no holiday exclusions; user approved 2026-10-03"
     }
   },
   "provenance": {
     "files": [
       {
-        "path": "data\\historical\\xauusd\\bid\\m1\\xauusd_bid_m1_2024_01.csv",
-        "sha256": "7414d1cf6a02cf4fff5347e79602e9109549622cb73b152e5462188cc797135d"
+        "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-01.csv",
+        "sha256": "7dbf3c9db2aa2a3e3082cc47e4bbbdafdad9b167d480adc5f85fc359f9ceff6d"
       },
       {
-        "path": "data\\historical\\xauusd\\bid\\m1\\xauusd_bid_m1_2024_02.csv",
-        "sha256": "45060c59ccfc0ef3d5f78b49d793b7e3f97757a7659c604b887850068346621f"
+        "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-02.csv",
+        "sha256": "8e35ee44287677d9be9a043401c6aa90c0e1defe27e5f8336387450b2bd71d34"
       },
       {
-        "path": "data\\historical\\xauusd\\bid\\m1\\xauusd_bid_m1_2024_03.csv",
-        "sha256": "28c82e54e1bd7f586f5d22c0c39d9217618f62e8dfdd7eab94602c2c2bb81a14"
+        "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-03.csv",
+        "sha256": "abf8b52855bb2eeb7c1c11a4d5761eee6fcfc7e1857762c7daa4279ac0c3c3d4"
       },
       {
-        "path": "data\\historical\\xauusd\\bid\\m1\\xauusd_bid_m1_2024_04.csv",
-        "sha256": "ce55b0d9acdf20c694c37e3c53233455cc8b772269eb39f60357808abe37b9c9"
+        "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-04.csv",
+        "sha256": "100242755a0b00c4c5b0a4d30111e9120e0657147a3fa6eceb7fa4cfcf8afc2a"
       },
       {
-        "path": "data\\historical\\xauusd\\bid\\m1\\xauusd_bid_m1_2024_05.csv",
-        "sha256": "18084ecf8e9d5cef352cc290a55de29f27f006653b5da24a6520f8a02488f4f6"
+        "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-05.csv",
+        "sha256": "229da9d8df3fb0cda1ed14d6f417a1ff96300b3fa2b8293851ad8c6805837710"
       },
       {
-        "path": "data\\historical\\xauusd\\bid\\m1\\xauusd_bid_m1_2024_06.csv",
-        "sha256": "f7cad6452e9666b37f6f7830bb69a61439095919bb1609daa80839fdb3a8fd39"
+        "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-06.csv",
+        "sha256": "cabd6c79b536d8dfdce70fbdc1c450ed54603e5606239aebe56f70c81c64fa2e"
       },
       {
-        "path": "data\\historical\\xauusd\\ask\\m1\\xauusd_ask_m1_2024_01.csv",
-        "sha256": "a4ac5385c164b40a5760890279455228f64646180ea04bb6e45e633cafc024ae"
+        "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-07.csv",
+        "sha256": "e65b5716477e25f54532995dfdd7e3f582b918adf22fb8b8ddc87d5e4070d835"
       },
       {
-        "path": "data\\historical\\xauusd\\ask\\m1\\xauusd_ask_m1_2024_02.csv",
-        "sha256": "40706a4ec8abb07c6fe13e4c4562f7d07485c104226e42d36c57e06d36c1c167"
+        "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-08.csv",
+        "sha256": "e1597597699ca90e7e233b576b0249ccae94679dd79ed2afbd02a05f30e4ebf0"
       },
       {
-        "path": "data\\historical\\xauusd\\ask\\m1\\xauusd_ask_m1_2024_03.csv",
-        "sha256": "12ee5b98105d955b18b7a496120998f5f6647987cd16f706c94da6bd7541eb91"
+        "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-01.csv",
+        "sha256": "c236ec318763b2679a65ee1cac63a5b5bd9b351e62716baf557ab497e34e9c0b"
       },
       {
-        "path": "data\\historical\\xauusd\\ask\\m1\\xauusd_ask_m1_2024_04.csv",
-        "sha256": "ef4001235ec800174d32459174e2235d7cdaf9f67662108c78a962d1d4cb43c6"
+        "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-02.csv",
+        "sha256": "2cb4f8af62c9db934e83b43ac5b6c911d3a269005bbcbcaf77055ae5f964d3e3"
       },
       {
-        "path": "data\\historical\\xauusd\\ask\\m1\\xauusd_ask_m1_2024_05.csv",
-        "sha256": "54ffe9267ce4be51e68746c20eb0a3d5d77f46b0fc71c34af7eb8884d0af6588"
+        "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-03.csv",
+        "sha256": "f9ee99817da6d5a2e53fc7c92db4435665019c7a5258c117db5a0863f2287918"
       },
       {
-        "path": "data\\historical\\xauusd\\ask\\m1\\xauusd_ask_m1_2024_06.csv",
-        "sha256": "ec13944e0fa902394e6a48baf8e142696c3b1486d229d50603f5464085073c56"
+        "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-04.csv",
+        "sha256": "83e94e2cb1f6164d34bbd5682e1be67120bd9cb4ea703cc1ef629be460f725f3"
+      },
+      {
+        "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-05.csv",
+        "sha256": "29daf8c3238a558e6768647323ebdfbaf655bff6c4d833459dfe4cb61b2639ed"
+      },
+      {
+        "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-06.csv",
+        "sha256": "09dde8be95f1cc2e2ec315592d8848e7dd9ad4b58dd19635e734b1448f542ff4"
+      },
+      {
+        "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-07.csv",
+        "sha256": "7991b0b66c529642b05e93bcbaaac8d33a525a596c057bc846e4fa28dadc237e"
+      },
+      {
+        "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-08.csv",
+        "sha256": "9f93be96563fbcc2e8fbfe17a7c4373c84ac212169e8bbfef251aaaf35a730c1"
       }
     ],
     "manifest_checks": [
       {
-        "file": "xauusd_bid_m1_2024_01.csv",
+        "file": "data\\raw\\xauusd\\bid\\m1\\2020-01-01.csv",
         "matches": true
       },
       {
-        "file": "xauusd_bid_m1_2024_02.csv",
+        "file": "data\\raw\\xauusd\\bid\\m1\\2020-01-02.csv",
         "matches": true
       },
       {
-        "file": "xauusd_bid_m1_2024_03.csv",
+        "file": "data\\raw\\xauusd\\bid\\m1\\2020-01-03.csv",
         "matches": true
       },
       {
-        "file": "xauusd_bid_m1_2024_04.csv",
+        "file": "data\\raw\\xauusd\\bid\\m1\\2020-01-04.csv",
         "matches": true
       },
       {
-        "file": "xauusd_bid_m1_2024_05.csv",
+        "file": "data\\raw\\xauusd\\bid\\m1\\2020-01-05.csv",
         "matches": true
       },
       {
-        "file": "xauusd_bid_m1_2024_06.csv",
+        "file": "data\\raw\\xauusd\\bid\\m1\\2020-01-06.csv",
         "matches": true
       },
       {
-        "file": "xauusd_ask_m1_2024_01.csv",
+        "file": "data\\raw\\xauusd\\bid\\m1\\2020-01-07.csv",
         "matches": true
       },
       {
-        "file": "xauusd_ask_m1_2024_02.csv",
+        "file": "data\\raw\\xauusd\\bid\\m1\\2020-01-08.csv",
         "matches": true
       },
       {
-        "file": "xauusd_ask_m1_2024_03.csv",
+        "file": "data\\raw\\xauusd\\ask\\m1\\2020-01-01.csv",
         "matches": true
       },
       {
-        "file": "xauusd_ask_m1_2024_04.csv",
+        "file": "data\\raw\\xauusd\\ask\\m1\\2020-01-02.csv",
         "matches": true
       },
       {
-        "file": "xauusd_ask_m1_2024_05.csv",
+        "file": "data\\raw\\xauusd\\ask\\m1\\2020-01-03.csv",
         "matches": true
       },
       {
-        "file": "xauusd_ask_m1_2024_06.csv",
+        "file": "data\\raw\\xauusd\\ask\\m1\\2020-01-04.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\ask\\m1\\2020-01-05.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\ask\\m1\\2020-01-06.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\ask\\m1\\2020-01-07.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\ask\\m1\\2020-01-08.csv",
         "matches": true
       }
     ],
-    "timestamp_provenance": "Unix milliseconds interpreted as UTC; source offset unverified"
+    "timestamp_provenance": "Dukascopy UTC day + seconds, zero-based URL month; source BI5 preserved"
   },
   "periods": {
     "development": {
@@ -159,7 +189,6 @@
       "status": "incomplete_data",
       "coverage_complete": false,
       "missing_months": [
-        "2020-01",
         "2020-02",
         "2020-03",
         "2020-04",
@@ -207,6 +236,12 @@
         "2023-10",
         "2023-11",
         "2023-12",
+        "2024-01",
+        "2024-02",
+        "2024-03",
+        "2024-04",
+        "2024-05",
+        "2024-06",
         "2024-07",
         "2024-08",
         "2024-09",
@@ -216,321 +251,17 @@
       ],
       "contains_both": null,
       "adx_d1": {
-        "contains_both_observed": true,
+        "contains_both_observed": false,
         "episodes": {
-          "trend": [
-            {
-              "start": "2024-03-08T00:00:00+00:00",
-              "end": "2024-05-28T00:00:00+00:00",
-              "bars": 57
-            }
-          ],
-          "range": [
-            {
-              "start": "2024-02-08T00:00:00+00:00",
-              "end": "2024-03-05T00:00:00+00:00",
-              "bars": 19
-            },
-            {
-              "start": "2024-06-04T00:00:00+00:00",
-              "end": "2024-06-29T00:00:00+00:00",
-              "bars": 20
-            }
-          ]
+          "trend": [],
+          "range": []
         }
       },
       "structure_htf": {
-        "contains_both_observed": true,
+        "contains_both_observed": false,
         "episodes": {
-          "trend": [
-            {
-              "start": "2024-01-03T16:00:00+00:00",
-              "end": "2024-01-04T20:00:00+00:00",
-              "bars": 8
-            },
-            {
-              "start": "2024-01-08T12:00:00+00:00",
-              "end": "2024-01-09T20:00:00+00:00",
-              "bars": 9
-            },
-            {
-              "start": "2024-01-10T20:00:00+00:00",
-              "end": "2024-01-11T20:00:00+00:00",
-              "bars": 7
-            },
-            {
-              "start": "2024-01-18T04:00:00+00:00",
-              "end": "2024-01-19T20:00:00+00:00",
-              "bars": 11
-            },
-            {
-              "start": "2024-01-23T16:00:00+00:00",
-              "end": "2024-01-24T20:00:00+00:00",
-              "bars": 8
-            },
-            {
-              "start": "2024-01-25T04:00:00+00:00",
-              "end": "2024-01-26T20:00:00+00:00",
-              "bars": 11
-            },
-            {
-              "start": "2024-01-29T00:00:00+00:00",
-              "end": "2024-02-01T16:00:00+00:00",
-              "bars": 23
-            },
-            {
-              "start": "2024-02-03T00:00:00+00:00",
-              "end": "2024-02-06T16:00:00+00:00",
-              "bars": 12
-            },
-            {
-              "start": "2024-02-08T00:00:00+00:00",
-              "end": "2024-02-08T20:00:00+00:00",
-              "bars": 6
-            },
-            {
-              "start": "2024-02-17T00:00:00+00:00",
-              "end": "2024-02-22T00:00:00+00:00",
-              "bars": 20
-            },
-            {
-              "start": "2024-02-29T00:00:00+00:00",
-              "end": "2024-03-11T08:00:00+00:00",
-              "bars": 47
-            },
-            {
-              "start": "2024-03-13T04:00:00+00:00",
-              "end": "2024-03-14T20:00:00+00:00",
-              "bars": 11
-            },
-            {
-              "start": "2024-03-18T12:00:00+00:00",
-              "end": "2024-03-19T16:00:00+00:00",
-              "bars": 8
-            },
-            {
-              "start": "2024-03-21T08:00:00+00:00",
-              "end": "2024-03-22T08:00:00+00:00",
-              "bars": 7
-            },
-            {
-              "start": "2024-03-22T16:00:00+00:00",
-              "end": "2024-03-25T12:00:00+00:00",
-              "bars": 7
-            },
-            {
-              "start": "2024-03-26T00:00:00+00:00",
-              "end": "2024-03-27T16:00:00+00:00",
-              "bars": 11
-            },
-            {
-              "start": "2024-04-01T16:00:00+00:00",
-              "end": "2024-04-10T12:00:00+00:00",
-              "bars": 43
-            },
-            {
-              "start": "2024-04-13T00:00:00+00:00",
-              "end": "2024-04-15T20:00:00+00:00",
-              "bars": 7
-            },
-            {
-              "start": "2024-04-23T20:00:00+00:00",
-              "end": "2024-04-24T16:00:00+00:00",
-              "bars": 6
-            },
-            {
-              "start": "2024-05-01T16:00:00+00:00",
-              "end": "2024-05-02T20:00:00+00:00",
-              "bars": 8
-            },
-            {
-              "start": "2024-05-08T20:00:00+00:00",
-              "end": "2024-05-09T16:00:00+00:00",
-              "bars": 6
-            },
-            {
-              "start": "2024-05-10T20:00:00+00:00",
-              "end": "2024-05-21T08:00:00+00:00",
-              "bars": 42
-            },
-            {
-              "start": "2024-05-22T00:00:00+00:00",
-              "end": "2024-05-25T00:00:00+00:00",
-              "bars": 19
-            },
-            {
-              "start": "2024-05-27T12:00:00+00:00",
-              "end": "2024-05-28T08:00:00+00:00",
-              "bars": 6
-            },
-            {
-              "start": "2024-05-29T00:00:00+00:00",
-              "end": "2024-05-29T20:00:00+00:00",
-              "bars": 6
-            },
-            {
-              "start": "2024-06-06T12:00:00+00:00",
-              "end": "2024-06-10T00:00:00+00:00",
-              "bars": 11
-            },
-            {
-              "start": "2024-06-12T00:00:00+00:00",
-              "end": "2024-06-13T20:00:00+00:00",
-              "bars": 12
-            },
-            {
-              "start": "2024-06-20T00:00:00+00:00",
-              "end": "2024-06-22T00:00:00+00:00",
-              "bars": 13
-            }
-          ],
-          "range": [
-            {
-              "start": "2024-01-05T00:00:00+00:00",
-              "end": "2024-01-08T08:00:00+00:00",
-              "bars": 10
-            },
-            {
-              "start": "2024-01-12T00:00:00+00:00",
-              "end": "2024-01-15T08:00:00+00:00",
-              "bars": 10
-            },
-            {
-              "start": "2024-01-15T20:00:00+00:00",
-              "end": "2024-01-18T00:00:00+00:00",
-              "bars": 14
-            },
-            {
-              "start": "2024-02-01T20:00:00+00:00",
-              "end": "2024-02-02T20:00:00+00:00",
-              "bars": 7
-            },
-            {
-              "start": "2024-02-06T20:00:00+00:00",
-              "end": "2024-02-07T20:00:00+00:00",
-              "bars": 7
-            },
-            {
-              "start": "2024-02-09T00:00:00+00:00",
-              "end": "2024-02-09T20:00:00+00:00",
-              "bars": 6
-            },
-            {
-              "start": "2024-02-12T00:00:00+00:00",
-              "end": "2024-02-12T20:00:00+00:00",
-              "bars": 6
-            },
-            {
-              "start": "2024-02-13T04:00:00+00:00",
-              "end": "2024-02-15T00:00:00+00:00",
-              "bars": 12
-            },
-            {
-              "start": "2024-02-16T00:00:00+00:00",
-              "end": "2024-02-16T20:00:00+00:00",
-              "bars": 6
-            },
-            {
-              "start": "2024-02-22T04:00:00+00:00",
-              "end": "2024-02-23T08:00:00+00:00",
-              "bars": 8
-            },
-            {
-              "start": "2024-02-27T20:00:00+00:00",
-              "end": "2024-02-28T20:00:00+00:00",
-              "bars": 7
-            },
-            {
-              "start": "2024-03-11T12:00:00+00:00",
-              "end": "2024-03-13T00:00:00+00:00",
-              "bars": 10
-            },
-            {
-              "start": "2024-03-15T00:00:00+00:00",
-              "end": "2024-03-18T08:00:00+00:00",
-              "bars": 10
-            },
-            {
-              "start": "2024-03-19T20:00:00+00:00",
-              "end": "2024-03-21T04:00:00+00:00",
-              "bars": 9
-            },
-            {
-              "start": "2024-03-27T20:00:00+00:00",
-              "end": "2024-04-01T12:00:00+00:00",
-              "bars": 12
-            },
-            {
-              "start": "2024-04-11T20:00:00+00:00",
-              "end": "2024-04-12T20:00:00+00:00",
-              "bars": 7
-            },
-            {
-              "start": "2024-04-22T00:00:00+00:00",
-              "end": "2024-04-23T16:00:00+00:00",
-              "bars": 11
-            },
-            {
-              "start": "2024-04-25T12:00:00+00:00",
-              "end": "2024-04-26T20:00:00+00:00",
-              "bars": 9
-            },
-            {
-              "start": "2024-04-30T04:00:00+00:00",
-              "end": "2024-05-01T12:00:00+00:00",
-              "bars": 9
-            },
-            {
-              "start": "2024-05-03T00:00:00+00:00",
-              "end": "2024-05-03T20:00:00+00:00",
-              "bars": 6
-            },
-            {
-              "start": "2024-05-07T12:00:00+00:00",
-              "end": "2024-05-08T16:00:00+00:00",
-              "bars": 8
-            },
-            {
-              "start": "2024-05-09T20:00:00+00:00",
-              "end": "2024-05-10T16:00:00+00:00",
-              "bars": 6
-            },
-            {
-              "start": "2024-05-30T00:00:00+00:00",
-              "end": "2024-05-30T20:00:00+00:00",
-              "bars": 6
-            },
-            {
-              "start": "2024-06-03T00:00:00+00:00",
-              "end": "2024-06-04T00:00:00+00:00",
-              "bars": 7
-            },
-            {
-              "start": "2024-06-05T00:00:00+00:00",
-              "end": "2024-06-06T08:00:00+00:00",
-              "bars": 9
-            },
-            {
-              "start": "2024-06-14T20:00:00+00:00",
-              "end": "2024-06-18T16:00:00+00:00",
-              "bars": 13
-            },
-            {
-              "start": "2024-06-24T00:00:00+00:00",
-              "end": "2024-06-25T04:00:00+00:00",
-              "bars": 8
-            },
-            {
-              "start": "2024-06-25T20:00:00+00:00",
-              "end": "2024-06-27T12:00:00+00:00",
-              "bars": 11
-            },
-            {
-              "start": "2024-06-28T00:00:00+00:00",
-              "end": "2024-06-28T20:00:00+00:00",
-              "bars": 6
-            }
-          ]
+          "trend": [],
+          "range": []
         }
       }
     },
@@ -545,11 +276,13 @@
     {
       "period": "development",
       "month": "2020-01",
-      "data_present": false,
-      "d1_bars": 0,
+      "data_present": true,
+      "d1_bars": 4,
       "adx_mean": null,
       "adx_min": null,
-      "adx_max": null
+      "adx_max": null,
+      "adx_warmup": 4,
+      "structure_warmup": 24
     },
     {
       "period": "development",
@@ -977,86 +710,56 @@
     {
       "period": "development",
       "month": "2024-01",
-      "data_present": true,
-      "d1_bars": 22,
+      "data_present": false,
+      "d1_bars": 0,
       "adx_mean": null,
       "adx_min": null,
-      "adx_max": null,
-      "adx_warmup": 22,
-      "structure_trend_down": 49,
-      "structure_range": 46,
-      "structure_trend_up": 31,
-      "structure_warmup": 11
+      "adx_max": null
     },
     {
       "period": "development",
       "month": "2024-02",
-      "data_present": true,
-      "d1_bars": 21,
-      "adx_mean": 12.950590348472867,
-      "adx_min": 11.770715132063254,
-      "adx_max": 15.078912013316843,
-      "adx_range": 16,
-      "adx_warmup": 5,
-      "structure_range": 63,
-      "structure_trend_up": 34,
-      "structure_trend_down": 33
+      "data_present": false,
+      "d1_bars": 0,
+      "adx_mean": null,
+      "adx_min": null,
+      "adx_max": null
     },
     {
       "period": "development",
       "month": "2024-03",
-      "data_present": true,
-      "d1_bars": 21,
-      "adx_mean": 32.48989156320468,
-      "adx_min": 12.372220885300928,
-      "adx_max": 44.15105108308766,
-      "adx_trend": 16,
-      "adx_range": 3,
-      "adx_transition": 2,
-      "structure_trend_up": 59,
-      "structure_range": 40,
-      "structure_trend_down": 26
+      "data_present": false,
+      "d1_bars": 0,
+      "adx_mean": null,
+      "adx_min": null,
+      "adx_max": null
     },
     {
       "period": "development",
       "month": "2024-04",
-      "data_present": true,
-      "d1_bars": 21,
-      "adx_mean": 55.42162451089956,
-      "adx_min": 45.95713161377599,
-      "adx_max": 61.7067335249637,
-      "adx_trend": 21,
-      "structure_trend_up": 67,
-      "structure_range": 52,
-      "structure_trend_down": 17
+      "data_present": false,
+      "d1_bars": 0,
+      "adx_mean": null,
+      "adx_min": null,
+      "adx_max": null
     },
     {
       "period": "development",
       "month": "2024-05",
-      "data_present": true,
-      "d1_bars": 23,
-      "adx_mean": 29.917974915946715,
-      "adx_min": 21.235794991149763,
-      "adx_max": 44.604485583329634,
-      "adx_trend": 20,
-      "adx_transition": 3,
-      "structure_trend_up": 57,
-      "structure_range": 45,
-      "structure_trend_down": 40
+      "data_present": false,
+      "d1_bars": 0,
+      "adx_mean": null,
+      "adx_min": null,
+      "adx_max": null
     },
     {
       "period": "development",
       "month": "2024-06",
-      "data_present": true,
-      "d1_bars": 21,
-      "adx_mean": 14.217508187175053,
-      "adx_min": 9.835265564009928,
-      "adx_max": 20.01451241677816,
-      "adx_range": 20,
-      "adx_transition": 1,
-      "structure_range": 68,
-      "structure_trend_up": 43,
-      "structure_trend_down": 14
+      "data_present": false,
+      "d1_bars": 0,
+      "adx_mean": null,
+      "adx_min": null,
+      "adx_max": null
     },
     {
       "period": "development",
@@ -1065,8 +768,7 @@
       "d1_bars": 0,
       "adx_mean": null,
       "adx_min": null,
-      "adx_max": null,
-      "structure_trend_up": 1
+      "adx_max": null
     },
     {
       "period": "development",
@@ -1115,7 +817,7 @@
     }
   ],
   "methods": [
-    "D1 UTC weekdays, Wilder ADX seeded causally; Sunday partial D1 excluded",
+    "Shared closed NY17 D1 for Wilder ADX, PDH/PDL and D1 structural bias",
     "H4 UTC confirmed fractals: HH+HL / LH+LL; otherwise range",
     "Labels attributed to bar availability/close, not opening timestamp",
     "Past market warmup may cross period start; no future prices used"

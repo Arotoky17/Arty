@@ -97,6 +97,9 @@ class StructureDetector(BaseDetector):
         5. BOS est subdivisé en Internal BOS ou External BOS selon la force du swing
         6. MSS = CHoCH confirmé par un changement de tendance
         """
+        from arty_trading.validation.market_calendar import tradable_candles
+
+        candles = tradable_candles(candles)
         if not self._enabled or len(candles) < 5:
             return []
 

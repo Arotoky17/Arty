@@ -24,6 +24,7 @@ from arty_trading.modules.execution.sl_guard import StructureContext
 from arty_trading.modules.smc.base import find_swing_points
 from arty_trading.utils.helpers import calculate_atr, get_pip_size, pip_value
 from arty_trading.validation.cost_sensitivity import cost_sensitivity
+from arty_trading.validation.market_calendar import entry_allowed, tradable_candles
 from arty_trading.validation.preregistration import assert_setup_run_allowed
 from arty_trading.validation.split import DataSplit
 from arty_trading.validation.trial_registry import TrialRegistry
@@ -56,14 +57,22 @@ class BacktestEngine:
         registry: TrialRegistry | None = None,
         cost_model: CostModel | None = None,
         fill_model: FillModel | None = None,
+        news_exclusion: bool = False,
     ) -> None:
         execution = load_config("execution.yaml")
+        if symbol.upper() != "XAUUSD":
+            # XAUUSD calibration cannot be applied to another instrument.
+            execution["cost"]["spread_mode"] = "configured"
+            execution["cost"]["spread_unit"] = "pips"
+            execution["cost"]["limit_slippage_usd"] = None
+            execution["cost"]["market_stop_slippage_usd"] = None
         self.cost_model = cost_model or CostModel(**execution["cost"])
         self.fill_model = fill_model or FillModel(**execution["fill"])
         self.registry = registry or TrialRegistry()
         self.split = DataSplit(self.registry)
         self.setup_id = setup_id
         self.parameters = parameters or {}
+        self.news_exclusion = news_exclusion
         self._authorized_batches: list[tuple[list[Candle], tuple[str, ...]]] = []
         self._pending: list[tuple[Signal, int]] = []
         self._rng = random.Random(self.fill_model.seed)
@@ -72,6 +81,7 @@ class BacktestEngine:
         self._orders_filled = 0
         self._entry_times: dict[int | None, datetime] = {}
         self._initial_risks: dict[int | None, float] = {}
+        self._execution_candles: list[Candle] = []
         self._exit_time: datetime | None = None
         self._costs_by_ticket: dict[int | None, float] = {}
         self._accrued_costs = [0.0]
@@ -117,6 +127,7 @@ class BacktestEngine:
         smc_detector: Any = None,
     ) -> BacktestStats:
         self._begin_run(candles)
+        candles = tradable_candles(candles)
         if not candles:
             return self._finish_run()
 
@@ -186,6 +197,7 @@ class BacktestEngine:
         self, candles: list[Candle], extra_batches: tuple[list[Candle], ...] = ()
     ) -> None:
         assert_setup_run_allowed(self.setup_id)
+        self._diagnostic_candles = candles
         partition = self._validate_batch(candles)
         for batch in extra_batches:
             if self._validate_batch(batch) != partition and batch:
@@ -200,6 +212,7 @@ class BacktestEngine:
                 "initial_balance": str(self._initial_balance),
                 "cost": asdict(self.cost_model),
                 "fill": asdict(self.fill_model),
+                "news_exclusion": self.news_exclusion,
                 "risk_per_trade": self._risk_per_trade,
             },
             candles[0].timeframe.value if candles else None,
@@ -216,6 +229,7 @@ class BacktestEngine:
         self._orders_submitted = self._orders_filled = 0
         self._entry_times = {}
         self._initial_risks = {}
+        self._execution_candles = []
         self._costs_by_ticket = {}
         self._accrued_costs = [0.0]
         self._rng = random.Random(self.fill_model.seed)
@@ -239,6 +253,18 @@ class BacktestEngine:
         stats.unfilled_orders = self._orders_submitted - self._orders_filled
         stats.fill_rate = (
             self._orders_filled / self._orders_submitted if self._orders_submitted else 0.0
+        )
+        # Share of scored trades whose volume was reduced by the leverage/margin ceilings.
+        scored = [t for t in closed_orders if self._initial_risks.get(t.ticket, 0) > 0]
+        stats.volume_capped_trades = sum(1 for t in scored if t.metadata.get("capped"))
+        stats.leverage_capped_trades = sum(
+            1 for t in scored if t.metadata.get("capped_by_leverage")
+        )
+        stats.margin_capped_trades = sum(
+            1 for t in scored if t.metadata.get("capped_by_margin")
+        )
+        stats.volume_capped_share = (
+            stats.volume_capped_trades / len(scored) if scored else 0.0
         )
         results = [
             float(t.profit or 0) / self._initial_risks[t.ticket]
@@ -264,6 +290,27 @@ class BacktestEngine:
             multipliers,
         )
         stats.cost_assumptions = self.cost_model.assumptions()
+        stats.execution_audit = [
+            {"ticket": t.ticket, **t.metadata,
+             "costs_usd": self._costs_by_ticket.get(t.ticket, 0.0),
+             "costs_over_initial_r": (
+                 self._costs_by_ticket.get(t.ticket, 0.0) / self._initial_risks[t.ticket]
+             )}
+            for t in closed_orders if self._initial_risks.get(t.ticket, 0) > 0
+        ]
+        from arty_trading.validation.xauusd_diagnostics import diagnostics
+
+        stats.xauusd_diagnostics = diagnostics(
+            [{"entry_time": self._entry_times[t.ticket].isoformat(),
+              "direction": t.direction.value,
+              "r": float(t.profit or 0) / self._initial_risks[t.ticket]}
+             for t in closed_orders if self._initial_risks.get(t.ticket, 0) > 0],
+            self._diagnostic_candles, self.cost_model, float(self._initial_balance),
+            self._risk_per_trade, self._symbol,
+        )
+        self.registry.record_diagnostics(
+            self._trial_id, {**stats.xauusd_diagnostics, "execution_audit": stats.execution_audit}
+        )
         self.registry.finish(self._trial_id, stats, stats.expectancy_r)
         self.last_stats = stats
         return stats
@@ -273,14 +320,28 @@ class BacktestEngine:
         self._accrued_costs.append(sum(self._costs_by_ticket.values()))
 
     def _submit_limit(self, signal: Signal, candle: Candle) -> None:
+        from arty_trading.validation.xauusd_diagnostics import news_blocked
+
+        if news_blocked(candle.time, self.cost_model, self.news_exclusion):
+            return
+        if not entry_allowed(candle):
+            return
         self._orders_submitted += 1
         self._pending.append((signal, self.fill_model.expiry_bars))
 
     def _process_pending(self, candle: Candle) -> None:
+        if not tradable_candles([candle]):
+            return
         self._exit_time = candle.time
         self._newly_filled = set()
         remaining = []
         for signal, ttl in self._pending:
+            from arty_trading.validation.xauusd_diagnostics import news_blocked
+
+            if news_blocked(candle.time, self.cost_model, self.news_exclusion):
+                if ttl > 1:
+                    remaining.append((signal, ttl - 1))
+                continue
             if self.fill_model.fills(signal, candle, float(get_pip_size(self._symbol)), self._rng):
                 before = len(self._trades)
                 self._open_trade_from_signal(signal, candle)
@@ -290,6 +351,7 @@ class BacktestEngine:
             elif ttl > 1:
                 remaining.append((signal, ttl - 1))
         self._pending = remaining
+        self._execution_candles.append(candle)
 
     def _estimate_trend(self, candles: list[Candle]) -> str:
         """Estime la tendance à partir des bougies (pour backtest simplifié)."""
@@ -317,9 +379,31 @@ class BacktestEngine:
 
         pip_val = pip_value(self._symbol, lot_size=1.0)
         volume = risk_amount / (sl_pips * pip_val)
-        volume = round(volume, 2)
-        if volume < 0.01:
-            volume = 0.01
+        limits: dict[str, Any] = {}
+        if self._symbol == "XAUUSD":
+            from arty_trading.modules.execution.risk_limits import permitted_volume
+
+            period = effective_definitions(self._symbol)["atr_period"]
+            atr = float(signal.metadata.get(
+                "atr_at_bos", calculate_atr(self._execution_candles, period)
+            ))
+            units = effective_definitions(self._symbol)["instrument_units"]["XAUUSD"][
+                "contract_ounces_per_lot"
+            ]
+            existing = sum(float(t.volume * t.entry_price) * units for t in self._open_trades)
+            margin_leverage = load_config("execution.yaml")["risk_limits"][
+                "broker_margin_leverage"
+            ]
+            volume, limits = permitted_volume(
+                volume, float(signal.entry_price), float(signal.stop_loss), atr,
+                float(self._equity), existing, existing / margin_leverage,
+            )
+            if not volume:
+                return
+        else:
+            volume = round(volume, 2)
+            if volume < 0.01:
+                volume = 0.01
 
         trade = Trade(
             symbol=self._symbol,
@@ -331,6 +415,7 @@ class BacktestEngine:
             signal_id=signal.id,
             strategy_name=signal.strategy_name,
             ticket=self._ticket_counter,
+            metadata=limits,
         )
         self._entry_times[trade.ticket] = candle.time
         self._initial_risks[trade.ticket] = sl_pips * pip_val * float(trade.volume)
@@ -444,6 +529,8 @@ class BacktestEngine:
             pip_val,
             self._entry_times.get(trade.ticket, self._exit_time),
             self._exit_time,
+            entry_price=float(trade.entry_price),
+            exit_price=float(price),
         )
         partial.profit = Decimal(str(pips * pip_val * float(closed_volume) - cost))
         self._costs_by_ticket[trade.ticket] = self._costs_by_ticket.get(trade.ticket, 0.0) + cost
@@ -460,7 +547,9 @@ class BacktestEngine:
             close_price = float(trade.entry_price)
 
             if trade.direction == Direction.BUY:
-                if candle.low <= float(trade.stop_loss):
+                if candle.low <= float(trade.stop_loss) and (
+                    self.fill_model.stop_on_fill_bar or trade.ticket not in self._newly_filled
+                ):
                     hit_sl = True
                     close_price = min(float(candle.open), float(trade.stop_loss))
                 elif (
@@ -470,7 +559,9 @@ class BacktestEngine:
                     hit_tp = True
                     close_price = float(trade.take_profit)
             else:
-                if candle.high >= float(trade.stop_loss):
+                if candle.high >= float(trade.stop_loss) and (
+                    self.fill_model.stop_on_fill_bar or trade.ticket not in self._newly_filled
+                ):
                     hit_sl = True
                     close_price = max(float(candle.open), float(trade.stop_loss))
                 elif (
@@ -481,9 +572,13 @@ class BacktestEngine:
                     close_price = float(trade.take_profit)
 
             if hit_sl or hit_tp:
-                self._close_trade(trade, Decimal(str(close_price)))
+                self._close_trade(
+                    trade, Decimal(str(close_price)), exit_kind="stop" if hit_sl else "limit"
+                )
 
-    def _close_trade(self, trade: Trade, close_price: Decimal) -> None:
+    def _close_trade(
+        self, trade: Trade, close_price: Decimal, *, exit_kind: str = "market"
+    ) -> None:
         pip_size = float(get_pip_size(self._symbol))
         if trade.direction == Direction.BUY:
             pips = (float(close_price) - float(trade.entry_price)) / pip_size
@@ -496,6 +591,9 @@ class BacktestEngine:
             pip_val,
             self._entry_times.get(trade.ticket, self._exit_time),
             self._exit_time,
+            exit_kind=exit_kind,
+            entry_price=float(trade.entry_price),
+            exit_price=float(close_price),
         )
         profit = Decimal(str(pips * pip_val * float(trade.volume) - cost))
         self._costs_by_ticket[trade.ticket] = self._costs_by_ticket.get(trade.ticket, 0.0) + cost
@@ -538,6 +636,8 @@ class BacktestEngine:
             "profit": str(self._balance - self._initial_balance),
             "cost_sensitivity": self.last_stats.cost_sensitivity if self.last_stats else [],
             "cost_assumptions": self.cost_model.assumptions(),
+            "xauusd_diagnostics": self.last_stats.xauusd_diagnostics if self.last_stats else {},
+            "execution_audit": self.last_stats.execution_audit if self.last_stats else [],
         }
 
     @property

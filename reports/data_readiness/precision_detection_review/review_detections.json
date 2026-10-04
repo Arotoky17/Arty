@@ -1,0 +1,3058 @@
+{
+  "generated_at": "2026-10-03T18:26:25.593878+00:00",
+  "symbol": "XAUUSD",
+  "period": [
+    "2024-01-03T05:00:00+00:00",
+    "2024-06-30T23:55:00+00:00"
+  ],
+  "config": {
+    "minimum_manual_correct_fraction": 0.8,
+    "timeframe": "M5",
+    "samples_per_type": 20,
+    "seed": 20261002,
+    "window_bars": 120,
+    "overlap_bars": 40,
+    "plot_before_bars": 20,
+    "plot_after_bars": 10,
+    "dpi": 110
+  },
+  "definitions": {
+    "version": 1,
+    "daily_bars": {
+      "convention": "new_york_17",
+      "alternatives": [
+        "utc",
+        "new_york_17"
+      ],
+      "new_york_anchor": "17:00",
+      "status": "user_selected_2026_10_03",
+      "source_timeframe": "H1",
+      "source_history_padding_days": 10,
+      "source_calendar_days_per_bar": 2.0,
+      "discard_partial_first_day": true
+    },
+    "execution_constraints": {
+      "minimum_stop_atr": 0.5
+    },
+    "instrument_units": {
+      "XAUUSD": {
+        "pip_usd": 0.01,
+        "contract_ounces_per_lot": 100.0
+      }
+    },
+    "regime_audit": {
+      "adx_timeframe_minutes": 1440,
+      "structure_timeframe_minutes": 240,
+      "adx_period": 14,
+      "trend_min_adx": 25.0,
+      "range_max_adx": 20.0,
+      "minimum_daily_episode_bars": 3,
+      "minimum_structure_episode_bars": 6,
+      "daily_weekdays": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    "atr_period": 14,
+    "atr_warmup": "require_full",
+    "swing": {
+      "window": 2,
+      "external_window": 5,
+      "confirmation_bars": 1
+    },
+    "displacement": {
+      "body_atr": 1.0,
+      "confirmation_bars": 2
+    },
+    "fvg": {
+      "gap_atr": 0.25,
+      "max_age_bars": 30
+    },
+    "ob": {
+      "max_age_bars": 30,
+      "max_mitigations": 0,
+      "mitigation_lookback": 20,
+      "max_size_atr": 3.0
+    },
+    "sweep": {
+      "penetration_atr": 0.05,
+      "displacement_atr": 1.0,
+      "reintegration_bars": 2,
+      "search_bars": 20,
+      "rejection_ratio": 0.5
+    },
+    "equal_levels": {
+      "tolerance_atr": 0.1
+    },
+    "confirmation": {
+      "rejection_wick_body_ratio": 1.5
+    },
+    "symbols": {
+      "XAUUSD": {
+        "fvg": {
+          "gap_atr": 0.25
+        },
+        "sweep": {
+          "rejection_ratio": 0.5,
+          "displacement_atr": 1.0
+        },
+        "ob": {
+          "max_size_atr": 3.0
+        },
+        "displacement": {
+          "confirmation_bars": 2
+        }
+      }
+    },
+    "override_provenance": {
+      "recorded_on": "2026-10-03",
+      "yaml_introduced_on": "2026-10-02",
+      "yaml_commit": "bf2297d",
+      "source": "src/arty_trading/config/settings.py",
+      "tool": "git_show_and_git_log_read_only",
+      "original_selection_date": "unknown",
+      "backtest_or_pnl_used_at_original_selection": "unknown",
+      "historical_note": "Existing PnL reports are present; no evidence establishes whether they guided these thresholds.",
+      "migration_pnl_used": false,
+      "overrides": {
+        "fvg": {
+          "source_field": "min_fvg_atr",
+          "value": 0.25,
+          "first_observed_on": "2026-08-24",
+          "commits": [
+            "2afe9e0",
+            "ebb1c92"
+          ]
+        },
+        "sweep": {
+          "source_fields": [
+            "sweep_min_rejection_ratio",
+            "sweep_displacement_atr_mult"
+          ],
+          "values": [
+            0.5,
+            1.0
+          ],
+          "first_observed_on": "2026-08-24",
+          "commits": [
+            "2afe9e0",
+            "ebb1c92"
+          ]
+        },
+        "ob": {
+          "source_field": "max_ob_atr_mult",
+          "value": 3.0,
+          "first_observed_on": "2026-08-24",
+          "commits": [
+            "2afe9e0",
+            "ebb1c92"
+          ]
+        },
+        "displacement": {
+          "source_field": "displacement_confirmation_bars",
+          "value": 2,
+          "first_observed_on": "2026-08-24",
+          "commits": [
+            "2afe9e0",
+            "ebb1c92"
+          ]
+        }
+      }
+    }
+  },
+  "provenance": {
+    "files": [
+      {
+        "path": "data\\historical\\xauusd\\bid\\m1\\xauusd_bid_m1_2024_01.csv",
+        "sha256": "7414d1cf6a02cf4fff5347e79602e9109549622cb73b152e5462188cc797135d"
+      },
+      {
+        "path": "data\\historical\\xauusd\\bid\\m1\\xauusd_bid_m1_2024_02.csv",
+        "sha256": "45060c59ccfc0ef3d5f78b49d793b7e3f97757a7659c604b887850068346621f"
+      },
+      {
+        "path": "data\\historical\\xauusd\\bid\\m1\\xauusd_bid_m1_2024_03.csv",
+        "sha256": "28c82e54e1bd7f586f5d22c0c39d9217618f62e8dfdd7eab94602c2c2bb81a14"
+      },
+      {
+        "path": "data\\historical\\xauusd\\bid\\m1\\xauusd_bid_m1_2024_04.csv",
+        "sha256": "ce55b0d9acdf20c694c37e3c53233455cc8b772269eb39f60357808abe37b9c9"
+      },
+      {
+        "path": "data\\historical\\xauusd\\bid\\m1\\xauusd_bid_m1_2024_05.csv",
+        "sha256": "18084ecf8e9d5cef352cc290a55de29f27f006653b5da24a6520f8a02488f4f6"
+      },
+      {
+        "path": "data\\historical\\xauusd\\bid\\m1\\xauusd_bid_m1_2024_06.csv",
+        "sha256": "f7cad6452e9666b37f6f7830bb69a61439095919bb1609daa80839fdb3a8fd39"
+      },
+      {
+        "path": "data\\historical\\xauusd\\ask\\m1\\xauusd_ask_m1_2024_01.csv",
+        "sha256": "a4ac5385c164b40a5760890279455228f64646180ea04bb6e45e633cafc024ae"
+      },
+      {
+        "path": "data\\historical\\xauusd\\ask\\m1\\xauusd_ask_m1_2024_02.csv",
+        "sha256": "40706a4ec8abb07c6fe13e4c4562f7d07485c104226e42d36c57e06d36c1c167"
+      },
+      {
+        "path": "data\\historical\\xauusd\\ask\\m1\\xauusd_ask_m1_2024_03.csv",
+        "sha256": "12ee5b98105d955b18b7a496120998f5f6647987cd16f706c94da6bd7541eb91"
+      },
+      {
+        "path": "data\\historical\\xauusd\\ask\\m1\\xauusd_ask_m1_2024_04.csv",
+        "sha256": "ef4001235ec800174d32459174e2235d7cdaf9f67662108c78a962d1d4cb43c6"
+      },
+      {
+        "path": "data\\historical\\xauusd\\ask\\m1\\xauusd_ask_m1_2024_05.csv",
+        "sha256": "54ffe9267ce4be51e68746c20eb0a3d5d77f46b0fc71c34af7eb8884d0af6588"
+      },
+      {
+        "path": "data\\historical\\xauusd\\ask\\m1\\xauusd_ask_m1_2024_06.csv",
+        "sha256": "ec13944e0fa902394e6a48baf8e142696c3b1486d229d50603f5464085073c56"
+      }
+    ],
+    "manifest_checks": [
+      {
+        "file": "xauusd_bid_m1_2024_01.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_bid_m1_2024_02.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_bid_m1_2024_03.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_bid_m1_2024_04.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_bid_m1_2024_05.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_bid_m1_2024_06.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_ask_m1_2024_01.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_ask_m1_2024_02.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_ask_m1_2024_03.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_ask_m1_2024_04.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_ask_m1_2024_05.csv",
+        "matches": true
+      },
+      {
+        "file": "xauusd_ask_m1_2024_06.csv",
+        "matches": true
+      }
+    ],
+    "timestamp_provenance": "Unix milliseconds interpreted as UTC; source offset unverified",
+    "removed_non_tradable_m1_rows_in_derived_view": 86700,
+    "bars": 35076
+  },
+  "selections": {
+    "swing": {
+      "available": 9132,
+      "selected": [
+        {
+          "category": "swing",
+          "direction": "low",
+          "price": 2024.965,
+          "details": {
+            "strength": "internal",
+            "window": 2
+          },
+          "origin_index": 10195,
+          "origin_time": "2024-02-23T03:35:00+00:00",
+          "snapshot_end_index": 10199,
+          "snapshot_end_time": "2024-02-23T03:55:00+00:00",
+          "snapshot_start_index": 10080,
+          "chart": "swing/01.png"
+        },
+        {
+          "category": "swing",
+          "direction": "low",
+          "price": 2006.695,
+          "details": {
+            "strength": "internal",
+            "window": 2
+          },
+          "origin_index": 8914,
+          "origin_time": "2024-02-16T11:50:00+00:00",
+          "snapshot_end_index": 8919,
+          "snapshot_end_time": "2024-02-16T12:15:00+00:00",
+          "snapshot_start_index": 8800,
+          "chart": "swing/02.png"
+        },
+        {
+          "category": "swing",
+          "direction": "high",
+          "price": 2326.935,
+          "details": {
+            "strength": "internal",
+            "window": 2
+          },
+          "origin_index": 34005,
+          "origin_time": "2024-06-25T02:45:00+00:00",
+          "snapshot_end_index": 34039,
+          "snapshot_end_time": "2024-06-25T05:35:00+00:00",
+          "snapshot_start_index": 33920,
+          "chart": "swing/03.png"
+        },
+        {
+          "category": "swing",
+          "direction": "low",
+          "price": 2295.445,
+          "details": {
+            "strength": "external",
+            "window": 2
+          },
+          "origin_index": 23424,
+          "origin_time": "2024-05-01T18:00:00+00:00",
+          "snapshot_end_index": 23479,
+          "snapshot_end_time": "2024-05-01T23:35:00+00:00",
+          "snapshot_start_index": 23360,
+          "chart": "swing/04.png"
+        },
+        {
+          "category": "swing",
+          "direction": "low",
+          "price": 2341.0,
+          "details": {
+            "strength": "internal",
+            "window": 2
+          },
+          "origin_index": 25592,
+          "origin_time": "2024-05-13T14:40:00+00:00",
+          "snapshot_end_index": 25639,
+          "snapshot_end_time": "2024-05-13T18:35:00+00:00",
+          "snapshot_start_index": 25520,
+          "chart": "swing/05.png"
+        },
+        {
+          "category": "swing",
+          "direction": "high",
+          "price": 2331.255,
+          "details": {
+            "strength": "internal",
+            "window": 2
+          },
+          "origin_index": 22380,
+          "origin_time": "2024-04-26T00:00:00+00:00",
+          "snapshot_end_index": 22439,
+          "snapshot_end_time": "2024-04-26T04:55:00+00:00",
+          "snapshot_start_index": 22320,
+          "chart": "swing/06.png"
+        },
+        {
+          "category": "swing",
+          "direction": "low",
+          "price": 2030.515,
+          "details": {
+            "strength": "internal",
+            "window": 2
+          },
+          "origin_index": 5875,
+          "origin_time": "2024-02-01T11:35:00+00:00",
+          "snapshot_end_index": 5879,
+          "snapshot_end_time": "2024-02-01T11:55:00+00:00",
+          "snapshot_start_index": 5760,
+          "chart": "swing/07.png"
+        },
+        {
+          "category": "swing",
+          "direction": "low",
+          "price": 2305.155,
+          "details": {
+            "strength": "internal",
+            "window": 2
+          },
+          "origin_index": 31333,
+          "origin_time": "2024-06-11T10:05:00+00:00",
+          "snapshot_end_index": 31399,
+          "snapshot_end_time": "2024-06-11T15:35:00+00:00",
+          "snapshot_start_index": 31280,
+          "chart": "swing/08.png"
+        },
+        {
+          "category": "swing",
+          "direction": "low",
+          "price": 2342.475,
+          "details": {
+            "strength": "internal",
+            "window": 2
+          },
+          "origin_index": 20076,
+          "origin_time": "2024-04-15T15:00:00+00:00",
+          "snapshot_end_index": 20119,
+          "snapshot_end_time": "2024-04-15T18:35:00+00:00",
+          "snapshot_start_index": 20000,
+          "chart": "swing/09.png"
+        },
+        {
+          "category": "swing",
+          "direction": "high",
+          "price": 2240.415,
+          "details": {
+            "strength": "internal",
+            "window": 2
+          },
+          "origin_index": 17361,
+          "origin_time": "2024-04-01T18:45:00+00:00",
+          "snapshot_end_index": 17399,
+          "snapshot_end_time": "2024-04-01T22:55:00+00:00",
+          "snapshot_start_index": 17280,
+          "chart": "swing/10.png"
+        },
+        {
+          "category": "swing",
+          "direction": "low",
+          "price": 2322.488,
+          "details": {
+            "strength": "internal",
+            "window": 2
+          },
+          "origin_index": 30034,
+          "origin_time": "2024-06-04T16:50:00+00:00",
+          "snapshot_end_index": 30039,
+          "snapshot_end_time": "2024-06-04T17:15:00+00:00",
+          "snapshot_start_index": 29920,
+          "chart": "swing/11.png"
+        },
+        {
+          "category": "swing",
+          "direction": "low",
+          "price": 2205.685,
+          "details": {
+            "strength": "external",
+            "window": 2
+          },
+          "origin_index": 16941,
+          "origin_time": "2024-03-28T12:45:00+00:00",
+          "snapshot_end_index": 16999,
+          "snapshot_end_time": "2024-03-28T17:35:00+00:00",
+          "snapshot_start_index": 16880,
+          "chart": "swing/12.png"
+        },
+        {
+          "category": "swing",
+          "direction": "high",
+          "price": 2031.175,
+          "details": {
+            "strength": "internal",
+            "window": 2
+          },
+          "origin_index": 858,
+          "origin_time": "2024-01-08T07:30:00+00:00",
+          "snapshot_end_index": 919,
+          "snapshot_end_time": "2024-01-08T12:35:00+00:00",
+          "snapshot_start_index": 800,
+          "chart": "swing/13.png"
+        },
+        {
+          "category": "swing",
+          "direction": "low",
+          "price": 2339.345,
+          "details": {
+            "strength": "external",
+            "window": 2
+          },
+          "origin_index": 28260,
+          "origin_time": "2024-05-27T07:00:00+00:00",
+          "snapshot_end_index": 28279,
+          "snapshot_end_time": "2024-05-27T08:35:00+00:00",
+          "snapshot_start_index": 28160,
+          "chart": "swing/14.png"
+        },
+        {
+          "category": "swing",
+          "direction": "low",
+          "price": 2175.785,
+          "details": {
+            "strength": "external",
+            "window": 2
+          },
+          "origin_index": 13310,
+          "origin_time": "2024-03-11T09:10:00+00:00",
+          "snapshot_end_index": 13319,
+          "snapshot_end_time": "2024-03-11T09:55:00+00:00",
+          "snapshot_start_index": 13200,
+          "chart": "swing/15.png"
+        },
+        {
+          "category": "swing",
+          "direction": "low",
+          "price": 2289.525,
+          "details": {
+            "strength": "internal",
+            "window": 2
+          },
+          "origin_index": 18233,
+          "origin_time": "2024-04-04T23:25:00+00:00",
+          "snapshot_end_index": 18279,
+          "snapshot_end_time": "2024-04-05T03:15:00+00:00",
+          "snapshot_start_index": 18160,
+          "chart": "swing/16.png"
+        },
+        {
+          "category": "swing",
+          "direction": "low",
+          "price": 2277.165,
+          "details": {
+            "strength": "external",
+            "window": 2
+          },
+          "origin_index": 23923,
+          "origin_time": "2024-05-03T13:35:00+00:00",
+          "snapshot_end_index": 23959,
+          "snapshot_end_time": "2024-05-03T16:35:00+00:00",
+          "snapshot_start_index": 23840,
+          "chart": "swing/17.png"
+        },
+        {
+          "category": "swing",
+          "direction": "high",
+          "price": 2320.218,
+          "details": {
+            "strength": "external",
+            "window": 2
+          },
+          "origin_index": 32463,
+          "origin_time": "2024-06-17T12:15:00+00:00",
+          "snapshot_end_index": 32519,
+          "snapshot_end_time": "2024-06-17T16:55:00+00:00",
+          "snapshot_start_index": 32400,
+          "chart": "swing/18.png"
+        },
+        {
+          "category": "swing",
+          "direction": "high",
+          "price": 2032.485,
+          "details": {
+            "strength": "external",
+            "window": 2
+          },
+          "origin_index": 5227,
+          "origin_time": "2024-01-30T03:35:00+00:00",
+          "snapshot_end_index": 5239,
+          "snapshot_end_time": "2024-01-30T04:35:00+00:00",
+          "snapshot_start_index": 5120,
+          "chart": "swing/19.png"
+        },
+        {
+          "category": "swing",
+          "direction": "low",
+          "price": 2325.735,
+          "details": {
+            "strength": "internal",
+            "window": 2
+          },
+          "origin_index": 32227,
+          "origin_time": "2024-06-14T15:35:00+00:00",
+          "snapshot_end_index": 32279,
+          "snapshot_end_time": "2024-06-14T19:55:00+00:00",
+          "snapshot_start_index": 32160,
+          "chart": "swing/20.png"
+        }
+      ],
+      "shortfall": 0
+    },
+    "displacement": {
+      "available": 4048,
+      "selected": [
+        {
+          "category": "displacement",
+          "direction": "bullish",
+          "price": 2316.798,
+          "details": {
+            "body": 1.613,
+            "atr": 1.5339238913877515,
+            "body_atr": 1.051551520291341
+          },
+          "origin_index": 22164,
+          "origin_time": "2024-04-25T05:00:00+00:00",
+          "snapshot_end_index": 22199,
+          "snapshot_end_time": "2024-04-25T07:55:00+00:00",
+          "snapshot_start_index": 22080,
+          "chart": "displacement/01.png"
+        },
+        {
+          "category": "displacement",
+          "direction": "bullish",
+          "price": 2016.115,
+          "details": {
+            "body": 0.84,
+            "atr": 0.6446191843173757,
+            "body_atr": 1.3030949441716106
+          },
+          "origin_index": 4434,
+          "origin_time": "2024-01-25T06:30:00+00:00",
+          "snapshot_end_index": 4439,
+          "snapshot_end_time": "2024-01-25T06:55:00+00:00",
+          "snapshot_start_index": 4320,
+          "chart": "displacement/02.png"
+        },
+        {
+          "category": "displacement",
+          "direction": "bullish",
+          "price": 2039.645,
+          "details": {
+            "body": 0.99,
+            "atr": 0.982456049556319,
+            "body_atr": 1.0076786645540916
+          },
+          "origin_index": 642,
+          "origin_time": "2024-01-05T12:30:00+00:00",
+          "snapshot_end_index": 679,
+          "snapshot_end_time": "2024-01-05T15:35:00+00:00",
+          "snapshot_start_index": 560,
+          "chart": "displacement/03.png"
+        },
+        {
+          "category": "displacement",
+          "direction": "bearish",
+          "price": 2417.865,
+          "details": {
+            "body": 3.09,
+            "atr": 2.7675513303670836,
+            "body_atr": 1.1165104567690702
+          },
+          "origin_index": 26778,
+          "origin_time": "2024-05-19T22:30:00+00:00",
+          "snapshot_end_index": 26839,
+          "snapshot_end_time": "2024-05-20T03:35:00+00:00",
+          "snapshot_start_index": 26720,
+          "chart": "displacement/04.png"
+        },
+        {
+          "category": "displacement",
+          "direction": "bearish",
+          "price": 2019.075,
+          "details": {
+            "body": 1.133,
+            "atr": 0.9622274238500953,
+            "body_atr": 1.1774763137248823
+          },
+          "origin_index": 7901,
+          "origin_time": "2024-02-12T19:25:00+00:00",
+          "snapshot_end_index": 7959,
+          "snapshot_end_time": "2024-02-13T01:15:00+00:00",
+          "snapshot_start_index": 7840,
+          "chart": "displacement/05.png"
+        },
+        {
+          "category": "displacement",
+          "direction": "bullish",
+          "price": 2336.315,
+          "details": {
+            "body": 1.19,
+            "atr": 1.1568747809187305,
+            "body_atr": 1.0286333660545033
+          },
+          "origin_index": 22442,
+          "origin_time": "2024-04-26T05:10:00+00:00",
+          "snapshot_end_index": 22519,
+          "snapshot_end_time": "2024-04-26T11:35:00+00:00",
+          "snapshot_start_index": 22400,
+          "chart": "displacement/06.png"
+        },
+        {
+          "category": "displacement",
+          "direction": "bearish",
+          "price": 2032.978,
+          "details": {
+            "body": 1.057,
+            "atr": 1.05694329641622,
+            "body_atr": 1.00005364865265
+          },
+          "origin_index": 4225,
+          "origin_time": "2024-01-24T12:05:00+00:00",
+          "snapshot_end_index": 4279,
+          "snapshot_end_time": "2024-01-24T16:35:00+00:00",
+          "snapshot_start_index": 4160,
+          "chart": "displacement/07.png"
+        },
+        {
+          "category": "displacement",
+          "direction": "bullish",
+          "price": 2374.375,
+          "details": {
+            "body": 2.93,
+            "atr": 2.8603011036216786,
+            "body_atr": 1.0243676780357387
+          },
+          "origin_index": 30581,
+          "origin_time": "2024-06-06T16:25:00+00:00",
+          "snapshot_end_index": 30599,
+          "snapshot_end_time": "2024-06-06T17:55:00+00:00",
+          "snapshot_start_index": 30480,
+          "chart": "displacement/08.png"
+        },
+        {
+          "category": "displacement",
+          "direction": "bullish",
+          "price": 2321.455,
+          "details": {
+            "body": 1.14,
+            "atr": 1.0316672242158365,
+            "body_atr": 1.105007480359286
+          },
+          "origin_index": 31769,
+          "origin_time": "2024-06-13T00:25:00+00:00",
+          "snapshot_end_index": 31799,
+          "snapshot_end_time": "2024-06-13T02:55:00+00:00",
+          "snapshot_start_index": 31680,
+          "chart": "displacement/09.png"
+        },
+        {
+          "category": "displacement",
+          "direction": "bearish",
+          "price": 2427.575,
+          "details": {
+            "body": 2.86,
+            "atr": 2.6550166366153753,
+            "body_atr": 1.0772060560968606
+          },
+          "origin_index": 26940,
+          "origin_time": "2024-05-20T12:00:00+00:00",
+          "snapshot_end_index": 26999,
+          "snapshot_end_time": "2024-05-20T16:55:00+00:00",
+          "snapshot_start_index": 26880,
+          "chart": "displacement/10.png"
+        },
+        {
+          "category": "displacement",
+          "direction": "bearish",
+          "price": 2025.165,
+          "details": {
+            "body": 0.91,
+            "atr": 0.7699451762423482,
+            "body_atr": 1.1819023328922944
+          },
+          "origin_index": 4969,
+          "origin_time": "2024-01-29T05:05:00+00:00",
+          "snapshot_end_index": 4999,
+          "snapshot_end_time": "2024-01-29T07:35:00+00:00",
+          "snapshot_start_index": 4880,
+          "chart": "displacement/11.png"
+        },
+        {
+          "category": "displacement",
+          "direction": "bullish",
+          "price": 2115.608,
+          "details": {
+            "body": 6.373,
+            "atr": 2.3665815835165427,
+            "body_atr": 2.692913713344399
+          },
+          "origin_index": 12002,
+          "origin_time": "2024-03-04T16:10:00+00:00",
+          "snapshot_end_index": 12039,
+          "snapshot_end_time": "2024-03-04T19:15:00+00:00",
+          "snapshot_start_index": 11920,
+          "chart": "displacement/12.png"
+        },
+        {
+          "category": "displacement",
+          "direction": "bullish",
+          "price": 2021.185,
+          "details": {
+            "body": 1.32,
+            "atr": 1.217278428315182,
+            "body_atr": 1.0843862581439099
+          },
+          "origin_index": 2790,
+          "origin_time": "2024-01-17T07:30:00+00:00",
+          "snapshot_end_index": 2839,
+          "snapshot_end_time": "2024-01-17T11:35:00+00:00",
+          "snapshot_start_index": 2720,
+          "chart": "displacement/13.png"
+        },
+        {
+          "category": "displacement",
+          "direction": "bearish",
+          "price": 2318.915,
+          "details": {
+            "body": 1.3,
+            "atr": 1.2980826940367967,
+            "body_atr": 1.001477029138445
+          },
+          "origin_index": 24387,
+          "origin_time": "2024-05-07T06:15:00+00:00",
+          "snapshot_end_index": 24439,
+          "snapshot_end_time": "2024-05-07T10:35:00+00:00",
+          "snapshot_start_index": 24320,
+          "chart": "displacement/14.png"
+        },
+        {
+          "category": "displacement",
+          "direction": "bearish",
+          "price": 2037.015,
+          "details": {
+            "body": 1.16,
+            "atr": 1.129352875823082,
+            "body_atr": 1.0271368894815822
+          },
+          "origin_index": 1963,
+          "origin_time": "2024-01-12T07:35:00+00:00",
+          "snapshot_end_index": 2039,
+          "snapshot_end_time": "2024-01-12T13:55:00+00:00",
+          "snapshot_start_index": 1920,
+          "chart": "displacement/15.png"
+        },
+        {
+          "category": "displacement",
+          "direction": "bearish",
+          "price": 2320.338,
+          "details": {
+            "body": 1.307,
+            "atr": 1.0993846896767192,
+            "body_atr": 1.1888468270231518
+          },
+          "origin_index": 32607,
+          "origin_time": "2024-06-18T01:15:00+00:00",
+          "snapshot_end_index": 32679,
+          "snapshot_end_time": "2024-06-18T07:15:00+00:00",
+          "snapshot_start_index": 32560,
+          "chart": "displacement/16.png"
+        },
+        {
+          "category": "displacement",
+          "direction": "bearish",
+          "price": 2418.105,
+          "details": {
+            "body": 2.08,
+            "atr": 1.896122978071691,
+            "body_atr": 1.0969752616548676
+          },
+          "origin_index": 26796,
+          "origin_time": "2024-05-20T00:00:00+00:00",
+          "snapshot_end_index": 26839,
+          "snapshot_end_time": "2024-05-20T03:35:00+00:00",
+          "snapshot_start_index": 26720,
+          "chart": "displacement/17.png"
+        },
+        {
+          "category": "displacement",
+          "direction": "bearish",
+          "price": 2037.278,
+          "details": {
+            "body": 0.67,
+            "atr": 0.5421215502741686,
+            "body_atr": 1.235885198921089
+          },
+          "origin_index": 5465,
+          "origin_time": "2024-01-31T00:25:00+00:00",
+          "snapshot_end_index": 5479,
+          "snapshot_end_time": "2024-01-31T01:35:00+00:00",
+          "snapshot_start_index": 5360,
+          "chart": "displacement/18.png"
+        },
+        {
+          "category": "displacement",
+          "direction": "bullish",
+          "price": 2323.188,
+          "details": {
+            "body": 6.633,
+            "atr": 3.773225112238726,
+            "body_atr": 1.757912608628992
+          },
+          "origin_index": 21717,
+          "origin_time": "2024-04-23T13:45:00+00:00",
+          "snapshot_end_index": 21719,
+          "snapshot_end_time": "2024-04-23T13:55:00+00:00",
+          "snapshot_start_index": 21600,
+          "chart": "displacement/19.png"
+        },
+        {
+          "category": "displacement",
+          "direction": "bullish",
+          "price": 2171.225,
+          "details": {
+            "body": 3.5,
+            "atr": 1.4323336474642054,
+            "body_atr": 2.443564742192839
+          },
+          "origin_index": 15830,
+          "origin_time": "2024-03-22T12:10:00+00:00",
+          "snapshot_end_index": 15879,
+          "snapshot_end_time": "2024-03-22T16:15:00+00:00",
+          "snapshot_start_index": 15760,
+          "chart": "displacement/20.png"
+        }
+      ],
+      "shortfall": 0
+    },
+    "FVG": {
+      "available": 1592,
+      "selected": [
+        {
+          "concept": "fair_value_gap",
+          "direction": "bullish",
+          "price": 2270.378,
+          "timestamp": null,
+          "details": {
+            "gap_top": 2272.015,
+            "gap_bottom": 2270.378,
+            "gap_size": 1.637,
+            "gap_size_atr": 0.8429450333392435,
+            "candle_index": 17791
+          },
+          "category": "FVG",
+          "origin_index": 17791,
+          "origin_time": "2024-04-03T08:35:00+00:00",
+          "snapshot_end_index": 17799,
+          "snapshot_end_time": "2024-04-03T09:15:00+00:00",
+          "snapshot_start_index": 17680,
+          "chart": "FVG/01.png"
+        },
+        {
+          "concept": "fair_value_gap",
+          "direction": "bearish",
+          "price": 2036.225,
+          "timestamp": null,
+          "details": {
+            "gap_top": 2036.225,
+            "gap_bottom": 2036.095,
+            "gap_size": 0.13,
+            "gap_size_atr": 0.2536073008392604,
+            "candle_index": 11304
+          },
+          "category": "FVG",
+          "origin_index": 11304,
+          "origin_time": "2024-02-29T04:00:00+00:00",
+          "snapshot_end_index": 11319,
+          "snapshot_end_time": "2024-02-29T05:15:00+00:00",
+          "snapshot_start_index": 11200,
+          "chart": "FVG/02.png"
+        },
+        {
+          "concept": "fair_value_gap",
+          "direction": "bearish",
+          "price": 2160.065,
+          "timestamp": null,
+          "details": {
+            "gap_top": 2160.065,
+            "gap_bottom": 2159.498,
+            "gap_size": 0.567,
+            "gap_size_atr": 0.6659551306874901,
+            "candle_index": 13795
+          },
+          "category": "FVG",
+          "origin_index": 13795,
+          "origin_time": "2024-03-13T03:35:00+00:00",
+          "snapshot_end_index": 13799,
+          "snapshot_end_time": "2024-03-13T03:55:00+00:00",
+          "snapshot_start_index": 13680,
+          "chart": "FVG/03.png"
+        },
+        {
+          "concept": "fair_value_gap",
+          "direction": "bearish",
+          "price": 2390.165,
+          "timestamp": null,
+          "details": {
+            "gap_top": 2390.165,
+            "gap_bottom": 2389.015,
+            "gap_size": 1.15,
+            "gap_size_atr": 0.6037970600583483,
+            "candle_index": 20570
+          },
+          "category": "FVG",
+          "origin_index": 20570,
+          "origin_time": "2024-04-17T10:10:00+00:00",
+          "snapshot_end_index": 20599,
+          "snapshot_end_time": "2024-04-17T12:35:00+00:00",
+          "snapshot_start_index": 20480,
+          "chart": "FVG/04.png"
+        },
+        {
+          "concept": "fair_value_gap",
+          "direction": "bearish",
+          "price": 2358.835,
+          "timestamp": null,
+          "details": {
+            "gap_top": 2358.835,
+            "gap_bottom": 2358.575,
+            "gap_size": 0.26,
+            "gap_size_atr": 0.27793940846521037,
+            "candle_index": 26023
+          },
+          "category": "FVG",
+          "origin_index": 26023,
+          "origin_time": "2024-05-15T04:35:00+00:00",
+          "snapshot_end_index": 26039,
+          "snapshot_end_time": "2024-05-15T05:55:00+00:00",
+          "snapshot_start_index": 25920,
+          "chart": "FVG/05.png"
+        },
+        {
+          "concept": "fair_value_gap",
+          "direction": "bearish",
+          "price": 2326.705,
+          "timestamp": null,
+          "details": {
+            "gap_top": 2326.705,
+            "gap_bottom": 2326.238,
+            "gap_size": 0.467,
+            "gap_size_atr": 0.3914058955137913,
+            "candle_index": 34889
+          },
+          "category": "FVG",
+          "origin_index": 34889,
+          "origin_time": "2024-06-28T07:25:00+00:00",
+          "snapshot_end_index": 34919,
+          "snapshot_end_time": "2024-06-28T09:55:00+00:00",
+          "snapshot_start_index": 34800,
+          "chart": "FVG/06.png"
+        },
+        {
+          "concept": "fair_value_gap",
+          "direction": "bearish",
+          "price": 2033.535,
+          "timestamp": null,
+          "details": {
+            "gap_top": 2033.535,
+            "gap_bottom": 2032.938,
+            "gap_size": 0.597,
+            "gap_size_atr": 0.6482436208300356,
+            "candle_index": 10594
+          },
+          "category": "FVG",
+          "origin_index": 10594,
+          "origin_time": "2024-02-26T13:50:00+00:00",
+          "snapshot_end_index": 10599,
+          "snapshot_end_time": "2024-02-26T14:15:00+00:00",
+          "snapshot_start_index": 10480,
+          "chart": "FVG/07.png"
+        },
+        {
+          "concept": "fair_value_gap",
+          "direction": "bearish",
+          "price": 2381.765,
+          "timestamp": null,
+          "details": {
+            "gap_top": 2381.765,
+            "gap_bottom": 2380.275,
+            "gap_size": 1.49,
+            "gap_size_atr": 0.37055021379209063,
+            "candle_index": 20896
+          },
+          "category": "FVG",
+          "origin_index": 20896,
+          "origin_time": "2024-04-18T14:20:00+00:00",
+          "snapshot_end_index": 20919,
+          "snapshot_end_time": "2024-04-18T16:15:00+00:00",
+          "snapshot_start_index": 20800,
+          "chart": "FVG/08.png"
+        },
+        {
+          "concept": "fair_value_gap",
+          "direction": "bullish",
+          "price": 2291.675,
+          "timestamp": null,
+          "details": {
+            "gap_top": 2292.515,
+            "gap_bottom": 2291.675,
+            "gap_size": 0.84,
+            "gap_size_atr": 0.4221168321970911,
+            "candle_index": 30909
+          },
+          "category": "FVG",
+          "origin_index": 30909,
+          "origin_time": "2024-06-07T20:45:00+00:00",
+          "snapshot_end_index": 30919,
+          "snapshot_end_time": "2024-06-09T22:35:00+00:00",
+          "snapshot_start_index": 30800,
+          "chart": "FVG/09.png"
+        },
+        {
+          "concept": "fair_value_gap",
+          "direction": "bullish",
+          "price": 2184.855,
+          "timestamp": null,
+          "details": {
+            "gap_top": 2185.485,
+            "gap_bottom": 2184.855,
+            "gap_size": 0.63,
+            "gap_size_atr": 0.3018511666930827,
+            "candle_index": 16670
+          },
+          "category": "FVG",
+          "origin_index": 16670,
+          "origin_time": "2024-03-27T13:10:00+00:00",
+          "snapshot_end_index": 16679,
+          "snapshot_end_time": "2024-03-27T13:55:00+00:00",
+          "snapshot_start_index": 16560,
+          "chart": "FVG/10.png"
+        },
+        {
+          "concept": "fair_value_gap",
+          "direction": "bullish",
+          "price": 2194.835,
+          "timestamp": null,
+          "details": {
+            "gap_top": 2195.365,
+            "gap_bottom": 2194.835,
+            "gap_size": 0.53,
+            "gap_size_atr": 0.5448698408990037,
+            "candle_index": 16837
+          },
+          "category": "FVG",
+          "origin_index": 16837,
+          "origin_time": "2024-03-28T04:05:00+00:00",
+          "snapshot_end_index": 16839,
+          "snapshot_end_time": "2024-03-28T04:15:00+00:00",
+          "snapshot_start_index": 16720,
+          "chart": "FVG/11.png"
+        },
+        {
+          "concept": "fair_value_gap",
+          "direction": "bearish",
+          "price": 2021.155,
+          "timestamp": null,
+          "details": {
+            "gap_top": 2021.155,
+            "gap_bottom": 2020.885,
+            "gap_size": 0.27,
+            "gap_size_atr": 0.5733877460421148,
+            "candle_index": 8015
+          },
+          "category": "FVG",
+          "origin_index": 8015,
+          "origin_time": "2024-02-13T05:55:00+00:00",
+          "snapshot_end_index": 8039,
+          "snapshot_end_time": "2024-02-13T07:55:00+00:00",
+          "snapshot_start_index": 7920,
+          "chart": "FVG/12.png"
+        },
+        {
+          "concept": "fair_value_gap",
+          "direction": "bullish",
+          "price": 2180.185,
+          "timestamp": null,
+          "details": {
+            "gap_top": 2181.808,
+            "gap_bottom": 2180.185,
+            "gap_size": 1.623,
+            "gap_size_atr": 1.157358374952945,
+            "candle_index": 16346
+          },
+          "category": "FVG",
+          "origin_index": 16346,
+          "origin_time": "2024-03-26T09:10:00+00:00",
+          "snapshot_end_index": 16359,
+          "snapshot_end_time": "2024-03-26T10:15:00+00:00",
+          "snapshot_start_index": 16240,
+          "chart": "FVG/13.png"
+        },
+        {
+          "concept": "fair_value_gap",
+          "direction": "bearish",
+          "price": 2299.308,
+          "timestamp": null,
+          "details": {
+            "gap_top": 2299.308,
+            "gap_bottom": 2297.695,
+            "gap_size": 1.613,
+            "gap_size_atr": 0.7402164730732985,
+            "candle_index": 30890
+          },
+          "category": "FVG",
+          "origin_index": 30890,
+          "origin_time": "2024-06-07T19:10:00+00:00",
+          "snapshot_end_index": 30919,
+          "snapshot_end_time": "2024-06-09T22:35:00+00:00",
+          "snapshot_start_index": 30800,
+          "chart": "FVG/14.png"
+        },
+        {
+          "concept": "fair_value_gap",
+          "direction": "bullish",
+          "price": 1991.855,
+          "timestamp": null,
+          "details": {
+            "gap_top": 1992.325,
+            "gap_bottom": 1991.855,
+            "gap_size": 0.47,
+            "gap_size_atr": 0.30719769523547635,
+            "candle_index": 8431
+          },
+          "category": "FVG",
+          "origin_index": 8431,
+          "origin_time": "2024-02-14T17:35:00+00:00",
+          "snapshot_end_index": 8439,
+          "snapshot_end_time": "2024-02-14T18:15:00+00:00",
+          "snapshot_start_index": 8320,
+          "chart": "FVG/15.png"
+        },
+        {
+          "concept": "fair_value_gap",
+          "direction": "bearish",
+          "price": 2053.575,
+          "timestamp": null,
+          "details": {
+            "gap_top": 2053.575,
+            "gap_bottom": 2052.735,
+            "gap_size": 0.84,
+            "gap_size_atr": 1.2774128057295022,
+            "candle_index": 2429
+          },
+          "category": "FVG",
+          "origin_index": 2429,
+          "origin_time": "2024-01-16T00:25:00+00:00",
+          "snapshot_end_index": 2439,
+          "snapshot_end_time": "2024-01-16T01:15:00+00:00",
+          "snapshot_start_index": 2320,
+          "chart": "FVG/16.png"
+        },
+        {
+          "concept": "fair_value_gap",
+          "direction": "bearish",
+          "price": 2339.625,
+          "timestamp": null,
+          "details": {
+            "gap_top": 2339.625,
+            "gap_bottom": 2338.425,
+            "gap_size": 1.2,
+            "gap_size_atr": 0.8822235245129816,
+            "candle_index": 25771
+          },
+          "category": "FVG",
+          "origin_index": 25771,
+          "origin_time": "2024-05-14T06:35:00+00:00",
+          "snapshot_end_index": 25799,
+          "snapshot_end_time": "2024-05-14T08:55:00+00:00",
+          "snapshot_start_index": 25680,
+          "chart": "FVG/17.png"
+        },
+        {
+          "concept": "fair_value_gap",
+          "direction": "bearish",
+          "price": 2025.275,
+          "timestamp": null,
+          "details": {
+            "gap_top": 2025.275,
+            "gap_bottom": 2024.595,
+            "gap_size": 0.68,
+            "gap_size_atr": 1.00534956764865,
+            "candle_index": 10186
+          },
+          "category": "FVG",
+          "origin_index": 10186,
+          "origin_time": "2024-02-23T02:50:00+00:00",
+          "snapshot_end_index": 10199,
+          "snapshot_end_time": "2024-02-23T03:55:00+00:00",
+          "snapshot_start_index": 10080,
+          "chart": "FVG/18.png"
+        },
+        {
+          "concept": "fair_value_gap",
+          "direction": "bullish",
+          "price": 2381.425,
+          "timestamp": null,
+          "details": {
+            "gap_top": 2382.155,
+            "gap_bottom": 2381.425,
+            "gap_size": 0.73,
+            "gap_size_atr": 0.36441757828185567,
+            "candle_index": 20193
+          },
+          "category": "FVG",
+          "origin_index": 20193,
+          "origin_time": "2024-04-16T01:45:00+00:00",
+          "snapshot_end_index": 20199,
+          "snapshot_end_time": "2024-04-16T02:15:00+00:00",
+          "snapshot_start_index": 20080,
+          "chart": "FVG/19.png"
+        },
+        {
+          "concept": "fair_value_gap",
+          "direction": "bearish",
+          "price": 2159.745,
+          "timestamp": null,
+          "details": {
+            "gap_top": 2159.745,
+            "gap_bottom": 2159.235,
+            "gap_size": 0.51,
+            "gap_size_atr": 0.6155880220195465,
+            "candle_index": 14916
+          },
+          "category": "FVG",
+          "origin_index": 14916,
+          "origin_time": "2024-03-19T05:00:00+00:00",
+          "snapshot_end_index": 14919,
+          "snapshot_end_time": "2024-03-19T05:15:00+00:00",
+          "snapshot_start_index": 14800,
+          "chart": "FVG/20.png"
+        }
+      ],
+      "shortfall": 0
+    },
+    "OB": {
+      "available": 858,
+      "selected": [
+        {
+          "concept": "order_block",
+          "direction": "bullish",
+          "price": 2046.215,
+          "timestamp": null,
+          "details": {
+            "ob_top": 2047.165,
+            "ob_bottom": 2046.215,
+            "displacement_index": 330,
+            "displacement_size": 2.69,
+            "mitigation_count": 7,
+            "fresh": false
+          },
+          "category": "OB",
+          "origin_index": 329,
+          "origin_time": "2024-01-04T09:25:00+00:00",
+          "snapshot_end_index": 359,
+          "snapshot_end_time": "2024-01-04T11:55:00+00:00",
+          "snapshot_start_index": 240,
+          "chart": "OB/01.png"
+        },
+        {
+          "concept": "order_block",
+          "direction": "bullish",
+          "price": 2332.288,
+          "timestamp": null,
+          "details": {
+            "ob_top": 2333.325,
+            "ob_bottom": 2332.288,
+            "displacement_index": 28115,
+            "displacement_size": 2.384,
+            "mitigation_count": 1,
+            "fresh": true
+          },
+          "category": "OB",
+          "origin_index": 28114,
+          "origin_time": "2024-05-24T17:50:00+00:00",
+          "snapshot_end_index": 28119,
+          "snapshot_end_time": "2024-05-24T18:15:00+00:00",
+          "snapshot_start_index": 28000,
+          "chart": "OB/02.png"
+        },
+        {
+          "concept": "order_block",
+          "direction": "bullish",
+          "price": 2033.725,
+          "timestamp": null,
+          "details": {
+            "ob_top": 2034.245,
+            "ob_bottom": 2033.725,
+            "displacement_index": 10516,
+            "displacement_size": 0.8,
+            "mitigation_count": 1,
+            "fresh": true
+          },
+          "category": "OB",
+          "origin_index": 10515,
+          "origin_time": "2024-02-26T07:15:00+00:00",
+          "snapshot_end_index": 10519,
+          "snapshot_end_time": "2024-02-26T07:35:00+00:00",
+          "snapshot_start_index": 10400,
+          "chart": "OB/03.png"
+        },
+        {
+          "concept": "order_block",
+          "direction": "bearish",
+          "price": 2056.305,
+          "timestamp": null,
+          "details": {
+            "ob_top": 2056.305,
+            "ob_bottom": 2055.695,
+            "displacement_index": 6117,
+            "displacement_size": 1.72,
+            "mitigation_count": 0,
+            "fresh": true
+          },
+          "category": "OB",
+          "origin_index": 6116,
+          "origin_time": "2024-02-02T08:40:00+00:00",
+          "snapshot_end_index": 6119,
+          "snapshot_end_time": "2024-02-02T08:55:00+00:00",
+          "snapshot_start_index": 6000,
+          "chart": "OB/04.png"
+        },
+        {
+          "concept": "order_block",
+          "direction": "bearish",
+          "price": 2340.458,
+          "timestamp": null,
+          "details": {
+            "ob_top": 2340.458,
+            "ob_bottom": 2339.148,
+            "displacement_index": 30173,
+            "displacement_size": 1.203,
+            "mitigation_count": 2,
+            "fresh": false
+          },
+          "category": "OB",
+          "origin_index": 30172,
+          "origin_time": "2024-06-05T05:20:00+00:00",
+          "snapshot_end_index": 30199,
+          "snapshot_end_time": "2024-06-05T07:35:00+00:00",
+          "snapshot_start_index": 30080,
+          "chart": "OB/05.png"
+        },
+        {
+          "concept": "order_block",
+          "direction": "bullish",
+          "price": 2194.905,
+          "timestamp": null,
+          "details": {
+            "ob_top": 2195.935,
+            "ob_bottom": 2194.905,
+            "displacement_index": 16904,
+            "displacement_size": 2.221,
+            "mitigation_count": 0,
+            "fresh": true
+          },
+          "category": "OB",
+          "origin_index": 16903,
+          "origin_time": "2024-03-28T09:35:00+00:00",
+          "snapshot_end_index": 16919,
+          "snapshot_end_time": "2024-03-28T10:55:00+00:00",
+          "snapshot_start_index": 16800,
+          "chart": "OB/06.png"
+        },
+        {
+          "concept": "order_block",
+          "direction": "bearish",
+          "price": 2035.455,
+          "timestamp": null,
+          "details": {
+            "ob_top": 2035.455,
+            "ob_bottom": 2034.445,
+            "displacement_index": 1872,
+            "displacement_size": 2.187,
+            "mitigation_count": 0,
+            "fresh": true
+          },
+          "category": "OB",
+          "origin_index": 1871,
+          "origin_time": "2024-01-11T23:55:00+00:00",
+          "snapshot_end_index": 1879,
+          "snapshot_end_time": "2024-01-12T00:35:00+00:00",
+          "snapshot_start_index": 1760,
+          "chart": "OB/07.png"
+        },
+        {
+          "concept": "order_block",
+          "direction": "bullish",
+          "price": 2150.165,
+          "timestamp": null,
+          "details": {
+            "ob_top": 2152.515,
+            "ob_bottom": 2150.165,
+            "displacement_index": 14597,
+            "displacement_size": 1.32,
+            "mitigation_count": 2,
+            "fresh": false
+          },
+          "category": "OB",
+          "origin_index": 14596,
+          "origin_time": "2024-03-18T01:20:00+00:00",
+          "snapshot_end_index": 14599,
+          "snapshot_end_time": "2024-03-18T01:35:00+00:00",
+          "snapshot_start_index": 14480,
+          "chart": "OB/08.png"
+        },
+        {
+          "concept": "order_block",
+          "direction": "bullish",
+          "price": 2312.545,
+          "timestamp": null,
+          "details": {
+            "ob_top": 2314.425,
+            "ob_bottom": 2312.545,
+            "displacement_index": 24117,
+            "displacement_size": 1.857,
+            "mitigation_count": 2,
+            "fresh": false
+          },
+          "category": "OB",
+          "origin_index": 24116,
+          "origin_time": "2024-05-06T06:40:00+00:00",
+          "snapshot_end_index": 24119,
+          "snapshot_end_time": "2024-05-06T06:55:00+00:00",
+          "snapshot_start_index": 24000,
+          "chart": "OB/09.png"
+        },
+        {
+          "concept": "order_block",
+          "direction": "bullish",
+          "price": 2325.455,
+          "timestamp": null,
+          "details": {
+            "ob_top": 2331.185,
+            "ob_bottom": 2325.455,
+            "displacement_index": 22821,
+            "displacement_size": 2.8,
+            "mitigation_count": 1,
+            "fresh": true
+          },
+          "category": "OB",
+          "origin_index": 22820,
+          "origin_time": "2024-04-29T13:40:00+00:00",
+          "snapshot_end_index": 22839,
+          "snapshot_end_time": "2024-04-29T15:15:00+00:00",
+          "snapshot_start_index": 22720,
+          "chart": "OB/10.png"
+        },
+        {
+          "concept": "order_block",
+          "direction": "bearish",
+          "price": 1993.195,
+          "timestamp": null,
+          "details": {
+            "ob_top": 1993.195,
+            "ob_bottom": 1992.655,
+            "displacement_index": 8356,
+            "displacement_size": 1.293,
+            "mitigation_count": 0,
+            "fresh": true
+          },
+          "category": "OB",
+          "origin_index": 8355,
+          "origin_time": "2024-02-14T11:15:00+00:00",
+          "snapshot_end_index": 8359,
+          "snapshot_end_time": "2024-02-14T11:35:00+00:00",
+          "snapshot_start_index": 8240,
+          "chart": "OB/11.png"
+        },
+        {
+          "concept": "order_block",
+          "direction": "bearish",
+          "price": 2027.125,
+          "timestamp": null,
+          "details": {
+            "ob_top": 2027.125,
+            "ob_bottom": 2026.185,
+            "displacement_index": 1392,
+            "displacement_size": 1.177,
+            "mitigation_count": 3,
+            "fresh": false
+          },
+          "category": "OB",
+          "origin_index": 1391,
+          "origin_time": "2024-01-10T05:55:00+00:00",
+          "snapshot_end_index": 1399,
+          "snapshot_end_time": "2024-01-10T06:35:00+00:00",
+          "snapshot_start_index": 1280,
+          "chart": "OB/12.png"
+        },
+        {
+          "concept": "order_block",
+          "direction": "bearish",
+          "price": 2028.855,
+          "timestamp": null,
+          "details": {
+            "ob_top": 2028.855,
+            "ob_bottom": 2027.745,
+            "displacement_index": 9788,
+            "displacement_size": 1.86,
+            "mitigation_count": 1,
+            "fresh": true
+          },
+          "category": "OB",
+          "origin_index": 9787,
+          "origin_time": "2024-02-21T15:35:00+00:00",
+          "snapshot_end_index": 9799,
+          "snapshot_end_time": "2024-02-21T16:35:00+00:00",
+          "snapshot_start_index": 9680,
+          "chart": "OB/13.png"
+        },
+        {
+          "concept": "order_block",
+          "direction": "bearish",
+          "price": 2029.235,
+          "timestamp": null,
+          "details": {
+            "ob_top": 2029.235,
+            "ob_bottom": 2028.565,
+            "displacement_index": 11071,
+            "displacement_size": 0.78,
+            "mitigation_count": 3,
+            "fresh": false
+          },
+          "category": "OB",
+          "origin_index": 11070,
+          "origin_time": "2024-02-28T07:30:00+00:00",
+          "snapshot_end_index": 11079,
+          "snapshot_end_time": "2024-02-28T08:15:00+00:00",
+          "snapshot_start_index": 10960,
+          "chart": "OB/14.png"
+        },
+        {
+          "concept": "order_block",
+          "direction": "bearish",
+          "price": 2163.715,
+          "timestamp": null,
+          "details": {
+            "ob_top": 2163.715,
+            "ob_bottom": 2160.865,
+            "displacement_index": 14197,
+            "displacement_size": 2.877,
+            "mitigation_count": 2,
+            "fresh": false
+          },
+          "category": "OB",
+          "origin_index": 14196,
+          "origin_time": "2024-03-14T14:00:00+00:00",
+          "snapshot_end_index": 14199,
+          "snapshot_end_time": "2024-03-14T14:15:00+00:00",
+          "snapshot_start_index": 14080,
+          "chart": "OB/15.png"
+        },
+        {
+          "concept": "order_block",
+          "direction": "bullish",
+          "price": 2303.075,
+          "timestamp": null,
+          "details": {
+            "ob_top": 2306.288,
+            "ob_bottom": 2303.075,
+            "displacement_index": 23392,
+            "displacement_size": 4.71,
+            "mitigation_count": 4,
+            "fresh": false
+          },
+          "category": "OB",
+          "origin_index": 23391,
+          "origin_time": "2024-05-01T15:15:00+00:00",
+          "snapshot_end_index": 23399,
+          "snapshot_end_time": "2024-05-01T15:55:00+00:00",
+          "snapshot_start_index": 23280,
+          "chart": "OB/16.png"
+        },
+        {
+          "concept": "order_block",
+          "direction": "bearish",
+          "price": 2429.825,
+          "timestamp": null,
+          "details": {
+            "ob_top": 2429.825,
+            "ob_bottom": 2426.854,
+            "displacement_index": 27224,
+            "displacement_size": 5.17,
+            "mitigation_count": 14,
+            "fresh": false
+          },
+          "category": "OB",
+          "origin_index": 27223,
+          "origin_time": "2024-05-21T12:35:00+00:00",
+          "snapshot_end_index": 27239,
+          "snapshot_end_time": "2024-05-21T13:55:00+00:00",
+          "snapshot_start_index": 27120,
+          "chart": "OB/17.png"
+        },
+        {
+          "concept": "order_block",
+          "direction": "bullish",
+          "price": 2311.795,
+          "timestamp": null,
+          "details": {
+            "ob_top": 2313.155,
+            "ob_bottom": 2311.795,
+            "displacement_index": 32738,
+            "displacement_size": 1.92,
+            "mitigation_count": 5,
+            "fresh": false
+          },
+          "category": "OB",
+          "origin_index": 32737,
+          "origin_time": "2024-06-18T12:05:00+00:00",
+          "snapshot_end_index": 32759,
+          "snapshot_end_time": "2024-06-18T13:55:00+00:00",
+          "snapshot_start_index": 32640,
+          "chart": "OB/18.png"
+        },
+        {
+          "concept": "order_block",
+          "direction": "bearish",
+          "price": 2135.125,
+          "timestamp": null,
+          "details": {
+            "ob_top": 2135.125,
+            "ob_bottom": 2130.335,
+            "displacement_index": 12267,
+            "displacement_size": 5.03,
+            "mitigation_count": 6,
+            "fresh": false
+          },
+          "category": "OB",
+          "origin_index": 12266,
+          "origin_time": "2024-03-05T15:10:00+00:00",
+          "snapshot_end_index": 12279,
+          "snapshot_end_time": "2024-03-05T16:15:00+00:00",
+          "snapshot_start_index": 12160,
+          "chart": "OB/19.png"
+        },
+        {
+          "concept": "order_block",
+          "direction": "bearish",
+          "price": 2259.685,
+          "timestamp": null,
+          "details": {
+            "ob_top": 2259.685,
+            "ob_bottom": 2258.415,
+            "displacement_index": 17236,
+            "displacement_size": 1.85,
+            "mitigation_count": 1,
+            "fresh": true
+          },
+          "category": "OB",
+          "origin_index": 17235,
+          "origin_time": "2024-04-01T08:15:00+00:00",
+          "snapshot_end_index": 17239,
+          "snapshot_end_time": "2024-04-01T08:35:00+00:00",
+          "snapshot_start_index": 17120,
+          "chart": "OB/20.png"
+        }
+      ],
+      "shortfall": 0
+    },
+    "sweep": {
+      "available": 686,
+      "selected": [
+        {
+          "concept": "liquidity_sweep",
+          "direction": "bearish",
+          "price": 2326.274,
+          "timestamp": null,
+          "details": {
+            "swept_level": 2326.274,
+            "swept_index": 24269,
+            "sweep_high": 2328.795,
+            "type": "sell_side_liquidity_grab",
+            "rejection_ratio": 0.71,
+            "penetration": 2.521,
+            "displacement_confirmed": true,
+            "quality": "weak"
+          },
+          "category": "sweep",
+          "origin_index": 24280,
+          "origin_time": "2024-05-06T20:20:00+00:00",
+          "snapshot_end_index": 24359,
+          "snapshot_end_time": "2024-05-07T03:55:00+00:00",
+          "snapshot_start_index": 24240,
+          "chart": "sweep/01.png"
+        },
+        {
+          "concept": "liquidity_sweep",
+          "direction": "bearish",
+          "price": 2019.485,
+          "timestamp": null,
+          "details": {
+            "swept_level": 2019.485,
+            "swept_index": 9378,
+            "sweep_high": 2019.595,
+            "type": "sell_side_liquidity_grab",
+            "rejection_ratio": 0.727,
+            "penetration": 0.11,
+            "displacement_confirmed": true,
+            "quality": "weak"
+          },
+          "category": "sweep",
+          "origin_index": 9383,
+          "origin_time": "2024-02-20T04:55:00+00:00",
+          "snapshot_end_index": 9399,
+          "snapshot_end_time": "2024-02-20T06:15:00+00:00",
+          "snapshot_start_index": 9280,
+          "chart": "sweep/02.png"
+        },
+        {
+          "concept": "liquidity_sweep",
+          "direction": "bearish",
+          "price": 2326.505,
+          "timestamp": null,
+          "details": {
+            "swept_level": 2326.505,
+            "swept_index": 33746,
+            "sweep_high": 2327.125,
+            "type": "sell_side_liquidity_grab",
+            "rejection_ratio": 1.677,
+            "penetration": 0.62,
+            "displacement_confirmed": true,
+            "quality": "strong"
+          },
+          "category": "sweep",
+          "origin_index": 33762,
+          "origin_time": "2024-06-24T05:30:00+00:00",
+          "snapshot_end_index": 33799,
+          "snapshot_end_time": "2024-06-24T08:35:00+00:00",
+          "snapshot_start_index": 33680,
+          "chart": "sweep/03.png"
+        },
+        {
+          "concept": "liquidity_sweep",
+          "direction": "bullish",
+          "price": 2294.865,
+          "timestamp": null,
+          "details": {
+            "swept_level": 2294.865,
+            "swept_index": 23132,
+            "sweep_low": 2294.348,
+            "type": "buy_side_liquidity_grab",
+            "rejection_ratio": 3.54,
+            "penetration": 0.517,
+            "displacement_confirmed": true,
+            "quality": "strong"
+          },
+          "category": "sweep",
+          "origin_index": 23136,
+          "origin_time": "2024-04-30T17:00:00+00:00",
+          "snapshot_end_index": 23239,
+          "snapshot_end_time": "2024-05-01T02:35:00+00:00",
+          "snapshot_start_index": 23120,
+          "chart": "sweep/04.png"
+        },
+        {
+          "concept": "liquidity_sweep",
+          "direction": "bearish",
+          "price": 2352.395,
+          "timestamp": null,
+          "details": {
+            "swept_level": 2352.395,
+            "swept_index": 25850,
+            "sweep_high": 2355.028,
+            "type": "sell_side_liquidity_grab",
+            "rejection_ratio": 0.611,
+            "penetration": 2.633,
+            "displacement_confirmed": true,
+            "quality": "weak"
+          },
+          "category": "sweep",
+          "origin_index": 25861,
+          "origin_time": "2024-05-14T14:05:00+00:00",
+          "snapshot_end_index": 25879,
+          "snapshot_end_time": "2024-05-14T15:35:00+00:00",
+          "snapshot_start_index": 25760,
+          "chart": "sweep/05.png"
+        },
+        {
+          "concept": "liquidity_sweep",
+          "direction": "bearish",
+          "price": 2009.035,
+          "timestamp": null,
+          "details": {
+            "swept_level": 2009.035,
+            "swept_index": 3020,
+            "sweep_high": 2009.125,
+            "type": "sell_side_liquidity_grab",
+            "rejection_ratio": 1.778,
+            "penetration": 0.09,
+            "displacement_confirmed": true,
+            "quality": "strong"
+          },
+          "category": "sweep",
+          "origin_index": 3034,
+          "origin_time": "2024-01-18T04:50:00+00:00",
+          "snapshot_end_index": 3079,
+          "snapshot_end_time": "2024-01-18T08:35:00+00:00",
+          "snapshot_start_index": 2960,
+          "chart": "sweep/06.png"
+        },
+        {
+          "concept": "liquidity_sweep",
+          "direction": "bearish",
+          "price": 2033.575,
+          "timestamp": null,
+          "details": {
+            "swept_level": 2033.575,
+            "swept_index": 7440,
+            "sweep_high": 2033.915,
+            "type": "sell_side_liquidity_grab",
+            "rejection_ratio": 0.912,
+            "penetration": 0.34,
+            "displacement_confirmed": true,
+            "quality": "weak"
+          },
+          "category": "sweep",
+          "origin_index": 7459,
+          "origin_time": "2024-02-09T05:35:00+00:00",
+          "snapshot_end_index": 7479,
+          "snapshot_end_time": "2024-02-09T07:15:00+00:00",
+          "snapshot_start_index": 7360,
+          "chart": "sweep/07.png"
+        },
+        {
+          "concept": "liquidity_sweep",
+          "direction": "bullish",
+          "price": 2337.615,
+          "timestamp": null,
+          "details": {
+            "swept_level": 2337.615,
+            "swept_index": 33280,
+            "sweep_low": 2337.345,
+            "type": "buy_side_liquidity_grab",
+            "rejection_ratio": 6.778,
+            "penetration": 0.27,
+            "displacement_confirmed": true,
+            "quality": "strong"
+          },
+          "category": "sweep",
+          "origin_index": 33291,
+          "origin_time": "2024-06-20T12:15:00+00:00",
+          "snapshot_end_index": 33319,
+          "snapshot_end_time": "2024-06-20T14:35:00+00:00",
+          "snapshot_start_index": 33200,
+          "chart": "sweep/08.png"
+        },
+        {
+          "concept": "liquidity_sweep",
+          "direction": "bullish",
+          "price": 2026.915,
+          "timestamp": null,
+          "details": {
+            "swept_level": 2026.915,
+            "swept_index": 4089,
+            "sweep_low": 2026.675,
+            "type": "buy_side_liquidity_grab",
+            "rejection_ratio": 1.167,
+            "penetration": 0.24,
+            "displacement_confirmed": true,
+            "quality": "strong"
+          },
+          "category": "sweep",
+          "origin_index": 4093,
+          "origin_time": "2024-01-24T01:05:00+00:00",
+          "snapshot_end_index": 4119,
+          "snapshot_end_time": "2024-01-24T03:15:00+00:00",
+          "snapshot_start_index": 4000,
+          "chart": "sweep/09.png"
+        },
+        {
+          "concept": "liquidity_sweep",
+          "direction": "bearish",
+          "price": 2020.855,
+          "timestamp": null,
+          "details": {
+            "swept_level": 2020.855,
+            "swept_index": 4619,
+            "sweep_high": 2021.065,
+            "type": "sell_side_liquidity_grab",
+            "rejection_ratio": 7.414,
+            "penetration": 0.21,
+            "displacement_confirmed": true,
+            "quality": "strong"
+          },
+          "category": "sweep",
+          "origin_index": 4624,
+          "origin_time": "2024-01-25T23:20:00+00:00",
+          "snapshot_end_index": 4679,
+          "snapshot_end_time": "2024-01-26T03:55:00+00:00",
+          "snapshot_start_index": 4560,
+          "chart": "sweep/10.png"
+        },
+        {
+          "concept": "liquidity_sweep",
+          "direction": "bullish",
+          "price": 2032.318,
+          "timestamp": null,
+          "details": {
+            "swept_level": 2032.318,
+            "swept_index": 7456,
+            "sweep_low": 2032.038,
+            "type": "buy_side_liquidity_grab",
+            "rejection_ratio": 2.132,
+            "penetration": 0.28,
+            "displacement_confirmed": true,
+            "quality": "strong"
+          },
+          "category": "sweep",
+          "origin_index": 7462,
+          "origin_time": "2024-02-09T05:50:00+00:00",
+          "snapshot_end_index": 7479,
+          "snapshot_end_time": "2024-02-09T07:15:00+00:00",
+          "snapshot_start_index": 7360,
+          "chart": "sweep/11.png"
+        },
+        {
+          "concept": "liquidity_sweep",
+          "direction": "bearish",
+          "price": 2034.935,
+          "timestamp": null,
+          "details": {
+            "swept_level": 2034.935,
+            "swept_index": 1740,
+            "sweep_high": 2039.485,
+            "type": "sell_side_liquidity_grab",
+            "rejection_ratio": 0.556,
+            "penetration": 4.55,
+            "displacement_confirmed": true,
+            "quality": "weak"
+          },
+          "category": "sweep",
+          "origin_index": 1758,
+          "origin_time": "2024-01-11T13:30:00+00:00",
+          "snapshot_end_index": 1799,
+          "snapshot_end_time": "2024-01-11T16:55:00+00:00",
+          "snapshot_start_index": 1680,
+          "chart": "sweep/12.png"
+        },
+        {
+          "concept": "liquidity_sweep",
+          "direction": "bullish",
+          "price": 2341.725,
+          "timestamp": null,
+          "details": {
+            "swept_level": 2341.725,
+            "swept_index": 28530,
+            "sweep_low": 2341.235,
+            "type": "buy_side_liquidity_grab",
+            "rejection_ratio": 4.714,
+            "penetration": 0.49,
+            "displacement_confirmed": true,
+            "quality": "strong"
+          },
+          "category": "sweep",
+          "origin_index": 28536,
+          "origin_time": "2024-05-28T07:00:00+00:00",
+          "snapshot_end_index": 28599,
+          "snapshot_end_time": "2024-05-28T12:15:00+00:00",
+          "snapshot_start_index": 28480,
+          "chart": "sweep/13.png"
+        },
+        {
+          "concept": "liquidity_sweep",
+          "direction": "bullish",
+          "price": 2005.205,
+          "timestamp": null,
+          "details": {
+            "swept_level": 2005.205,
+            "swept_index": 2954,
+            "sweep_low": 2004.905,
+            "type": "buy_side_liquidity_grab",
+            "rejection_ratio": 5.03,
+            "penetration": 0.3,
+            "displacement_confirmed": true,
+            "quality": "strong"
+          },
+          "category": "sweep",
+          "origin_index": 2964,
+          "origin_time": "2024-01-17T23:00:00+00:00",
+          "snapshot_end_index": 2999,
+          "snapshot_end_time": "2024-01-18T01:55:00+00:00",
+          "snapshot_start_index": 2880,
+          "chart": "sweep/14.png"
+        },
+        {
+          "concept": "liquidity_sweep",
+          "direction": "bearish",
+          "price": 2037.928,
+          "timestamp": null,
+          "details": {
+            "swept_level": 2037.928,
+            "swept_index": 7134,
+            "sweep_high": 2038.345,
+            "type": "sell_side_liquidity_grab",
+            "rejection_ratio": 0.6,
+            "penetration": 0.417,
+            "displacement_confirmed": true,
+            "quality": "weak"
+          },
+          "category": "sweep",
+          "origin_index": 7143,
+          "origin_time": "2024-02-08T02:15:00+00:00",
+          "snapshot_end_index": 7159,
+          "snapshot_end_time": "2024-02-08T03:35:00+00:00",
+          "snapshot_start_index": 7040,
+          "chart": "sweep/15.png"
+        },
+        {
+          "concept": "liquidity_sweep",
+          "direction": "bullish",
+          "price": 2135.555,
+          "timestamp": null,
+          "details": {
+            "swept_level": 2135.555,
+            "swept_index": 12530,
+            "sweep_low": 2131.818,
+            "type": "buy_side_liquidity_grab",
+            "rejection_ratio": 0.923,
+            "penetration": 3.737,
+            "displacement_confirmed": true,
+            "quality": "weak"
+          },
+          "category": "sweep",
+          "origin_index": 12541,
+          "origin_time": "2024-03-06T15:05:00+00:00",
+          "snapshot_end_index": 12599,
+          "snapshot_end_time": "2024-03-06T19:55:00+00:00",
+          "snapshot_start_index": 12480,
+          "chart": "sweep/16.png"
+        },
+        {
+          "concept": "liquidity_sweep",
+          "direction": "bullish",
+          "price": 2023.705,
+          "timestamp": null,
+          "details": {
+            "swept_level": 2023.705,
+            "swept_index": 2834,
+            "sweep_low": 2023.595,
+            "type": "buy_side_liquidity_grab",
+            "rejection_ratio": 0.909,
+            "penetration": 0.11,
+            "displacement_confirmed": true,
+            "quality": "weak"
+          },
+          "category": "sweep",
+          "origin_index": 2843,
+          "origin_time": "2024-01-17T11:55:00+00:00",
+          "snapshot_end_index": 2919,
+          "snapshot_end_time": "2024-01-17T18:15:00+00:00",
+          "snapshot_start_index": 2800,
+          "chart": "sweep/17.png"
+        },
+        {
+          "concept": "liquidity_sweep",
+          "direction": "bearish",
+          "price": 2415.788,
+          "timestamp": null,
+          "details": {
+            "swept_level": 2415.788,
+            "swept_index": 27129,
+            "sweep_high": 2417.315,
+            "type": "sell_side_liquidity_grab",
+            "rejection_ratio": 1.358,
+            "penetration": 1.527,
+            "displacement_confirmed": true,
+            "quality": "strong"
+          },
+          "category": "sweep",
+          "origin_index": 27139,
+          "origin_time": "2024-05-21T05:35:00+00:00",
+          "snapshot_end_index": 27159,
+          "snapshot_end_time": "2024-05-21T07:15:00+00:00",
+          "snapshot_start_index": 27040,
+          "chart": "sweep/18.png"
+        },
+        {
+          "concept": "liquidity_sweep",
+          "direction": "bearish",
+          "price": 2020.225,
+          "timestamp": null,
+          "details": {
+            "swept_level": 2020.225,
+            "swept_index": 4607,
+            "sweep_high": 2021.065,
+            "type": "sell_side_liquidity_grab",
+            "rejection_ratio": 1.104,
+            "penetration": 0.84,
+            "displacement_confirmed": true,
+            "quality": "strong"
+          },
+          "category": "sweep",
+          "origin_index": 4624,
+          "origin_time": "2024-01-25T23:20:00+00:00",
+          "snapshot_end_index": 4679,
+          "snapshot_end_time": "2024-01-26T03:55:00+00:00",
+          "snapshot_start_index": 4560,
+          "chart": "sweep/19.png"
+        },
+        {
+          "concept": "liquidity_sweep",
+          "direction": "bearish",
+          "price": 2422.575,
+          "timestamp": null,
+          "details": {
+            "swept_level": 2422.575,
+            "swept_index": 26766,
+            "sweep_high": 2425.185,
+            "type": "sell_side_liquidity_grab",
+            "rejection_ratio": 1.544,
+            "penetration": 2.61,
+            "displacement_confirmed": true,
+            "quality": "strong"
+          },
+          "category": "sweep",
+          "origin_index": 26773,
+          "origin_time": "2024-05-19T22:05:00+00:00",
+          "snapshot_end_index": 26839,
+          "snapshot_end_time": "2024-05-20T03:35:00+00:00",
+          "snapshot_start_index": 26720,
+          "chart": "sweep/20.png"
+        }
+      ],
+      "shortfall": 0
+    },
+    "EQH": {
+      "available": 1261,
+      "selected": [
+        {
+          "concept": "equal_high",
+          "direction": "neutral",
+          "price": 2020.135,
+          "timestamp": null,
+          "details": {
+            "level1_index": 7882,
+            "level1_price": 2020.105,
+            "level2_index": 7904,
+            "level2_price": 2020.165,
+            "avg_price": 2020.135,
+            "tolerance": 0.08947112529072214
+          },
+          "category": "EQH",
+          "origin_index": 7904,
+          "origin_time": "2024-02-12T19:40:00+00:00",
+          "snapshot_end_index": 7959,
+          "snapshot_end_time": "2024-02-13T01:15:00+00:00",
+          "snapshot_start_index": 7840,
+          "chart": "EQH/01.png"
+        },
+        {
+          "concept": "equal_high",
+          "direction": "neutral",
+          "price": 2301.85,
+          "timestamp": null,
+          "details": {
+            "level1_index": 23792,
+            "level1_price": 2301.805,
+            "level2_index": 23840,
+            "level2_price": 2301.895,
+            "avg_price": 2301.85,
+            "tolerance": 0.12527855451633377
+          },
+          "category": "EQH",
+          "origin_index": 23840,
+          "origin_time": "2024-05-03T06:40:00+00:00",
+          "snapshot_end_index": 23879,
+          "snapshot_end_time": "2024-05-03T09:55:00+00:00",
+          "snapshot_start_index": 23760,
+          "chart": "EQH/02.png"
+        },
+        {
+          "concept": "equal_high",
+          "direction": "neutral",
+          "price": 2033.435,
+          "timestamp": null,
+          "details": {
+            "level1_index": 5371,
+            "level1_price": 2033.405,
+            "level2_index": 5378,
+            "level2_price": 2033.465,
+            "avg_price": 2033.435,
+            "tolerance": 0.1946097053853784
+          },
+          "category": "EQH",
+          "origin_index": 5378,
+          "origin_time": "2024-01-30T16:10:00+00:00",
+          "snapshot_end_index": 5399,
+          "snapshot_end_time": "2024-01-30T17:55:00+00:00",
+          "snapshot_start_index": 5280,
+          "chart": "EQH/03.png"
+        },
+        {
+          "concept": "equal_high",
+          "direction": "neutral",
+          "price": 2357.605,
+          "timestamp": null,
+          "details": {
+            "level1_index": 19152,
+            "level1_price": 2357.655,
+            "level2_index": 19157,
+            "level2_price": 2357.555,
+            "avg_price": 2357.605,
+            "tolerance": 0.16780143974884326
+          },
+          "category": "EQH",
+          "origin_index": 19157,
+          "origin_time": "2024-04-10T07:25:00+00:00",
+          "snapshot_end_index": 19159,
+          "snapshot_end_time": "2024-04-10T07:35:00+00:00",
+          "snapshot_start_index": 19040,
+          "chart": "EQH/04.png"
+        },
+        {
+          "concept": "equal_high",
+          "direction": "neutral",
+          "price": 2289.33,
+          "timestamp": null,
+          "details": {
+            "level1_index": 23184,
+            "level1_price": 2289.345,
+            "level2_index": 23231,
+            "level2_price": 2289.315,
+            "avg_price": 2289.33,
+            "tolerance": 0.1371810746775249
+          },
+          "category": "EQH",
+          "origin_index": 23231,
+          "origin_time": "2024-05-01T01:55:00+00:00",
+          "snapshot_end_index": 23239,
+          "snapshot_end_time": "2024-05-01T02:35:00+00:00",
+          "snapshot_start_index": 23120,
+          "chart": "EQH/05.png"
+        },
+        {
+          "concept": "equal_high",
+          "direction": "neutral",
+          "price": 2379.605,
+          "timestamp": null,
+          "details": {
+            "level1_index": 26482,
+            "level1_price": 2379.625,
+            "level2_index": 26511,
+            "level2_price": 2379.585,
+            "avg_price": 2379.605,
+            "tolerance": 0.07292894139991825
+          },
+          "category": "EQH",
+          "origin_index": 26511,
+          "origin_time": "2024-05-16T23:15:00+00:00",
+          "snapshot_end_index": 26519,
+          "snapshot_end_time": "2024-05-16T23:55:00+00:00",
+          "snapshot_start_index": 26400,
+          "chart": "EQH/06.png"
+        },
+        {
+          "concept": "equal_high",
+          "direction": "neutral",
+          "price": 2259.49,
+          "timestamp": null,
+          "details": {
+            "level1_index": 17150,
+            "level1_price": 2259.485,
+            "level2_index": 17153,
+            "level2_price": 2259.495,
+            "avg_price": 2259.49,
+            "tolerance": 0.29233789056848286
+          },
+          "category": "EQH",
+          "origin_index": 17153,
+          "origin_time": "2024-04-01T01:25:00+00:00",
+          "snapshot_end_index": 17159,
+          "snapshot_end_time": "2024-04-01T01:55:00+00:00",
+          "snapshot_start_index": 17040,
+          "chart": "EQH/07.png"
+        },
+        {
+          "concept": "equal_high",
+          "direction": "neutral",
+          "price": 2039.965,
+          "timestamp": null,
+          "details": {
+            "level1_index": 1982,
+            "level1_price": 2039.995,
+            "level2_index": 1985,
+            "level2_price": 2039.935,
+            "avg_price": 2039.965,
+            "tolerance": 0.10185502654684137
+          },
+          "category": "EQH",
+          "origin_index": 1985,
+          "origin_time": "2024-01-12T09:25:00+00:00",
+          "snapshot_end_index": 2039,
+          "snapshot_end_time": "2024-01-12T13:55:00+00:00",
+          "snapshot_start_index": 1920,
+          "chart": "EQH/08.png"
+        },
+        {
+          "concept": "equal_high",
+          "direction": "neutral",
+          "price": 2339.3215,
+          "timestamp": null,
+          "details": {
+            "level1_index": 22765,
+            "level1_price": 2339.285,
+            "level2_index": 22832,
+            "level2_price": 2339.358,
+            "avg_price": 2339.3215,
+            "tolerance": 0.2634383167155086
+          },
+          "category": "EQH",
+          "origin_index": 22832,
+          "origin_time": "2024-04-29T14:40:00+00:00",
+          "snapshot_end_index": 22839,
+          "snapshot_end_time": "2024-04-29T15:15:00+00:00",
+          "snapshot_start_index": 22720,
+          "chart": "EQH/09.png"
+        },
+        {
+          "concept": "equal_high",
+          "direction": "neutral",
+          "price": 2369.8365,
+          "timestamp": null,
+          "details": {
+            "level1_index": 25292,
+            "level1_price": 2369.745,
+            "level2_index": 25342,
+            "level2_price": 2369.928,
+            "avg_price": 2369.8365,
+            "tolerance": 0.2353324698411329
+          },
+          "category": "EQH",
+          "origin_index": 25342,
+          "origin_time": "2024-05-10T16:50:00+00:00",
+          "snapshot_end_index": 25399,
+          "snapshot_end_time": "2024-05-12T22:35:00+00:00",
+          "snapshot_start_index": 25280,
+          "chart": "EQH/10.png"
+        },
+        {
+          "concept": "equal_high",
+          "direction": "neutral",
+          "price": 2004.1965,
+          "timestamp": null,
+          "details": {
+            "level1_index": 8820,
+            "level1_price": 2004.218,
+            "level2_index": 8833,
+            "level2_price": 2004.175,
+            "avg_price": 2004.1965,
+            "tolerance": 0.04337436194299038
+          },
+          "category": "EQH",
+          "origin_index": 8833,
+          "origin_time": "2024-02-16T05:05:00+00:00",
+          "snapshot_end_index": 8839,
+          "snapshot_end_time": "2024-02-16T05:35:00+00:00",
+          "snapshot_start_index": 8720,
+          "chart": "EQH/11.png"
+        },
+        {
+          "concept": "equal_high",
+          "direction": "neutral",
+          "price": 2315.425,
+          "timestamp": null,
+          "details": {
+            "level1_index": 31495,
+            "level1_price": 2315.445,
+            "level2_index": 31517,
+            "level2_price": 2315.405,
+            "avg_price": 2315.425,
+            "tolerance": 0.14541099907485733
+          },
+          "category": "EQH",
+          "origin_index": 31517,
+          "origin_time": "2024-06-12T02:25:00+00:00",
+          "snapshot_end_index": 31559,
+          "snapshot_end_time": "2024-06-12T05:55:00+00:00",
+          "snapshot_start_index": 31440,
+          "chart": "EQH/12.png"
+        },
+        {
+          "concept": "equal_high",
+          "direction": "neutral",
+          "price": 2021.11,
+          "timestamp": null,
+          "details": {
+            "level1_index": 9144,
+            "level1_price": 2021.075,
+            "level2_index": 9148,
+            "level2_price": 2021.145,
+            "avg_price": 2021.11,
+            "tolerance": 0.07939841109718099
+          },
+          "category": "EQH",
+          "origin_index": 9148,
+          "origin_time": "2024-02-19T08:20:00+00:00",
+          "snapshot_end_index": 9159,
+          "snapshot_end_time": "2024-02-19T09:15:00+00:00",
+          "snapshot_start_index": 9040,
+          "chart": "EQH/13.png"
+        },
+        {
+          "concept": "equal_high",
+          "direction": "neutral",
+          "price": 2318.34,
+          "timestamp": null,
+          "details": {
+            "level1_index": 23026,
+            "level1_price": 2318.305,
+            "level2_index": 23029,
+            "level2_price": 2318.375,
+            "avg_price": 2318.34,
+            "tolerance": 0.1595231090138663
+          },
+          "category": "EQH",
+          "origin_index": 23029,
+          "origin_time": "2024-04-30T08:05:00+00:00",
+          "snapshot_end_index": 23079,
+          "snapshot_end_time": "2024-04-30T12:15:00+00:00",
+          "snapshot_start_index": 22960,
+          "chart": "EQH/14.png"
+        },
+        {
+          "concept": "equal_high",
+          "direction": "neutral",
+          "price": 2160.3865,
+          "timestamp": null,
+          "details": {
+            "level1_index": 14795,
+            "level1_price": 2160.345,
+            "level2_index": 14798,
+            "level2_price": 2160.428,
+            "avg_price": 2160.3865,
+            "tolerance": 0.10861969254346956
+          },
+          "category": "EQH",
+          "origin_index": 14798,
+          "origin_time": "2024-03-18T18:10:00+00:00",
+          "snapshot_end_index": 14839,
+          "snapshot_end_time": "2024-03-18T22:35:00+00:00",
+          "snapshot_start_index": 14720,
+          "chart": "EQH/15.png"
+        },
+        {
+          "concept": "equal_high",
+          "direction": "neutral",
+          "price": 2320.635,
+          "timestamp": null,
+          "details": {
+            "level1_index": 22124,
+            "level1_price": 2320.605,
+            "level2_index": 22175,
+            "level2_price": 2320.665,
+            "avg_price": 2320.635,
+            "tolerance": 0.14744327839669194
+          },
+          "category": "EQH",
+          "origin_index": 22175,
+          "origin_time": "2024-04-25T05:55:00+00:00",
+          "snapshot_end_index": 22199,
+          "snapshot_end_time": "2024-04-25T07:55:00+00:00",
+          "snapshot_start_index": 22080,
+          "chart": "EQH/16.png"
+        },
+        {
+          "concept": "equal_high",
+          "direction": "neutral",
+          "price": 2162.635,
+          "timestamp": null,
+          "details": {
+            "level1_index": 14863,
+            "level1_price": 2162.595,
+            "level2_index": 14882,
+            "level2_price": 2162.675,
+            "avg_price": 2162.635,
+            "tolerance": 0.10244482852997921
+          },
+          "category": "EQH",
+          "origin_index": 14882,
+          "origin_time": "2024-03-19T02:10:00+00:00",
+          "snapshot_end_index": 14919,
+          "snapshot_end_time": "2024-03-19T05:15:00+00:00",
+          "snapshot_start_index": 14800,
+          "chart": "EQH/17.png"
+        },
+        {
+          "concept": "equal_high",
+          "direction": "neutral",
+          "price": 2315.395,
+          "timestamp": null,
+          "details": {
+            "level1_index": 24553,
+            "level1_price": 2315.395,
+            "level2_index": 24578,
+            "level2_price": 2315.395,
+            "avg_price": 2315.395,
+            "tolerance": 0.07602663314834393
+          },
+          "category": "EQH",
+          "origin_index": 24578,
+          "origin_time": "2024-05-07T23:10:00+00:00",
+          "snapshot_end_index": 24599,
+          "snapshot_end_time": "2024-05-08T00:55:00+00:00",
+          "snapshot_start_index": 24480,
+          "chart": "EQH/18.png"
+        },
+        {
+          "concept": "equal_high",
+          "direction": "neutral",
+          "price": 2417.8245,
+          "timestamp": null,
+          "details": {
+            "level1_index": 27420,
+            "level1_price": 2417.764,
+            "level2_index": 27460,
+            "level2_price": 2417.885,
+            "avg_price": 2417.8245,
+            "tolerance": 0.16038857110448623
+          },
+          "category": "EQH",
+          "origin_index": 27460,
+          "origin_time": "2024-05-22T09:20:00+00:00",
+          "snapshot_end_index": 27479,
+          "snapshot_end_time": "2024-05-22T10:55:00+00:00",
+          "snapshot_start_index": 27360,
+          "chart": "EQH/19.png"
+        },
+        {
+          "concept": "equal_high",
+          "direction": "neutral",
+          "price": 2301.3015,
+          "timestamp": null,
+          "details": {
+            "level1_index": 23849,
+            "level1_price": 2301.325,
+            "level2_index": 23852,
+            "level2_price": 2301.278,
+            "avg_price": 2301.3015,
+            "tolerance": 0.14478197976942397
+          },
+          "category": "EQH",
+          "origin_index": 23852,
+          "origin_time": "2024-05-03T07:40:00+00:00",
+          "snapshot_end_index": 23879,
+          "snapshot_end_time": "2024-05-03T09:55:00+00:00",
+          "snapshot_start_index": 23760,
+          "chart": "EQH/20.png"
+        }
+      ],
+      "shortfall": 0
+    },
+    "EQL": {
+      "available": 1113,
+      "selected": [
+        {
+          "concept": "equal_low",
+          "direction": "neutral",
+          "price": 2324.0165,
+          "timestamp": null,
+          "details": {
+            "level1_index": 32202,
+            "level1_price": 2324.088,
+            "level2_index": 32230,
+            "level2_price": 2323.945,
+            "avg_price": 2324.0165,
+            "tolerance": 0.2469403205592258
+          },
+          "category": "EQL",
+          "origin_index": 32230,
+          "origin_time": "2024-06-14T15:50:00+00:00",
+          "snapshot_end_index": 32279,
+          "snapshot_end_time": "2024-06-14T19:55:00+00:00",
+          "snapshot_start_index": 32160,
+          "chart": "EQL/01.png"
+        },
+        {
+          "concept": "equal_low",
+          "direction": "neutral",
+          "price": 2301.17,
+          "timestamp": null,
+          "details": {
+            "level1_index": 21628,
+            "level1_price": 2301.215,
+            "level2_index": 21696,
+            "level2_price": 2301.125,
+            "avg_price": 2301.17,
+            "tolerance": 0.22005935834770535
+          },
+          "category": "EQL",
+          "origin_index": 21696,
+          "origin_time": "2024-04-23T12:00:00+00:00",
+          "snapshot_end_index": 21719,
+          "snapshot_end_time": "2024-04-23T13:55:00+00:00",
+          "snapshot_start_index": 21600,
+          "chart": "EQL/02.png"
+        },
+        {
+          "concept": "equal_low",
+          "direction": "neutral",
+          "price": 2313.5915,
+          "timestamp": null,
+          "details": {
+            "level1_index": 24726,
+            "level1_price": 2313.628,
+            "level2_index": 24797,
+            "level2_price": 2313.555,
+            "avg_price": 2313.5915,
+            "tolerance": 0.1519677732765911
+          },
+          "category": "EQL",
+          "origin_index": 24797,
+          "origin_time": "2024-05-08T17:25:00+00:00",
+          "snapshot_end_index": 24839,
+          "snapshot_end_time": "2024-05-08T20:55:00+00:00",
+          "snapshot_start_index": 24720,
+          "chart": "EQL/03.png"
+        },
+        {
+          "concept": "equal_low",
+          "direction": "neutral",
+          "price": 2033.6415,
+          "timestamp": null,
+          "details": {
+            "level1_index": 1054,
+            "level1_price": 2033.688,
+            "level2_index": 1151,
+            "level2_price": 2033.595,
+            "avg_price": 2033.6415,
+            "tolerance": 0.12890188169618352
+          },
+          "category": "EQL",
+          "origin_index": 1151,
+          "origin_time": "2024-01-09T08:55:00+00:00",
+          "snapshot_end_index": 1159,
+          "snapshot_end_time": "2024-01-09T09:35:00+00:00",
+          "snapshot_start_index": 1040,
+          "chart": "EQL/04.png"
+        },
+        {
+          "concept": "equal_low",
+          "direction": "neutral",
+          "price": 2298.1065,
+          "timestamp": null,
+          "details": {
+            "level1_index": 34439,
+            "level1_price": 2298.128,
+            "level2_index": 34507,
+            "level2_price": 2298.085,
+            "avg_price": 2298.1065,
+            "tolerance": 0.06070172753130083
+          },
+          "category": "EQL",
+          "origin_index": 34507,
+          "origin_time": "2024-06-26T22:35:00+00:00",
+          "snapshot_end_index": 34519,
+          "snapshot_end_time": "2024-06-26T23:35:00+00:00",
+          "snapshot_start_index": 34400,
+          "chart": "EQL/05.png"
+        },
+        {
+          "concept": "equal_low",
+          "direction": "neutral",
+          "price": 2028.4,
+          "timestamp": null,
+          "details": {
+            "level1_index": 9942,
+            "level1_price": 2028.375,
+            "level2_index": 9990,
+            "level2_price": 2028.425,
+            "avg_price": 2028.4,
+            "tolerance": 0.1115002232661296
+          },
+          "category": "EQL",
+          "origin_index": 9990,
+          "origin_time": "2024-02-22T09:30:00+00:00",
+          "snapshot_end_index": 10039,
+          "snapshot_end_time": "2024-02-22T13:35:00+00:00",
+          "snapshot_start_index": 9920,
+          "chart": "EQL/06.png"
+        },
+        {
+          "concept": "equal_low",
+          "direction": "neutral",
+          "price": 2328.46,
+          "timestamp": null,
+          "details": {
+            "level1_index": 32241,
+            "level1_price": 2328.525,
+            "level2_index": 32244,
+            "level2_price": 2328.395,
+            "avg_price": 2328.46,
+            "tolerance": 0.18145360289310916
+          },
+          "category": "EQL",
+          "origin_index": 32244,
+          "origin_time": "2024-06-14T17:00:00+00:00",
+          "snapshot_end_index": 32279,
+          "snapshot_end_time": "2024-06-14T19:55:00+00:00",
+          "snapshot_start_index": 32160,
+          "chart": "EQL/07.png"
+        },
+        {
+          "concept": "equal_low",
+          "direction": "neutral",
+          "price": 2310.6345,
+          "timestamp": null,
+          "details": {
+            "level1_index": 31501,
+            "level1_price": 2310.685,
+            "level2_index": 31519,
+            "level2_price": 2310.584,
+            "avg_price": 2310.6345,
+            "tolerance": 0.14590540226352494
+          },
+          "category": "EQL",
+          "origin_index": 31519,
+          "origin_time": "2024-06-12T02:35:00+00:00",
+          "snapshot_end_index": 31559,
+          "snapshot_end_time": "2024-06-12T05:55:00+00:00",
+          "snapshot_start_index": 31440,
+          "chart": "EQL/08.png"
+        },
+        {
+          "concept": "equal_low",
+          "direction": "neutral",
+          "price": 2326.615,
+          "timestamp": null,
+          "details": {
+            "level1_index": 29942,
+            "level1_price": 2326.615,
+            "level2_index": 29964,
+            "level2_price": 2326.615,
+            "avg_price": 2326.615,
+            "tolerance": 0.18594502508720778
+          },
+          "category": "EQL",
+          "origin_index": 29964,
+          "origin_time": "2024-06-04T11:00:00+00:00",
+          "snapshot_end_index": 30039,
+          "snapshot_end_time": "2024-06-04T17:15:00+00:00",
+          "snapshot_start_index": 29920,
+          "chart": "EQL/09.png"
+        },
+        {
+          "concept": "equal_low",
+          "direction": "neutral",
+          "price": 2030.115,
+          "timestamp": null,
+          "details": {
+            "level1_index": 1416,
+            "level1_price": 2030.165,
+            "level2_index": 1476,
+            "level2_price": 2030.065,
+            "avg_price": 2030.115,
+            "tolerance": 0.10590548423310568
+          },
+          "category": "EQL",
+          "origin_index": 1476,
+          "origin_time": "2024-01-10T13:00:00+00:00",
+          "snapshot_end_index": 1479,
+          "snapshot_end_time": "2024-01-10T13:15:00+00:00",
+          "snapshot_start_index": 1360,
+          "chart": "EQL/10.png"
+        },
+        {
+          "concept": "equal_low",
+          "direction": "neutral",
+          "price": 2247.785,
+          "timestamp": null,
+          "details": {
+            "level1_index": 17412,
+            "level1_price": 2247.725,
+            "level2_index": 17415,
+            "level2_price": 2247.845,
+            "avg_price": 2247.785,
+            "tolerance": 0.14555223561863687
+          },
+          "category": "EQL",
+          "origin_index": 17415,
+          "origin_time": "2024-04-02T00:15:00+00:00",
+          "snapshot_end_index": 17479,
+          "snapshot_end_time": "2024-04-02T05:35:00+00:00",
+          "snapshot_start_index": 17360,
+          "chart": "EQL/11.png"
+        },
+        {
+          "concept": "equal_low",
+          "direction": "neutral",
+          "price": 2167.4015,
+          "timestamp": null,
+          "details": {
+            "level1_index": 14115,
+            "level1_price": 2167.405,
+            "level2_index": 14120,
+            "level2_price": 2167.398,
+            "avg_price": 2167.4015,
+            "tolerance": 0.08569137119375289
+          },
+          "category": "EQL",
+          "origin_index": 14120,
+          "origin_time": "2024-03-14T07:40:00+00:00",
+          "snapshot_end_index": 14199,
+          "snapshot_end_time": "2024-03-14T14:15:00+00:00",
+          "snapshot_start_index": 14080,
+          "chart": "EQL/12.png"
+        },
+        {
+          "concept": "equal_low",
+          "direction": "neutral",
+          "price": 2386.8915,
+          "timestamp": null,
+          "details": {
+            "level1_index": 26292,
+            "level1_price": 2386.945,
+            "level2_index": 26323,
+            "level2_price": 2386.838,
+            "avg_price": 2386.8915,
+            "tolerance": 0.13993845469881713
+          },
+          "category": "EQL",
+          "origin_index": 26323,
+          "origin_time": "2024-05-16T06:35:00+00:00",
+          "snapshot_end_index": 26359,
+          "snapshot_end_time": "2024-05-16T09:35:00+00:00",
+          "snapshot_start_index": 26240,
+          "chart": "EQL/13.png"
+        },
+        {
+          "concept": "equal_low",
+          "direction": "neutral",
+          "price": 2157.35,
+          "timestamp": null,
+          "details": {
+            "level1_index": 13777,
+            "level1_price": 2157.335,
+            "level2_index": 13797,
+            "level2_price": 2157.365,
+            "avg_price": 2157.35,
+            "tolerance": 0.08373633163404721
+          },
+          "category": "EQL",
+          "origin_index": 13797,
+          "origin_time": "2024-03-13T03:45:00+00:00",
+          "snapshot_end_index": 13799,
+          "snapshot_end_time": "2024-03-13T03:55:00+00:00",
+          "snapshot_start_index": 13680,
+          "chart": "EQL/14.png"
+        },
+        {
+          "concept": "equal_low",
+          "direction": "neutral",
+          "price": 2023.265,
+          "timestamp": null,
+          "details": {
+            "level1_index": 6677,
+            "level1_price": 2023.255,
+            "level2_index": 6692,
+            "level2_price": 2023.275,
+            "avg_price": 2023.265,
+            "tolerance": 0.08573820753359802
+          },
+          "category": "EQL",
+          "origin_index": 6692,
+          "origin_time": "2024-02-06T10:40:00+00:00",
+          "snapshot_end_index": 6759,
+          "snapshot_end_time": "2024-02-06T16:15:00+00:00",
+          "snapshot_start_index": 6640,
+          "chart": "EQL/15.png"
+        },
+        {
+          "concept": "equal_low",
+          "direction": "neutral",
+          "price": 1991.745,
+          "timestamp": null,
+          "details": {
+            "level1_index": 8294,
+            "level1_price": 1991.735,
+            "level2_index": 8353,
+            "level2_price": 1991.755,
+            "avg_price": 1991.745,
+            "tolerance": 0.09489070398219501
+          },
+          "category": "EQL",
+          "origin_index": 8353,
+          "origin_time": "2024-02-14T11:05:00+00:00",
+          "snapshot_end_index": 8359,
+          "snapshot_end_time": "2024-02-14T11:35:00+00:00",
+          "snapshot_start_index": 8240,
+          "chart": "EQL/16.png"
+        },
+        {
+          "concept": "equal_low",
+          "direction": "neutral",
+          "price": 2377.701,
+          "timestamp": null,
+          "details": {
+            "level1_index": 26483,
+            "level1_price": 2377.704,
+            "level2_index": 26519,
+            "level2_price": 2377.698,
+            "avg_price": 2377.701,
+            "tolerance": 0.0745390212498518
+          },
+          "category": "EQL",
+          "origin_index": 26519,
+          "origin_time": "2024-05-16T23:55:00+00:00",
+          "snapshot_end_index": 26599,
+          "snapshot_end_time": "2024-05-17T06:35:00+00:00",
+          "snapshot_start_index": 26480,
+          "chart": "EQL/17.png"
+        },
+        {
+          "concept": "equal_low",
+          "direction": "neutral",
+          "price": 2033.97,
+          "timestamp": null,
+          "details": {
+            "level1_index": 6873,
+            "level1_price": 2033.975,
+            "level2_index": 6876,
+            "level2_price": 2033.965,
+            "avg_price": 2033.97,
+            "tolerance": 0.05426376985160204
+          },
+          "category": "EQL",
+          "origin_index": 6876,
+          "origin_time": "2024-02-07T03:00:00+00:00",
+          "snapshot_end_index": 6919,
+          "snapshot_end_time": "2024-02-07T06:35:00+00:00",
+          "snapshot_start_index": 6800,
+          "chart": "EQL/18.png"
+        },
+        {
+          "concept": "equal_low",
+          "direction": "neutral",
+          "price": 2336.8915,
+          "timestamp": null,
+          "details": {
+            "level1_index": 27991,
+            "level1_price": 2336.905,
+            "level2_index": 28020,
+            "level2_price": 2336.878,
+            "avg_price": 2336.8915,
+            "tolerance": 0.15151006713513626
+          },
+          "category": "EQL",
+          "origin_index": 28020,
+          "origin_time": "2024-05-24T10:00:00+00:00",
+          "snapshot_end_index": 28039,
+          "snapshot_end_time": "2024-05-24T11:35:00+00:00",
+          "snapshot_start_index": 27920,
+          "chart": "EQL/19.png"
+        },
+        {
+          "concept": "equal_low",
+          "direction": "neutral",
+          "price": 2063.385,
+          "timestamp": null,
+          "details": {
+            "level1_index": 5,
+            "level1_price": 2063.405,
+            "level2_index": 16,
+            "level2_price": 2063.365,
+            "avg_price": 2063.385,
+            "tolerance": 0.08137546669542453
+          },
+          "category": "EQL",
+          "origin_index": 16,
+          "origin_time": "2024-01-03T06:20:00+00:00",
+          "snapshot_end_index": 119,
+          "snapshot_end_time": "2024-01-03T14:55:00+00:00",
+          "snapshot_start_index": 0,
+          "chart": "EQL/20.png"
+        }
+      ],
+      "shortfall": 0
+    }
+  },
+  "human_review_status": "pending",
+  "pnl_inspected": false,
+  "method": "overlapping dev snapshots; unique origins, no live-signal or trading simulation"
+}

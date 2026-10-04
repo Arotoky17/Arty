@@ -30,6 +30,11 @@ def test_flat_padding_does_not_decay_audit_atr_or_hide_absolute_spikes() -> None
     frame = pd.DataFrame({name: prices for name in ("open", "high", "low", "close")})
     frame.loc[:19, "high"] += 1
     frame.loc[:19, "low"] -= 1
+    frame.index = (
+        pd.date_range("2024-01-05T21:40Z", periods=20, freq="min")
+        .append(pd.date_range("2024-01-06T00:00Z", periods=200, freq="min"))
+        .append(pd.date_range("2024-01-07T23:00Z", periods=2, freq="min"))
+    )
     metrics = bar_outlier_metrics(frame, load_config("validation.yaml")["audit"])
     assert metrics.iloc[-2].legacy_outlier
     assert not metrics.iloc[-2].outlier
@@ -46,7 +51,22 @@ def test_existing_2024_grid_flags_are_padding_driven_without_raw_mutation() -> N
         frame = index_utc(frames[side], "ms")
         metrics = bar_outlier_metrics(frame, cfg)
         assert int(metrics.legacy_outlier.sum()) == expected
-        assert int(metrics.outlier.sum()) == 7
+        assert int(metrics.outlier.sum()) == 12
+        # Preserve the seven candidates from the previous flat-clock rule;
+        # regular market hours additionally expose five unverified holiday cases.
+        old_atr = (
+            metrics.true_range.loc[~metrics.unchanged_flat]
+            .shift()
+            .ewm(alpha=1 / load_config("definitions.yaml")["atr_period"], adjust=False)
+            .mean()
+            .reindex(metrics.index)
+            .ffill()
+        )
+        before = (old_atr > 0) & (metrics.true_range > cfg["spike_atr_multiple"] * old_atr)
+        assert int(before.sum()) == 7
+        assert not (before & ~metrics.outlier).any()
+        assert int(metrics.non_tradable.sum()) == 86700
+        assert int(metrics.forward_fill_candidate.sum()) == 84959
         assert not metrics.absolute_return_flag.any()
         assert not metrics.absolute_range_flag.any()
     assert all(item["matches"] for item in provenance["manifest_checks"])
@@ -281,3 +301,40 @@ def test_all_missing_downloads_cannot_report_a_successful_import(
     assert report["status"] == "failed"
     assert report["unavailable_daily_sides"] == 2
     assert not report["coverage_validated"]
+def test_import_progress_separates_expected_closed_days_from_missing_files() -> None:
+    """Weekends and configured holidays must not be reported as absent files."""
+    from tools.import_progress import _coverage, _expected_closed_days
+
+    start = datetime(2020, 1, 1, tzinfo=UTC)
+    end = datetime(2020, 1, 8, tzinfo=UTC)
+    closed = _expected_closed_days(start, end)
+    assert "2020-01-01" in closed  # configured recurring holiday (01-01)
+    assert "2020-01-02" in closed  # configured recurring holiday (01-02)
+    assert "2020-01-04" in closed  # Saturday: fully outside market hours
+    assert "2020-01-03" not in closed  # Thursday
+    assert "2020-01-05" not in closed  # Sunday reopens 18:00 New York
+    assert "2020-01-06" not in closed  # Monday
+
+    # Every expected-open day of the window is imported.
+    covered = {"2020-01-03", "2020-01-05", "2020-01-06", "2020-01-07"}
+    report = _coverage(start, end, covered, closed)
+    assert report["expected_open_days"] == 4
+    assert report["expected_closed_days"] == 3
+    assert report["covered_days"] == 4
+    assert report["missing_days"] == 0
+    assert report["verdict"] == "complet"
+
+    # A genuinely open day without a file is still reported as an absence.
+    report = _coverage(start, end, covered - {"2020-01-06"}, closed)
+    assert report["expected_open_days"] == 4
+    assert report["missing_days"] == 1
+    assert report["missing_examples"] == ["2020-01-06"]
+    assert report["verdict"] == "incomplet"
+
+    # A closed day that nonetheless has a validated file is informative, not an anomaly.
+    report = _coverage(start, end, covered | {"2020-01-04"}, closed)
+    assert report["expected_closed_days"] == 3
+    assert report["closed_but_present_days"] == 1
+    assert report["closed_but_present_examples"] == ["2020-01-04"]
+    assert report["missing_days"] == 0
+    assert report["verdict"] == "complet"

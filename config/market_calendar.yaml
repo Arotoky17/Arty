@@ -1,0 +1,19 @@
+version: 1
+symbol: XAUUSD
+timezone: America/New_York
+daily_pause_start: '17:00'
+daily_pause_end: '18:00'
+weekend_close_weekday: 4
+weekend_close_time: '17:00'
+weekend_open_weekday: 6
+weekend_open_time: '18:00'
+post_reopen_minutes: 20
+post_reopen_status: proposed_pending_user_validation
+source: https://www.dukascopy.com/swiss/english/forex/forex-trading-accounts/link/
+# Date-specific provider notices take priority. No invented historic holiday hours.
+holiday_overrides: []
+holiday_exclusions:
+  policy: conservative_full_local_day_user_requested_2026_10_03
+  recurring_month_days: ['12-24', '12-25', '12-26', '12-31', '01-01', '01-02']
+  good_friday: true
+historical_holiday_status: conservative_exclusion_not_a_claim_about_provider_hours

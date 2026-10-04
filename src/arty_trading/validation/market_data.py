@@ -101,6 +101,32 @@ def resample_closed_bars(
             aggregation[column] = "sum"
     if frame.empty:
         return pd.DataFrame(columns=[*aggregation, "available_at", "source_close", "observations"])
+    from arty_trading.config.operational import definitions
+
+    daily = definitions()["daily_bars"]
+    if minutes == 1440 and daily["convention"] == "new_york_17":
+        from arty_trading.validation.market_calendar import MarketCalendar
+
+        calendar = MarketCalendar()
+        hour, minute = map(int, daily["new_york_anchor"].split(":"))
+        local = frame.index.tz_convert(calendar.zone).tz_localize(None)
+        naive_starts = local.normalize() + pd.Timedelta(hours=hour, minutes=minute)
+        naive_starts = naive_starts.where(
+            local >= naive_starts, naive_starts - pd.Timedelta(days=1)
+        )
+        starts = naive_starts.tz_localize(calendar.zone).tz_convert("UTC")
+        grouped_daily = frame.groupby(starts)
+        bars = grouped_daily.agg(aggregation).dropna(subset=OHLC)
+        next_local = bars.index.tz_convert(calendar.zone).tz_localize(None) + pd.Timedelta(days=1)
+        bars["available_at"] = next_local.tz_localize(calendar.zone).tz_convert("UTC")
+        source_close = pd.Series(
+            frame.index + pd.Timedelta(minutes=source_minutes), index=frame.index
+        )
+        bars["source_close"] = source_close.groupby(starts).max()
+        bars["observations"] = grouped_daily.close.count()
+        return bars.loc[
+            bars.available_at <= frame.index[-1] + pd.Timedelta(minutes=source_minutes)
+        ].copy()
     grouped = frame.resample(f"{minutes}min", origin="epoch", closed="left", label="left")
     bars = grouped.agg(aggregation).dropna(subset=OHLC)
     bars["available_at"] = bars.index + pd.Timedelta(minutes=minutes)

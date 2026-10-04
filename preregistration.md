@@ -1,112 +1,180 @@
 # Préenregistrement — Setup 1 : BOS + retest OB/FVG
 
-**Statut : EN ATTENTE DE VALIDATION PAR L'UTILISATEUR. Aucun run de baseline autorisé.**
+Statut : EN ATTENTE D’APPROBATION EXPLICITE. Aucun backtest autorisé.
+Préparé le 3 octobre 2026 ; setup `setup_1_bos_retest_ob_fvg_v1`.
+Responsable, signature UTC et commit final : à renseigner avant approbation.
+Les valeurs proposées ci-dessous ne sont pas encore validées.
+Unité XAUUSD : 1 pip = 0,01 USD par once ; 1 lot = 100 onces, à confirmer broker.
 
-Préparé le 2 octobre 2026. Setup : `setup_1_bos_retest_ob_fvg_v1`.
-Phase : baseline de développement, une seule variante prévue.
-Référence avant refactor : `ff73228102403e11f9f7a9908de9349a1db00a82`.
-Commit final : à renseigner avant signature (travail non commité).
-Responsable et approbateur : utilisateur, signature/date à renseigner.
+## Hypothèse et règles déterminées
 
-## Hypothèse et règles proposées, à approuver avant tout run
+XAUUSD, décisions M5 fermées, données bid/ask UTC. Un BOS externe avec
+displacement puis premier retest OB/FVG produit une expectancy nette positive.
+Aucun filtre régime, biais HTF, session ou confluence.
 
-Un BOS confirmé avec displacement suivi du premier retest d'un OB frais ou FVG
-valide a une expectancy nette positive. Aucun filtre régime, biais HTF, killzone,
-session, news ou score de confluence. Les sessions/news influencent uniquement
-les coûts. Les régimes du hold-out décrivent la couverture, jamais un choix des
-dates selon la performance.
+1. Swing externe : fractal strict de 5 barres de chaque côté, disponible après
+   clôture des 5 barres droites. BOS de continuation : clôture M5 strictement
+   au-delà du dernier swing externe confirmé dans le sens de la structure.
+   Mèche seule, CHoCH et MSS exclus. Corps de cassure > 1 ATR(14) Wilder,
+   calculé sur les barres ouvertes jusqu’à cette clôture ; aucun signal avant
+   warmup complet. La tendance est l’état du détecteur structure existant :
+   dernière cassure haussière/baissière ; son état initial unknown peut établir
+   le premier BOS. Dédupliquer BOS/external_BOS par swing, direction et niveau.
+2. Zone de même direction déjà confirmée : OB non mitigé, âge ≤30 barres ouvertes,
+   taille ≤3 ATR ; sinon FVG, gap >0,25 ATR et âge ≤30 barres. OB prioritaire.
+   Âge compté depuis la bougie OB ou la première bougie du FVG.
+   Dans chaque famille : confirmation la plus récente, puis origine la plus
+   récente, puis prix bas le plus petit. Aucun remplacement ultérieur.
+   OB : bougie opposée immédiatement suivie de 2 barres consécutives de même
+   direction, corps cumulés >1 ATR mesuré à l’origine OB ; zone [low, high].
+   Ces 2 barres doivent être toutes deux fermées. Après confirmation, aucune
+   intersection entre une barre ultérieure et la zone jusqu’au BOS : frais.
+   FVG : trois barres, gap haussier low[3]−high[1], baissier low[1]−high[3],
+   mesuré à clôture de la troisième ; zone du gap. Remplissage complet : low
+   ≤borne basse pour un gap haussier, high ≥borne haute pour un gap baissier,
+   sur une barre ultérieure à confirmation ; un gap rempli est exclu.
+3. Limite au milieu de la zone déposée à la clôture du BOS. Premier retest :
+   première barre ultérieure traversant la limite d’au moins 0,10 USD (10 pips) ; cotation
+   ask pour achat, bid pour vente. Cette traversée est la seule pénalité d’exécution
+   à l’entrée : aucun slippage d’entrée n’est ajouté par-dessus (anti double
+   comptage). Probabilité 1, seed 0. Aucun fill sur la barre
+   de dépôt. Expiration après 10 barres ouvertes ; annulation sur cassure de
+   structure opposée ou pause NY 17 h. Un seul ordre en attente.
+   Stress de fill : traversée de 0,30 USD (30 pips), sans réglage selon P&L.
+   Le stop peut être touché sur la barre du fill : oui, scénario pessimiste.
+   Le TP ne peut pas être exécuté sur cette barre, faute d’ordre intrabar connu.
+4. Stop long : bord bas moins 0,1 ATR du BOS ; short : bord haut plus ce buffer.
+   Stop figé, TP à 2 fois la distance entrée–stop. Stop prioritaire si SL et TP
+   touchés sur la même barre. Sortie à la clôture de la 48e barre ouverte après
+   fill ou dernière clôture avant NY 17 h, selon celle qui arrive en premier.
+   Aucune position overnight, sortie partielle, pyramide ou trailing.
+   Distance entrée–stop ≥0,5 ATR(14) du BOS ; sinon aucun trade.
+5. Budget : 1 % de l’équité à l’entrée. Volume arrondi vers le bas au pas broker,
+   refus sous volume minimum. 1R = distance entrée–stop × volume × valeur du
+   contrat avant coûts ; R net = P&L net / risque initial effectivement engagé.
+   Une position à la fois ; un seul trade par BOS ; aucun sizing par confluence.
+   Plafonds proposés : levier brut agrégé ≤10×, marge utilisée ≤50 % de l’équité,
+   marge calculée avec levier broker 20×. Réduire le volume au pas 0,01 lot,
+   minimum 0,01 ; sinon refuser. Hypothèses à confirmer avec le broker.
+   Rapport par trade : risque initial USD, coûts USD, coûts/1R, levier et marge.
 
-- Instrument proposé : XAUUSD ; signal et exécution M5, bougies fermées UTC.
-- BOS : cassure en clôture d'un swing confirmé ; corps strictement supérieur
-  au seuil ATR de `definitions.yaml`. Pas de CHoCH/MSS comme signal de continuation.
-- Zone : plus récente parmi celles déjà confirmées à la clôture du BOS,
-  OB frais prioritaire, sinon FVG ; aucun choix selon le résultat futur.
-- Limite : milieu de la zone ; dépôt à la clôture, fill dès la bougie suivante.
-  Traversée d'au moins 0,1 pip, probabilité 1, expiration 10 bougies, seed 0.
-- Stop : bord opposé + buffer de 0,1 ATR ; TP fixe 2R.
-- Risque initial fixe 1R, budget proposé 1 % ; aucun sizing par confluence.
-  Une position à la fois, pas de pyramide, trailing ou sortie partielle.
-  Aucun deuxième trade sur le même BOS après fill.
-- Définitions dans `definitions.yaml`, règles proposées de stratégie dans
-  `setup1_preregistration.yaml` ; toutes sont figées après approbation.
+Ces règles spécifient la future baseline ; implémentation et tests de conformité
+requis avant lancement. Les détecteurs existants restent la source unique.
+Paramètres : definitions, setup1_preregistration, execution, market_calendar YAML.
 
-## Données et split figés
+## Données, calendrier et revue sans P&L
 
-- Source attendue : Dukascopy M1 bid/ask XAUUSD du 2020-01-01 à la dernière
-  bougie fermée réellement disponible à la date d'import, manifeste SHA-256.
-- Disponibles : janvier–juin 2024 seulement. Couverture requise : **NON FOURNIE**.
-- Dev : `[2020-01-01 00:00 UTC, 2025-01-01 00:00 UTC)`.
-- Purge : `[2025-01-01, 2025-01-16)`, exclue des deux jeux ; 10 jours ouvrés
-  lundi–vendredi hors 1er janvier, calendrier explicite dans `split.yaml`.
-- Hold-out : début figé au 2025-01-16 ; fin calculée exclusivement depuis la
-  dernière clôture M1 commune bid/ask importée, jamais une date future.
-  **Indisponible : aucune donnée locale postérieure au début du hold-out.**
-- Régimes : ADX Wilder D1(14), tendance ≥25, range ≤20, épisodes de 3 barres ;
-  structure H4 sur swings confirmés, épisodes de 6 barres. Les deux mesures
-  observent tendance/range dans janvier–juin 2024, mais la couverture complète
-  dev et hold-out reste **NON CONFIRMÉE : données manquantes**.
-  Aucun déplacement des dates pour améliorer les résultats.
-- Audit mensuel des trous, doublons, prix aberrants, weekends, UTC et
-  disponibilité HTF à la clôture requis ; revue humaine des anomalies/détecteurs.
+Dev : [2020-01-01 00:00 UTC, 2025-01-01 00:00 UTC).
+Purge : [2025-01-01, 2025-01-15), 10 jours lundi–vendredi sans fériés.
+Hold-out : début 2025-01-15 ; fin explicite après import complet, dernière clôture
+M1 commune bid/ask. Actuellement indisponible ; ni date future ni extension
+automatique après gel. Raw immuable, checksums requis.
 
-## Coûts et hypothèses d'exécution
+Pause régulière XAUUSD NY 17–18 h ; weekend vendredi 17 h à dimanche 18 h,
+DST America/New_York. Proposition : aucun signal ni entrée pendant 20 minutes
+après réouverture. Jours non tradables entiers en date America/New_York :
+24–26 décembre, 31 décembre–2 janvier et Vendredi saint. Exclusion prudente,
+sans prétendre attester les horaires historiques du fournisseur.
+D1 actif : clôture New York 17 h, conversion UTC avec DST. ADX D1, PDH/PDL et
+biais D1 partagent les mêmes barres fermées issues de H1 ; première session
+partielle exclue. H4 reste ancré UTC. ATR : `require_full`, 14 TR causaux, donc
+15 barres tradables au minimum ; Wilder initialisé par leur moyenne avant usage.
 
-`execution.yaml` contient des valeurs illustratives à calibrer : spreads par
-session UTC, override horaire, slippage 0,2 pip par côté et commission 3,5 unités
-de compte par lot et par côté. Autour des NFP/FOMC/CPI : spread ×1,5 pendant les
-15 minutes avant/après l'heure officielle UTC fournie. Calendrier :
-`config/news_calendar.csv`, 224 événements 2020–2026, sources BLS/Federal Reserve
-citées par ligne, UTC/DST vérifiés. Les événements futurs sont marqués scheduled ;
-l'heure de deux futurs FOMC reste conventionnelle et à confirmer avant échéance.
-Broker, devise USD, contrat XAUUSD, spread réel et convention OHLC : à confirmer.
-Swap non modélisé : l'ajouter ou exclure explicitement l'exposition overnight
-AVANT approbation si nécessaire.
+Audit mensuel complet 2020–fin figée, HTF exploitable uniquement à clôture,
+ADX(14) D1 et structure H4 : tendance ET range dans chaque période.
+Couverture manquante : NON ÉVALUÉ, run bloqué. Aucun choix de dates selon P&L.
+Revue dev : 20 graphiques aléatoires par type, ≥16/20 corrects pour chaque type
+(swing, displacement, OB, FVG), graphiques M5 et verdict humain avant run.
+Sweep, EQH/EQL : revue informative, non bloquante pour ce Setup 1.
+Toute modification impose justification au registre et nouvelle signature.
 
-Sensibilité : coûts totaux ×1, ×1,5, ×2, mêmes fills, volumes et prix. Un seul run
-et une seule ligne du registre. Aucun réglage des seuils à partir de ce stress.
-Il ne simule pas un changement de fill sous fort spread.
+## Coûts, news et diagnostics
 
-## Critères de succès — tous obligatoires
+Référence ×1 : P75 horaire UTC du ratio (ask−bid)/prix médian, sur TOUT le dev
+2020–2024, hors pauses, exclusions calendrier et fenêtres news. Application :
+ratio × prix courant, conversion en pips avec 1 pip = 0,01 USD par once.
+Facteur broker 1 à confirmer. Calibrage actuel provisoire janvier–juin 2024 :
+couverture incomplète, run bloqué ; clôtures M1, pas des ticks exécutables.
+Hold-out 2025 : calibrage dev complet figé. Pour 2026 : recalibrage sur les seules
+cotations bid/ask de 2025, sans stratégie ni P&L, figé et journalisé avant le run.
+Aucune cotation de l’année évaluée ne calibre son propre spread. Fichier annuel,
+dates, SHA-256 et absence de P&L obligatoires ; sans fichier annuel, run refusé.
+NFP/FOMC/CPI : spread ×1,5 dans ±15 min. Entrée limite : seule la traversée de
+fill de 0,10 USD est modélisée ; aucun coût de slippage d’entrée n’est ajouté
+(entry_limit_slippage_usd = 0,00 USD), afin d’éviter le double comptage du même
+mouvement adverse de 0,10 USD. Sortie TP en limite : 0,10 USD (inchangé) ;
+stop et market, sortie temporelle incluse : 0,30 USD (inchangé). Hypothèses à
+confirmer broker avant signature.
+Commission 3,5 USD par lot et côté ; pip XAUUSD = 0,01 USD par once. Contrat, devise,
+spreads et frais broker à approuver. Pas de swap car aucune position overnight.
+Sources news par ligne BLS/Fed ; deux futurs horaires FOMC marqués non confirmés.
 
-1. Expectancy nette en R >0 ET borne basse de l'IC bootstrap 95 % >0.
-2. PF net de coûts >1,2.
-3. Au moins 100 trades indépendants en dev ET 100 en hold-out.
-4. Évaluation séparée dev puis hold-out, sans réajustement intermédiaire.
+Stress ×1, ×1,5, ×2 sur même chemin de trades sans retuning. Expectancy négative
+à ×1,5 : fragile ; expectancy ≤0 à ×1,5 : échec. Le stress ne modélise pas
+un changement de fill dû au spread. Le stress de traversée 0,30 USD est configuré,
+non exécuté ; toute simulation historique additionnelle consomme un trial et
+nécessite un budget préenregistré. Il ne peut être présenté comme un rerun gratuit.
 
-Bootstrap proposé : blocs hebdomadaires calendaires UTC, 10 000 réplications,
-seed 20261002, IC percentile bilatéral 95 %. Toutes les tentatives sont dans le
-registre, y compris interrompues. Les audits visuels ne regardent aucun P&L.
+Diagnostics seulement : année, H4 haussier/baissier/range connu à l’entrée,
+longs/shorts, sessions UTC, IC bootstrap et buy-and-hold au même risque initial
+référencé à 1 ATR sans stop exécuté. Benchmark après warmup, mêmes plafonds de risque.
+Une variante dev avec exclusion des signaux/entrées dans ±45 min des news utilise
+le même moteur. Elle ne peut sauver une référence en échec. Le sous-ensemble
+des trades est distingué d’une réelle variante réexécutée. Aucun variant hold-out.
 
-Échec d'un critère ou nombre de trades insuffisant : **suppression du setup,
-aucun réajustement**. Données manquantes : « non évalué », jamais une autorisation.
-L'usage des stress ×1,5/×2 comme critères éliminatoires supplémentaires reste à
-valider AVANT le run ; les critères par défaut concernent les coûts calibrés ×1.
+## Succès, abandon et budget de trials
 
-## Empreintes et approbation
+Référence dev, critères bloquants : expectancy nette R >0, borne basse IC bootstrap
+95 % >0, PF net >1,2, ≥100 trades remplis, expectancy nette >0 à coûts ×1,5.
+Bootstrap percentile en blocs hebdomadaires UTC, 10 000 réplications, seed 20261002 ;
+semaines sans trade incluses.
 
-L'empreinte canonique couvre règles et critères du setup, `definitions.yaml`,
-`split.yaml`, `execution.yaml` et le contenu du calendrier news. Le moteur vérifie sa signature, l'empreinte de
-l'audit complet et chaque fichier source avant un run du Setup 1.
+Hold-out, critères bloquants en estimation ponctuelle : expectancy nette R >0,
+PF net >1,2, ≥100 trades remplis. L’IC bootstrap 95 % est rapporté pour information
+mais NON bloquant en hold-out ; la base de décision hold-out est l’estimation
+ponctuelle.
 
-```powershell
-.venv\Scripts\python.exe -c "from arty_trading.validation.preregistration import configuration_sha256; print(configuration_sha256())"
-```
+La variante news, diagnostic dev uniquement, est ANNULÉE si la référence dev
+échoue : aucun trial news n’est lancé tant que les critères dev bloquants ne sont
+pas satisfaits.
 
-- Empreinte à signer : `reports/prebaseline/preregistration_snapshot.json`.
-- Empreinte audit complet 2020–2026 : à renseigner après fourniture des données.
-- Approbation utilisateur : **EN ATTENTE**, nom/date UTC/signature à renseigner.
-- `setup1_preregistration.yaml` garde `pending_user_validation` et
-  `missing_2020_2026` jusqu'à votre validation explicite.
+Maximum 3 trials : 1 référence dev, 1 diagnostic news dev, 1 référence hold-out.
+Une seule configuration, aucune répétition ni optimisation. Tentatives interrompues
+comptées ; stress et audits sans P&L ne sont pas des trials supplémentaires.
+Limites contrôlées atomiquement par le registre. Échec d’un seul critère bloquant,
+<100 trades ou budget épuisé : suppression du setup, aucun réajustement.
+Données manquantes : NON ÉVALUÉ et blocage.
 
-## Accès final au hold-out
+## Puissance statistique
 
-Après succès dev et autorisation de la phase finale, une seule utilisation de
-`load_holdout(setup_id, reason, enabled=True, loader=...)`.
-Raison prévue : « évaluation finale selon le préenregistrement approuvé ».
-L'audit OHLC/ADX a son propre journal de marché sans P&L et ne consomme pas cet
-accès de performance. Aucun run hold-out avant la phase finale autorisée.
+Hypothèses de planification à valider, pas des comptages observés : 250 trades
+remplis attendus en dev, 100 en hold-out ; écart-type des R =1,5, effet de plan
+hebdomadaire =2, puissance 80 %, confiance bilatérale 95 %.
+Expectancy minimale détectable approximative :
+`(z_0,975 + z_0,80) × 1,5 × sqrt(2/n)` : 0,376 R en dev, 0,594 R en hold-out.
+À 100 trades, un petit avantage peut rester indétectable. Ces approximations
+normales ne garantissent pas la réussite du bootstrap en blocs. Nombre réel de
+trades et variance inconnus sans données complètes et run autorisé ; aucune
+estimation de P&L n’a été utilisée. Ne pas rallonger le hold-out après résultat.
 
-## Résultats et décision après phase
+## Provenance des overrides XAUUSD
+
+FVG 0,25 ATR, sweep rejet 0,5 et displacement 1 ATR, OB taille 3 ATR,
+displacement confirmation 2 barres : repris de `config/settings.py`, présents
+dans les commits `2afe9e0` et `ebb1c92` du 24 août 2026, migrés vers YAML le
+2 octobre 2026 (`bf2297d`). Vérification le 3 octobre par `git log -S`/`git show`.
+Date de choix initial et usage initial de backtest/P&L : inconnus, à confirmer
+par le responsable. Des rapports P&L existent ; ils ne prouvent pas leur rôle
+dans ce choix. Aucun P&L utilisé pour cette migration ou les présents contrôles.
+
+## Approbation et accès final
+
+Run bloqué jusqu’à signature explicite de ce fichier, des configs, du calendrier
+news, du calibrage et de l’audit complet SHA-256. Tout changement invalide
+l’approbation. À valider : revue M5 des quatre détecteurs, fenêtre de réouverture,
+coûts/contrat/levier broker, hypothèses de puissance et provenance des overrides.
+Après succès dev et autorisation finale : un seul load_holdout pour ce setup,
+flag explicite et raison journalisée. Audit OHLC/ADX sans P&L : accès distinct.
 
 Dev : NON EXÉCUTÉ. Hold-out : NON EXÉCUTÉ. Décision : NON ÉVALUÉ.
-Ne pas réécrire les critères après observation d'un résultat.
+Approbation utilisateur : EN ATTENTE.

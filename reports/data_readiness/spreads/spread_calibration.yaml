@@ -1,0 +1,315 @@
+annual_policy: Previous calendar year quotes only; freeze before effective year
+calibration_end_exclusive: '2025-01-01T00:00:00+00:00'
+calibration_start: '2020-01-01T00:00:00+00:00'
+coverage_complete: false
+effective_year: null
+hours:
+  0:
+    median_pips: 36.00000000001273
+    observations: 7620
+    p75_fraction_price: 0.0001730007872059658
+    p75_minus_assumed_pips: 36.99999999998727
+    p75_pips: 38.99999999998727
+    p90_pips: 41.9999999999618
+    previous_assumed_pips: 2.0
+  1:
+    median_pips: 35.999999999989996
+    observations: 7620
+    p75_fraction_price: 0.00017397923382528416
+    p75_minus_assumed_pips: 37.700000000032745
+    p75_pips: 39.00000000003274
+    p90_pips: 42.000000000007276
+    previous_assumed_pips: 1.3
+  2:
+    median_pips: 35.99999999996726
+    observations: 7620
+    p75_fraction_price: 0.00017325667285848263
+    p75_minus_assumed_pips: 37.69999999998727
+    p75_pips: 38.99999999998727
+    p90_pips: 42.699999999967986
+    previous_assumed_pips: 1.3
+  3:
+    median_pips: 35.69999999999709
+    observations: 7620
+    p75_fraction_price: 0.000172242611119069
+    p75_minus_assumed_pips: 37.69999999998727
+    p75_pips: 38.99999999998727
+    p90_pips: 41.70000000003711
+    previous_assumed_pips: 1.3
+  4:
+    median_pips: 35.69999999999709
+    observations: 7560
+    p75_fraction_price: 0.00017234384946094268
+    p75_minus_assumed_pips: 37.69999999998727
+    p75_pips: 38.99999999998727
+    p90_pips: 42.000000000007276
+    previous_assumed_pips: 1.3
+  5:
+    median_pips: 35.399999999981446
+    observations: 7620
+    p75_fraction_price: 0.00017220392410025406
+    p75_minus_assumed_pips: 37.69999999998727
+    p75_pips: 38.99999999998727
+    p90_pips: 42.000000000007276
+    previous_assumed_pips: 1.3
+  6:
+    median_pips: 34.999999999990905
+    observations: 7620
+    p75_fraction_price: 0.00016826640570454855
+    p75_minus_assumed_pips: 36.69999999996544
+    p75_pips: 37.99999999996544
+    p90_pips: 40.399999999999636
+    previous_assumed_pips: 1.3
+  7:
+    median_pips: 34.70000000002074
+    observations: 7620
+    p75_fraction_price: 0.00016766100803020822
+    p75_minus_assumed_pips: 37.20000000001092
+    p75_pips: 38.000000000010914
+    p90_pips: 40.99999999998545
+    previous_assumed_pips: 0.8
+  8:
+    median_pips: 34.999999999990905
+    observations: 7620
+    p75_fraction_price: 0.00016796247843881557
+    p75_minus_assumed_pips: 37.20000000001092
+    p75_pips: 38.000000000010914
+    p90_pips: 40.99999999998545
+    previous_assumed_pips: 0.8
+  9:
+    median_pips: 34.999999999990905
+    observations: 7620
+    p75_fraction_price: 0.00016830412555572297
+    p75_minus_assumed_pips: 37.20000000001092
+    p75_pips: 38.000000000010914
+    p90_pips: 40.99999999998545
+    previous_assumed_pips: 0.8
+  10:
+    median_pips: 34.999999999990905
+    observations: 7620
+    p75_fraction_price: 0.0001682295938190294
+    p75_minus_assumed_pips: 37.20000000001092
+    p75_pips: 38.000000000010914
+    p90_pips: 40.99999999998545
+    previous_assumed_pips: 0.8
+  11:
+    median_pips: 34.70000000002074
+    observations: 7620
+    p75_fraction_price: 0.0001680039754643191
+    p75_minus_assumed_pips: 37.20000000001092
+    p75_pips: 38.000000000010914
+    p90_pips: 41.00000000003092
+    previous_assumed_pips: 0.8
+  12:
+    median_pips: 34.999999999990905
+    observations: 7403
+    p75_fraction_price: 0.00016856833281830025
+    p75_minus_assumed_pips: 37.99999999997162
+    p75_pips: 38.699999999971624
+    p90_pips: 41.69999999999163
+    previous_assumed_pips: 0.7
+  13:
+    median_pips: 35.69999999999709
+    observations: 7465
+    p75_fraction_price: 0.00017196482091087753
+    p75_minus_assumed_pips: 38.299999999987264
+    p75_pips: 38.99999999998727
+    p90_pips: 42.000000000007276
+    previous_assumed_pips: 0.7
+  14:
+    median_pips: 35.69999999999709
+    observations: 7620
+    p75_fraction_price: 0.0001717268016326807
+    p75_minus_assumed_pips: 38.299999999987264
+    p75_pips: 38.99999999998727
+    p90_pips: 42.000000000007276
+    previous_assumed_pips: 0.7
+  15:
+    median_pips: 34.999999999990905
+    observations: 7620
+    p75_fraction_price: 0.0001690806488519381
+    p75_minus_assumed_pips: 37.30000000001091
+    p75_pips: 38.000000000010914
+    p90_pips: 41.00000000003092
+    previous_assumed_pips: 0.7
+  16:
+    median_pips: 34.999999999990905
+    observations: 7620
+    p75_fraction_price: 0.00016816819088550012
+    p75_minus_assumed_pips: 37.000000000010914
+    p75_pips: 38.000000000010914
+    p90_pips: 40.99999999998545
+    previous_assumed_pips: 1.0
+  17:
+    median_pips: 34.999999999990905
+    observations: 7575
+    p75_fraction_price: 0.00016847947321447338
+    p75_minus_assumed_pips: 37.000000000010914
+    p75_pips: 38.000000000010914
+    p90_pips: 40.99999999998545
+    previous_assumed_pips: 1.0
+  18:
+    median_pips: 34.40000000000509
+    observations: 7557
+    p75_fraction_price: 0.00016726631364089758
+    p75_minus_assumed_pips: 36.69999999999527
+    p75_pips: 37.69999999999527
+    p90_pips: 40.69999999999254
+    previous_assumed_pips: 1.0
+  19:
+    median_pips: 33.700000000033015
+    observations: 7604
+    p75_fraction_price: 0.0001656717446509695
+    p75_minus_assumed_pips: 35.77500000001146
+    p75_pips: 36.77500000001146
+    p90_pips: 40.699999999969805
+    previous_assumed_pips: 1.0
+  20:
+    median_pips: 32.999999999992724
+    observations: 7620
+    p75_fraction_price: 0.0001655324371291038
+    p75_minus_assumed_pips: 35.999999999989086
+    p75_pips: 36.999999999989086
+    p90_pips: 41.69999999999163
+    previous_assumed_pips: 1.0
+  21:
+    median_pips: 34.69999999997526
+    observations: 2880
+    p75_fraction_price: 0.0001915819181347946
+    p75_minus_assumed_pips: 36.49999999998727
+    p75_pips: 38.99999999998727
+    p90_pips: 42.70000000001346
+    previous_assumed_pips: 2.5
+  22:
+    median_pips: 42.000000000007276
+    observations: 3240
+    p75_fraction_price: 0.00019306758652637865
+    p75_minus_assumed_pips: 42.49999999998181
+    p75_pips: 44.99999999998181
+    p90_pips: 50.0
+    previous_assumed_pips: 2.5
+  23:
+    median_pips: 38.699999999971624
+    observations: 6740
+    p75_fraction_price: 0.00018947203002043643
+    p75_minus_assumed_pips: 41.47500000001219
+    p75_pips: 43.47500000001219
+    p90_pips: 48.99999999997817
+    previous_assumed_pips: 2.0
+instrument: XAUUSD
+limitation: M1 close quote spreads, not simultaneous executable ticks; see coverage_complete
+missing_months:
+- 2020-01
+- 2020-02
+- 2020-03
+- 2020-04
+- 2020-05
+- 2020-06
+- 2020-07
+- 2020-08
+- 2020-09
+- 2020-10
+- 2020-11
+- 2020-12
+- 2021-01
+- 2021-02
+- 2021-03
+- 2021-04
+- 2021-05
+- 2021-06
+- 2021-07
+- 2021-08
+- 2021-09
+- 2021-10
+- 2021-11
+- 2021-12
+- 2022-01
+- 2022-02
+- 2022-03
+- 2022-04
+- 2022-05
+- 2022-06
+- 2022-07
+- 2022-08
+- 2022-09
+- 2022-10
+- 2022-11
+- 2022-12
+- 2023-01
+- 2023-02
+- 2023-03
+- 2023-04
+- 2023-05
+- 2023-06
+- 2023-07
+- 2023-08
+- 2023-09
+- 2023-10
+- 2023-11
+- 2023-12
+- 2024-07
+- 2024-08
+- 2024-09
+- 2024-10
+- 2024-11
+- 2024-12
+news_minutes_excluded: 496
+partition: development
+pip_usd: 0.01
+pnl_inspected: false
+provenance:
+  files:
+  - path: data\historical\xauusd\bid\m1\xauusd_bid_m1_2024_01.csv
+    sha256: 7414d1cf6a02cf4fff5347e79602e9109549622cb73b152e5462188cc797135d
+  - path: data\historical\xauusd\bid\m1\xauusd_bid_m1_2024_02.csv
+    sha256: 45060c59ccfc0ef3d5f78b49d793b7e3f97757a7659c604b887850068346621f
+  - path: data\historical\xauusd\bid\m1\xauusd_bid_m1_2024_03.csv
+    sha256: 28c82e54e1bd7f586f5d22c0c39d9217618f62e8dfdd7eab94602c2c2bb81a14
+  - path: data\historical\xauusd\bid\m1\xauusd_bid_m1_2024_04.csv
+    sha256: ce55b0d9acdf20c694c37e3c53233455cc8b772269eb39f60357808abe37b9c9
+  - path: data\historical\xauusd\bid\m1\xauusd_bid_m1_2024_05.csv
+    sha256: 18084ecf8e9d5cef352cc290a55de29f27f006653b5da24a6520f8a02488f4f6
+  - path: data\historical\xauusd\bid\m1\xauusd_bid_m1_2024_06.csv
+    sha256: f7cad6452e9666b37f6f7830bb69a61439095919bb1609daa80839fdb3a8fd39
+  - path: data\historical\xauusd\ask\m1\xauusd_ask_m1_2024_01.csv
+    sha256: a4ac5385c164b40a5760890279455228f64646180ea04bb6e45e633cafc024ae
+  - path: data\historical\xauusd\ask\m1\xauusd_ask_m1_2024_02.csv
+    sha256: 40706a4ec8abb07c6fe13e4c4562f7d07485c104226e42d36c57e06d36c1c167
+  - path: data\historical\xauusd\ask\m1\xauusd_ask_m1_2024_03.csv
+    sha256: 12ee5b98105d955b18b7a496120998f5f6647987cd16f706c94da6bd7541eb91
+  - path: data\historical\xauusd\ask\m1\xauusd_ask_m1_2024_04.csv
+    sha256: ef4001235ec800174d32459174e2235d7cdaf9f67662108c78a962d1d4cb43c6
+  - path: data\historical\xauusd\ask\m1\xauusd_ask_m1_2024_05.csv
+    sha256: 54ffe9267ce4be51e68746c20eb0a3d5d77f46b0fc71c34af7eb8884d0af6588
+  - path: data\historical\xauusd\ask\m1\xauusd_ask_m1_2024_06.csv
+    sha256: ec13944e0fa902394e6a48baf8e142696c3b1486d229d50603f5464085073c56
+  manifest_checks:
+  - file: xauusd_bid_m1_2024_01.csv
+    matches: true
+  - file: xauusd_bid_m1_2024_02.csv
+    matches: true
+  - file: xauusd_bid_m1_2024_03.csv
+    matches: true
+  - file: xauusd_bid_m1_2024_04.csv
+    matches: true
+  - file: xauusd_bid_m1_2024_05.csv
+    matches: true
+  - file: xauusd_bid_m1_2024_06.csv
+    matches: true
+  - file: xauusd_ask_m1_2024_01.csv
+    matches: true
+  - file: xauusd_ask_m1_2024_02.csv
+    matches: true
+  - file: xauusd_ask_m1_2024_03.csv
+    matches: true
+  - file: xauusd_ask_m1_2024_04.csv
+    matches: true
+  - file: xauusd_ask_m1_2024_05.csv
+    matches: true
+  - file: xauusd_ask_m1_2024_06.csv
+    matches: true
+  timestamp_provenance: Unix milliseconds interpreted as UTC; source offset unverified
+raw_data_modified: false
+sample_end_utc: '2024-06-30T23:59:00+00:00'
+sample_start_utc: '2024-01-03T05:00:00+00:00'
+spread_unit: fraction_price

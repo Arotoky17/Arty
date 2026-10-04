@@ -22,7 +22,7 @@ from arty_trading.core.enums import Direction, TimeFrame
 from arty_trading.modules.signals import SignalGenerator
 from arty_trading.modules.smc import SetupTracker
 
-_t0 = datetime(2024, 1, 1, 0, 0, tzinfo=UTC)
+_t0 = datetime(2024, 1, 4, 0, 0, tzinfo=UTC)
 
 
 def mk_m5(idx: int, o: float, h: float, low: float, c: float) -> Candle:
@@ -220,7 +220,7 @@ class TestGeneratorGate:
             setup_tracker=tracker,
             ob_quality=ob_quality,
         )
-        candles = flat_m5_series(10)
+        candles = flat_m5_series(20)
         return asyncio.run(generator.generate(candles, [], master_trend="bullish")), generator
 
     def test_low_grade_setup_rejected(self) -> None:

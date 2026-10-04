@@ -162,13 +162,22 @@ def make_bearish_fvg_candles() -> list[Candle]:
 
 def make_order_block_candles() -> list[Candle]:
     """Crée des bougies avec un Order Block haussier."""
-    return [
+    candles = [
         make_candle(0, 1.0800, 1.0810, 1.0795, 1.0805),
         make_candle(1, 1.0805, 1.0810, 1.0790, 1.0792),
         make_candle(2, 1.0792, 1.0830, 1.0792, 1.0828),
         make_candle(3, 1.0828, 1.0835, 1.0820, 1.0832),
         make_candle(4, 1.0832, 1.0840, 1.0825, 1.0838),
     ]
+    from datetime import timedelta
+
+    from arty_trading.config.operational import definitions
+
+    period = definitions()["atr_period"]
+    prefix = [candles[0].model_copy(update={
+        "time": candles[0].time - timedelta(hours=period - i),
+    }) for i in range(period)]
+    return prefix + candles
 
 
 def make_sweep_candles() -> list[Candle]:

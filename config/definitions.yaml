@@ -1,4 +1,17 @@
 version: 1
+daily_bars:
+  convention: new_york_17
+  alternatives: [utc, new_york_17]
+  new_york_anchor: '17:00'
+  status: user_selected_2026_10_03
+  source_timeframe: H1
+  source_history_padding_days: 10
+  source_calendar_days_per_bar: 2.0
+  discard_partial_first_day: true
+execution_constraints:
+  minimum_stop_atr: 0.5
+instrument_units:
+  XAUUSD: {pip_usd: 0.01, contract_ounces_per_lot: 100.0}
 regime_audit:
   adx_timeframe_minutes: 1440
   structure_timeframe_minutes: 240
@@ -9,7 +22,7 @@ regime_audit:
   minimum_structure_episode_bars: 6
   daily_weekdays: [0, 1, 2, 3, 4]
 atr_period: 14
-atr_warmup: available_mean
+atr_warmup: require_full
 swing:
   window: 2
   external_window: 5
@@ -42,3 +55,18 @@ symbols:
     sweep: {rejection_ratio: 0.5, displacement_atr: 1.0}
     ob: {max_size_atr: 3.0}
     displacement: {confirmation_bars: 2}
+override_provenance:
+  recorded_on: '2026-10-03'
+  yaml_introduced_on: '2026-10-02'
+  yaml_commit: bf2297d
+  source: src/arty_trading/config/settings.py
+  tool: git_show_and_git_log_read_only
+  original_selection_date: unknown
+  backtest_or_pnl_used_at_original_selection: unknown
+  historical_note: Existing PnL reports are present; no evidence establishes whether they guided these thresholds.
+  migration_pnl_used: false
+  overrides:
+    fvg: {source_field: min_fvg_atr, value: 0.25, first_observed_on: '2026-08-24', commits: [2afe9e0, ebb1c92]}
+    sweep: {source_fields: [sweep_min_rejection_ratio, sweep_displacement_atr_mult], values: [0.5, 1.0], first_observed_on: '2026-08-24', commits: [2afe9e0, ebb1c92]}
+    ob: {source_field: max_ob_atr_mult, value: 3.0, first_observed_on: '2026-08-24', commits: [2afe9e0, ebb1c92]}
+    displacement: {source_field: displacement_confirmation_bars, value: 2, first_observed_on: '2026-08-24', commits: [2afe9e0, ebb1c92]}

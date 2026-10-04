@@ -1,0 +1,31 @@
+{
+  "historical_backtest_run": false,
+  "new_import_run": false,
+  "setup1_trials": 0,
+  "setup1_holdout_accesses": 0,
+  "tests_passed": 1189,
+  "tests_skipped": 4,
+  "ruff_new": 0,
+  "mypy_new": 0,
+  "raw_checksums_match": true,
+  "charts": {
+    "swing": 20,
+    "displacement": 20,
+    "FVG": 20,
+    "OB": 20,
+    "sweep": 20,
+    "EQH": 20,
+    "EQL": 20
+  },
+  "blocking_review_types": [
+    "swing",
+    "displacement",
+    "OB",
+    "FVG"
+  ],
+  "manual_review": "pending",
+  "detection_regression": "no_undocumented_differences",
+  "full_dev_calibration": "blocked_missing_data",
+  "holdout_regimes": "unavailable_until_import",
+  "configuration_sha256": "2667af5055ef2a7be8e8a4c37956788ae8cc2e28b9a00f232ffb164dee34e2f1"
+}

@@ -10,6 +10,8 @@ import numpy as np
 import pandas as pd
 
 from arty_trading.config.operational import definitions, load_config
+from arty_trading.validation.daily_context import daily_bars
+from arty_trading.validation.market_calendar import MarketCalendar
 from arty_trading.validation.market_data import (
     OHLC,
     index_utc,
@@ -94,12 +96,13 @@ def run_monthly_regimes(
             raise ValueError("Regime input contains unfinished/future observations")
     common = bid.index.intersection(ask.index)
     bid, ask = bid.loc[common], ask.loc[common]
-    # Derived activity view: skip jointly unchanged flat padded rows, no raw edits.
-    bid_flat = bid[OHLC].eq(bid.close.shift(), axis=0).all(axis=1)
-    ask_flat = ask[OHLC].eq(ask.close.shift(), axis=0).all(axis=1)
-    active = bid.loc[~(bid_flat & ask_flat), OHLC]
-    daily = resample_closed_bars(active, cfg["adx_timeframe_minutes"])
-    daily = daily.loc[daily.index.dayofweek.isin(cfg["daily_weekdays"])]
+    active = bid.loc[~MarketCalendar().annotate(bid).non_tradable, OHLC]
+    daily = daily_bars(bid, 1, cutoff.to_pydatetime())
+    if definitions()["daily_bars"]["convention"] == "new_york_17":
+        weekdays = daily.available_at.dt.tz_convert(MarketCalendar().zone).dt.dayofweek
+    else:
+        weekdays = daily.index.dayofweek
+    daily = daily.loc[weekdays.isin(cfg["daily_weekdays"])]
     values = adx(daily, cfg["adx_period"])
     daily_labels = pd.Series("transition", index=daily.available_at)
     daily_labels.loc[daily.available_at[values.ge(cfg["trend_min_adx"])]] = "trend"
@@ -186,7 +189,7 @@ def run_monthly_regimes(
         "periods": periods,
         "months": monthly,
         "methods": [
-            "D1 UTC weekdays, Wilder ADX seeded causally; Sunday partial D1 excluded",
+            "Shared closed NY17 D1 for Wilder ADX, PDH/PDL and D1 structural bias",
             "H4 UTC confirmed fractals: HH+HL / LH+LL; otherwise range",
             "Labels attributed to bar availability/close, not opening timestamp",
             "Past market warmup may cross period start; no future prices used",

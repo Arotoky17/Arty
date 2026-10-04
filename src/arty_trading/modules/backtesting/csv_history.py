@@ -10,6 +10,7 @@ from typing import Any
 
 import pandas as pd
 
+from arty_trading.validation.market_calendar import MarketCalendar
 from arty_trading.validation.market_data import resample_closed_bars
 
 
@@ -58,9 +59,7 @@ def load_csv_history(directory: Path, point: float) -> dict[str, Any]:
     if (ask.close < bid.close).any():
         raise ValueError("Negative historical bid/ask spread")
     columns = ["open", "high", "low", "close"]
-    unchanged = bid[columns].eq(bid.close.shift(), axis=0).all(axis=1) & ask[columns].eq(
-        ask.close.shift(), axis=0
-    ).all(axis=1)
+    unchanged = MarketCalendar().annotate(bid).non_tradable
     bid, ask = bid.loc[~unchanged], ask.loc[~unchanged]
     candles: dict[str, list[dict[str, Any]]] = {}
     volume_column = next((key for key in ("tick_volume", "volume") if key in bid.columns), None)
@@ -93,5 +92,5 @@ def load_csv_history(directory: Path, point: float) -> dict[str, Any]:
         "candles": candles,
         "volume_available": volume_column is not None,
         "volume_placeholder": 0,
-        "removed_unchanged_flat_minutes": int(unchanged.sum()),
+        "removed_non_tradable_minutes": int(unchanged.sum()),
     }

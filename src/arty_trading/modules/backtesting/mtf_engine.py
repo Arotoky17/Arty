@@ -153,6 +153,11 @@ class MTFBacktestEngine(BacktestEngine):
         from arty_trading.modules.smc import SetupTracker
 
         self._begin_run(m5_candles, (m15_candles, h1_candles))
+        from arty_trading.validation.market_calendar import tradable_candles
+
+        m5_candles = tradable_candles(m5_candles)
+        m15_candles = tradable_candles(m15_candles)
+        h1_candles = tradable_candles(h1_candles)
         if not m5_candles:
             return self._finish_run()
 

@@ -83,6 +83,9 @@ class DataSplit:
     ) -> T:
         setup_id = setup_id.strip()
         reason = reason.strip()
+        from arty_trading.validation.preregistration import assert_setup_run_allowed
+
+        assert_setup_run_allowed(setup_id, holdout=True)
         if not self.holdout_ready:
             raise HoldoutAccessError("Holdout unavailable: no imported closed bid/ask data")
         if not enabled or not setup_id or not reason:

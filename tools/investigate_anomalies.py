@@ -3,8 +3,9 @@
 import argparse
 from pathlib import Path
 
-from arty_trading.config.operational import load_config
+from arty_trading.config.operational import CONFIG_ROOT, load_config
 from arty_trading.validation.data_audit import bar_outlier_metrics
+from arty_trading.validation.market_calendar import MarketCalendar
 from arty_trading.validation.market_data import (
     OHLC,
     index_utc,
@@ -12,6 +13,7 @@ from arty_trading.validation.market_data import (
     source_frames,
     write_report,
 )
+from arty_trading.validation.news_calendar import read_news_calendar
 
 
 def investigate(directory: Path, output: Path) -> dict:
@@ -38,6 +40,8 @@ def investigate(directory: Path, output: Path) -> dict:
     common = frames["bid"].index.intersection(frames["ask"].index)
     summaries = {}
     remaining = []
+    news = read_news_calendar(CONFIG_ROOT / "news_calendar.csv", ["NFP", "FOMC", "CPI"])
+    calendar = MarketCalendar()
     for side, value in metrics.items():
         summaries[side] = {
             "legacy_count": int(value.legacy_outlier.sum()),
@@ -48,7 +52,27 @@ def investigate(directory: Path, output: Path) -> dict:
         }
         for time, row in value.loc[value.outlier].iterrows():
             remaining.append(
-                {"side": side, "time_utc": time.isoformat(), "true_range": float(row.true_range)}
+                {
+                    "side": side,
+                    "time_utc": time.isoformat(),
+                    "true_range": float(row.true_range),
+                    "spread_price": float(
+                        frames["ask"].loc[time].close - frames["bid"].loc[time].close
+                    ),
+                    "calendar_reason": calendar.state(time.to_pydatetime())["reason"],
+                    "news": [
+                        event["type"] for event in news if event["time_utc"] == time.isoformat()
+                    ],
+                    "classification": (
+                        "news"
+                        if any(event["time_utc"] == time.isoformat() for event in news)
+                        else (
+                            calendar.state(time.to_pydatetime())["reason"]
+                            if calendar.state(time.to_pydatetime())["reason"] != "open"
+                            else "other"
+                        )
+                    ),
+                }
             )
     report = {
         "criterion": {
@@ -75,10 +99,15 @@ def investigate(directory: Path, output: Path) -> dict:
             "candidates, not proven corruption; compare original ticks before rejecting."
         ),
         "correction": (
-            "Freeze ATR observation clock on unchanged flat OHLC equal to previous close; "
+            "Exclude calendar-closed bars from the ATR observation clock; "
             "retain all raw rows, old flags and absolute 2% checks. No price interpolation."
         ),
         "provenance": provenance,
+        "calendar_limitation": (
+            "Five extra paired candidates on US holidays (Jan15, Feb19, Mar31 after Good Friday, "
+            "May27, Jun19); historic provider holiday notices unavailable. Retain flags, "
+            "do not classify all quiet open bars as padding."
+        ),
         "raw_data_modified": False,
         "pnl_inspected": False,
     }

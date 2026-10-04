@@ -19,9 +19,16 @@ class BacktestStats:
     orders_submitted: int = 0
     unfilled_orders: int = 0
     fill_rate: float = 0.0
+    # Trades whose risk-based request was reduced by the leverage or margin ceiling.
+    volume_capped_trades: int = 0
+    leverage_capped_trades: int = 0
+    margin_capped_trades: int = 0
+    volume_capped_share: float = 0.0
     expectancy_r: float = 0.0
     cost_sensitivity: list[dict[str, Any]] = field(default_factory=list)
     cost_assumptions: dict[str, Any] = field(default_factory=dict)
+    xauusd_diagnostics: dict[str, Any] = field(default_factory=dict)
+    execution_audit: list[dict[str, Any]] = field(default_factory=list)
     total_trades: int = 0
     winning_trades: int = 0
     losing_trades: int = 0

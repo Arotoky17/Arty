@@ -1,4 +1,9 @@
 version: 1
+precision_controls_2026_10_03:
+  atr_warmup: require_full_14_true_ranges_15_tradable_bars
+  expected_effect: No ATR-based detection before the complete Wilder seed
+  holiday_calendar: Conservative full New York dates excluded from both comparison inputs
+  validation_basis: Threshold and calendar review only; no PnL
 # Declared operational changes. This is a coverage map, not a proof of each event's cause.
 rules:
   swing:

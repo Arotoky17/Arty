@@ -1,12 +1,17 @@
 {
-  "status": "pending_user_validation",
-  "baseline_run": false,
-  "configuration_sha256": "b9a29ac71f4e8554934bf23be448450bfa3d1f35a3f8741036b70afd064de158",
-  "files": {
-    "config\\definitions.yaml": "3ce2a2697d3ad780646cb1e1814999b3cb0d0a76ed7557d571160ab7c409a98f",
-    "config\\split.yaml": "ec7ddff094821272d6c0e8cd49469245e4dbe2935b8b660974760930ca5f4bc6",
-    "config\\execution.yaml": "36d67a726c24810e22e5648e2f7b67630e8ebc57a5284facab156c3cee583cb9",
-    "config\\setup1_preregistration.yaml": "1c499a6264a14ef66045a0391e3d3791330c45da0dbeac57ff9f244caf8b7995",
-    "config\\news_calendar.csv": "8eea76f995671edf50b5853aacf4d5a0c50bfa8ea3de7f06a1998f8b084d5978"
-  }
+  "configuration_sha256": "eb2f9ed7bfc6fd3b69e4da8215916e0aa0a2c55d5bdf3b11a53f7efe65561733",
+  "approval": "pending_user_validation",
+  "backtest_run": false,
+  "holdout_loaded": false,
+  "setup1_trials": 0,
+  "setup1_holdout_accesses": 0,
+  "changed_config_scopes": [
+    "definitions.yaml",
+    "execution.yaml",
+    "market_calendar.yaml",
+    "setup1_preregistration.yaml"
+  ],
+  "full_dev_spread_calibration": "blocked_missing_data",
+  "annual_holdout_spread_calibration": "not_available",
+  "preregistration_sha256": "bb426606688f42bd69d638929026eacdfe2bf49cef3e3842b7c78e4d135e8cdf"
 }

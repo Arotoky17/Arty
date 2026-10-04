@@ -86,6 +86,9 @@ class LiquidityDetector(BaseDetector):
         3. Equal High : swing highs au même niveau (± tolérance)
         4. Equal Low : swing lows au même niveau (± tolérance)
         """
+        from arty_trading.validation.market_calendar import tradable_candles
+
+        candles = tradable_candles(candles)
         if not self._enabled or len(candles) < 5:
             return []
 

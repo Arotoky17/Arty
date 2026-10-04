@@ -252,3 +252,25 @@ L’import append-only, le diagnostic bid/ask, le calendrier news et les régime
 mensuels sont dans [le guide de préparation des données](docs/data_readiness.md).
 Les rapports actuels sont dans `reports/data_readiness/`. Le Setup 1 reste bloqué
 en attente des données complètes et de votre validation du [préenregistrement](preregistration.md).
+# Contrôles XAUUSD avant baseline
+
+Le début du hold-out est fixé au **15 janvier 2025** (purge de 10 jours
+lundi–vendredi sans fériés). Import incomplet : fin du hold-out indisponible,
+aucun backtest autorisé. Voir [les contrôles et commandes](docs/xauusd_controls.md)
+et [le préenregistrement à approuver](preregistration.md).
+Revue bloquante : 20 graphiques **M5** pour swing, displacement, OB et FVG,
+≥16 corrects sur 20 chacun ; sweep/EQH/EQL restent informatifs.
+Après warmup complet et exclusions des jours fériés, les nouveaux graphiques
+sont dans `reports/data_readiness/precision_detection_review/`.
+XAUUSD : **1 pip = 0,01 USD/once** ; slippage limite 0,10 USD, stop/market 0,30 USD ;
+fill traversé 0,10 USD, stress 0,30 USD, stop possible sur barre du fill.
+Stop minimal 0,5 ATR, plafonds de levier/marge proposés et coûts/R par trade.
+D1 NY 17 h actif pour ADX, PDH/PDL et biais D1. Spread normalisé par le prix :
+dev complet et recalibrage annuel sur cotations antérieures requis, actuellement
+bloqués par les données manquantes. Le guide ci-dessus fournit la commande exacte
+de reprise locale ; `tools/statistical_power.py` calcule la puissance de planification.
+
+L'[audit de l'importateur Dukascopy](docs/dukascopy_importer_audit.md) documente
+les réessais, le diagnostic réseau et la reprise limitée au développement avec
+`--until '2025-01-01T00:00:00+00:00'`. L'import réel reste incomplet ; aucun
+backtest ni accès au hold-out n'est autorisé par cette commande.

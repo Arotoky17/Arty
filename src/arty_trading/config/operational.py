@@ -65,15 +65,24 @@ def definitions() -> dict[str, Any]:
     return cfg
 
 
+@lru_cache(maxsize=16)
+def _atr_settings(path: Path, modified: int) -> tuple[int, str]:
+    cfg = definitions()
+    return cfg["atr_period"], cfg["atr_warmup"]
+
+
 def operational_atr(candles: list[Candle]) -> Decimal:
     """Wilder ATR; configured fallback for short detector windows."""
 
     from arty_trading.utils.helpers import calculate_atr
+    from arty_trading.validation.market_calendar import tradable_candles
 
-    cfg = definitions()
-    atr = calculate_atr(candles, period=cfg["atr_period"])
-    if atr > 0 or cfg["atr_warmup"] == "require_full":
+    path = CONFIG_ROOT / "definitions.yaml"
+    period, warmup = _atr_settings(path, path.stat().st_mtime_ns)
+    atr = calculate_atr(candles, period=period)
+    if atr > 0 or warmup == "require_full":
         return atr
+    candles = tradable_candles(candles)
     ranges = [
         max(c.high - c.low, abs(c.high - p.close), abs(c.low - p.close))
         for p, c in zip(candles, candles[1:])

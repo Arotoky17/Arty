@@ -6,7 +6,7 @@ audit:
   max_return_fraction: 0.02
   max_range_fraction: 0.02
   spike_atr_multiple: 20.0
-  exclude_unchanged_flats_from_atr: true
+  volatility_clock: market_open_bars
   lookahead_probes: 12
   expected_start: '2020-01-01T00:00:00+00:00'
   # Updated to the captured UTC cutoff after each successful import.
@@ -22,6 +22,7 @@ regime:
   range_max_adx: 20.0
   minimum_consecutive_bars: 24
 review:
+  minimum_manual_correct_fraction: 0.8
   timeframe: M5
   samples_per_type: 20
   seed: 20261002

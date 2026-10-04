@@ -55,12 +55,7 @@ def resampling_audit(frame: pd.DataFrame, cfg: dict[str, Any]) -> dict[str, Any]
 
 
 def bar_outlier_metrics(frame: pd.DataFrame, cfg: dict[str, Any]) -> pd.DataFrame:
-    """Keep grid flags, but freeze the volatility clock on unchanged flat bars.
-
-    A flat OHLC equal to the preceding close is an inactivity candidate, not
-    proof of an exchange closure. Never discard its raw row or suppress the
-    absolute price/range checks. Every ATR uses past observations only.
-    """
+    """Calendar-open volatility clock, causal ATR; preserve legacy grid flags."""
     previous = frame.close.shift()
     tr = pd.concat(
         [frame.high - frame.low, (frame.high - previous).abs(), (frame.low - previous).abs()],
@@ -69,20 +64,38 @@ def bar_outlier_metrics(frame: pd.DataFrame, cfg: dict[str, Any]) -> pd.DataFram
     flat = frame[OHLC].eq(previous, axis=0).all(axis=1)
     alpha = 1 / definitions()["atr_period"]
     grid_atr = tr.shift().ewm(alpha=alpha, adjust=False).mean()
-    active_atr = tr.loc[~flat].shift().ewm(alpha=alpha, adjust=False).mean()
+    from arty_trading.validation.market_calendar import MarketCalendar
+
+    if isinstance(frame.index, pd.DatetimeIndex) and frame.index.tz is not None:
+        closed = MarketCalendar().annotate(frame).non_tradable
+    else:
+        closed = pd.Series(False, index=frame.index)
+    active = frame.loc[~closed]
+    active_previous = active.close.shift()
+    active_tr = pd.concat(
+        [
+            active.high - active.low,
+            (active.high - active_previous).abs(),
+            (active.low - active_previous).abs(),
+        ],
+        axis=1,
+    ).max(axis=1)
+    active_atr = active_tr.shift().ewm(alpha=alpha, adjust=False).mean()
     active_atr = active_atr.reindex(frame.index).ffill()
-    selected = active_atr if cfg["exclude_unchanged_flats_from_atr"] else grid_atr
+    selected = active_atr
     absolute_return = (frame.close / previous - 1).abs() > cfg["max_return_fraction"]
     absolute_range = (frame.high - frame.low) / previous > cfg["max_range_fraction"]
     absolute = absolute_return | absolute_range
     legacy = absolute | ((grid_atr > 0) & (tr > cfg["spike_atr_multiple"] * grid_atr))
-    corrected = absolute | ((selected > 0) & (tr > cfg["spike_atr_multiple"] * selected))
+    corrected = absolute | (~closed & (selected > 0) & (tr > cfg["spike_atr_multiple"] * selected))
     return pd.DataFrame(
         {
             "true_range": tr,
             "past_atr_grid": grid_atr,
             "past_atr_active": active_atr,
             "unchanged_flat": flat,
+            "non_tradable": closed,
+            "forward_fill_candidate": closed & flat,
             "absolute_return_flag": absolute_return,
             "absolute_range_flag": absolute_range,
             "legacy_outlier": legacy,
@@ -166,6 +179,8 @@ def audit_frame(raw: pd.DataFrame, cfg: dict[str, Any]) -> tuple[dict[str, Any],
             "outlier_m1_bars": len(anomaly),
             "legacy_outlier_m1_bars": int(clean.legacy_outlier.sum()),
             "padding_atr_false_positives": int(clean.padding_atr_false_positive.sum()),
+            "non_tradable_bars": int(clean.non_tradable.sum()),
+            "forward_fill_candidates": int(clean.forward_fill_candidate.sum()),
             "outside_expected_dates": int(group.outside_expected_dates.sum()),
             "outlier_examples": [t.isoformat() for t in anomaly.index[: cfg["example_limit"]]],
             "gap_examples": [t.isoformat() for t in missing[: cfg["example_limit"]]],

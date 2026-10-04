@@ -130,6 +130,9 @@ class SessionDetector(BaseDetector):
         Returns:
             Liste des détections de sessions
         """
+        from arty_trading.validation.market_calendar import tradable_candles
+
+        candles = tradable_candles(candles)
         if not self._enabled or not candles:
             return []
 

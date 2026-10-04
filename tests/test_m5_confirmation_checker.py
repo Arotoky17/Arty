@@ -520,7 +520,7 @@ def test_check_rejects_missing_candle_timestamps() -> None:
 
 
 def test_structure_detector_dates_all_events_at_break_candle() -> None:
-    start = datetime(2024, 1, 1, tzinfo=UTC)
+    start = datetime(2024, 1, 4, tzinfo=UTC)
     candles = [
         Candle(
             symbol="XAUUSD",

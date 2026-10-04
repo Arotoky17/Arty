@@ -73,7 +73,7 @@ class FixedConfirmation(M5ConfirmationChecker):
 
 
 def make_candles() -> list[Candle]:
-    start = datetime(2024, 1, 1, tzinfo=UTC)
+    start = datetime(2024, 1, 4, tzinfo=UTC)
     candles = [
         Candle(
             symbol="XAUUSD",

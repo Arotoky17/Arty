@@ -5,7 +5,7 @@ development:
   start: '2020-01-01T00:00:00+00:00'
   end: '2025-01-01T00:00:00+00:00'
 holdout:
-  start: '2025-01-16T00:00:00+00:00'
+  start: '2025-01-15T00:00:00+00:00'
   # Set ONLY from the latest common closed bid/ask bar by fetch_dukascopy.py.
   # Existing imported data stops in June 2024, before holdout starts.
   end: null
@@ -13,8 +13,8 @@ holdout:
   end_policy: last_available_common_closed_m1_bar
 purge:
   start: '2025-01-01T00:00:00+00:00'
-  end: '2025-01-16T00:00:00+00:00'
+  end: '2025-01-15T00:00:00+00:00'
   business_days: 10
   weekdays: [0, 1, 2, 3, 4]
-  holidays: ['2025-01-01']
-  convention: 'UTC weekdays excluding explicitly listed exchange holidays'
+  holidays: []
+  convention: 'UTC Monday-Friday, no holiday exclusions; user approved 2026-10-03'

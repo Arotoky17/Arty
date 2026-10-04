@@ -75,6 +75,9 @@ class PremiumDiscountDetector(BaseDetector):
         3. Premium = upper half, Discount = lower half
         4. OTE = zone de retracement 62%-79% du range
         """
+        from arty_trading.validation.market_calendar import tradable_candles
+
+        candles = tradable_candles(candles)
         if not self._enabled or len(candles) < 5:
             return []
 

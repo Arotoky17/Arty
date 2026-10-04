@@ -1,0 +1,120 @@
+{
+  "checked_existing_2020_daily_sides": 15,
+  "objects": [
+    {
+      "date": "2020-01-01",
+      "side": "bid",
+      "rows": 1440,
+      "checksums_match": true
+    },
+    {
+      "date": "2020-01-01",
+      "side": "ask",
+      "rows": 1440,
+      "checksums_match": true
+    },
+    {
+      "date": "2020-01-02",
+      "side": "bid",
+      "rows": 1440,
+      "checksums_match": true
+    },
+    {
+      "date": "2020-01-02",
+      "side": "ask",
+      "rows": 1440,
+      "checksums_match": true
+    },
+    {
+      "date": "2020-01-03",
+      "side": "bid",
+      "rows": 1440,
+      "checksums_match": true
+    },
+    {
+      "date": "2020-01-03",
+      "side": "ask",
+      "rows": 1440,
+      "checksums_match": true
+    },
+    {
+      "date": "2020-01-04",
+      "side": "bid",
+      "rows": 1440,
+      "checksums_match": true
+    },
+    {
+      "date": "2020-01-04",
+      "side": "ask",
+      "rows": 1440,
+      "checksums_match": true
+    },
+    {
+      "date": "2020-01-05",
+      "side": "bid",
+      "rows": 1440,
+      "checksums_match": true
+    },
+    {
+      "date": "2020-01-05",
+      "side": "ask",
+      "rows": 1440,
+      "checksums_match": true
+    },
+    {
+      "date": "2020-01-06",
+      "side": "bid",
+      "rows": 1440,
+      "checksums_match": true
+    },
+    {
+      "date": "2020-01-06",
+      "side": "ask",
+      "rows": 1440,
+      "checksums_match": true
+    },
+    {
+      "date": "2020-01-07",
+      "side": "bid",
+      "rows": 1440,
+      "checksums_match": true
+    },
+    {
+      "date": "2020-01-07",
+      "side": "ask",
+      "rows": 1440,
+      "checksums_match": true
+    },
+    {
+      "date": "2020-01-08",
+      "side": "bid",
+      "rows": 1440,
+      "checksums_match": true
+    }
+  ],
+  "holdout_accessed": false,
+  "raw_modified": false,
+  "network_probe": {
+    "probes": [
+      {
+        "url": "https://www.dukascopy.com/",
+        "status": "request_failed",
+        "error_type": "URLError",
+        "error": "<urlopen error [WinError 10013] Une tentative d\u2019acc\u00e8s \u00e0 un socket de mani\u00e8re interdite par ses autorisations d\u2019acc\u00e8s a \u00e9t\u00e9 tent\u00e9e>",
+        "errno": 13,
+        "winerror": 10013
+      },
+      {
+        "url": "https://datafeed.dukascopy.com/datafeed/XAUUSD/2020/00/01/BID_candles_min_1.bi5",
+        "status": "request_failed",
+        "error_type": "URLError",
+        "error": "<urlopen error [WinError 10013] Une tentative d\u2019acc\u00e8s \u00e0 un socket de mani\u00e8re interdite par ses autorisations d\u2019acc\u00e8s a \u00e9t\u00e9 tent\u00e9e>",
+        "errno": 13,
+        "winerror": 10013
+      }
+    ],
+    "raw_written": false,
+    "holdout_accessed": false,
+    "interpretation": "Observed from this process only; no proof of provider outage"
+  }
+}

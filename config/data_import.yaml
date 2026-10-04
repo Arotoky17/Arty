@@ -8,11 +8,21 @@ record_format: '>5If'
 record_fields: [seconds, open, close, low, high, volume]
 source_bar_seconds: 60
 day_seconds: 86400
-workers: 4
+workers: 1
+# Inter-request delay: a base value with symmetric jitter around it.
+request_delay_base_seconds: 4.0
+request_jitter_fraction: 0.25
+request_delay_min_seconds: 3.0
+request_delay_max_seconds: 5.0
+# One file is retried with a long backoff, then deferred; it never aborts the run.
 timeout_seconds: 30
 max_attempts: 3
-retry_seconds: 5
-max_retry_after_seconds: 60
+file_attempts: 8
+retry_multiplier: 2.0
+retry_base_seconds: 30
+retry_jitter_fraction: 0.25
+backoff_cap_seconds: 900
+user_agent: 'Arty-XAUUSD-research/1.0 (local validation import; repository owner)'
 progress_every: 100
 output: data/raw
 report_output: reports/data_readiness/import

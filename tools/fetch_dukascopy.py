@@ -65,7 +65,7 @@ def main() -> None:
     parser.add_argument(
         "--max-runtime",
         type=float,
-        help="Stop the session after N seconds and report what remains for resume",
+        help="Download budget in seconds, excluding resume indexing and optional existing audit",
     )
     parser.add_argument(
         "--file-attempts",
@@ -73,6 +73,17 @@ def main() -> None:
         help="Attempts per file before deferring it (default 8)",
     )
     parser.add_argument("--user-agent", help="Override the explicit User-Agent header")
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=1,
+        help="Concurrent downloads (1..32); immutable publication has one writer",
+    )
+    parser.add_argument(
+        "--verify-existing",
+        action="store_true",
+        help="Explicitly reread/checksum existing files and certify legacy BID/ASK pairs",
+    )
     parser.add_argument(
         "--csv-root",
         type=Path,
@@ -90,13 +101,12 @@ def main() -> None:
     if args.csv_root is not None:
         from arty_trading.validation.csv_import import run_csv_import
 
-        print(
-            json.dumps(
-                run_csv_import(args.csv_root, args.output, until=args.until), indent=2
-            )
-        )
+        print(json.dumps(run_csv_import(args.csv_root, args.output, until=args.until), indent=2))
         return
     cfg = load_config("data_import.yaml")
+    if not 1 <= args.workers <= 32:
+        raise SystemExit("--workers must be between 1 and 32")
+    cfg["workers"] = args.workers
     if args.delay is not None:
         cfg = apply_request_delay(cfg, args.delay)
     if args.file_attempts is not None:
@@ -108,7 +118,11 @@ def main() -> None:
     print(
         json.dumps(
             run_fetch(
-                args.output, until=args.until, max_runtime=args.max_runtime, cfg=cfg
+                args.output,
+                until=args.until,
+                max_runtime=args.max_runtime,
+                cfg=cfg,
+                verify_existing=args.verify_existing,
             ),
             indent=2,
         )

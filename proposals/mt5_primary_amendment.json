@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "status": "draft_pending_user_validation",
+  "sha_applied": null,
+  "amendment_id": "setup1_mt5_primary_source_proposal_20261005",
+  "base_setup": "setup_1_bos_retest_ob_fvg_v1",
+  "source": {
+    "provider": "MetaQuotes-Demo MT5 CSV",
+    "directory": "data/external/mt5_converted",
+    "symbol": "XAUUSD",
+    "server_timezone": "Europe/Athens",
+    "point": 0.01,
+    "contract_oz": 100,
+    "volume_min_lot": 0.01,
+    "volume_step_lot": 0.01,
+    "specification_source": "User-confirmed Specification 2026-10-05",
+    "ask_origin": "reconstructed_ask",
+    "reference_cost_calibration_from_mt5": false,
+    "source_sha256": "14d47c38faa9083194996f0be84c8fab43b8a744dcb2ca1028c6a7f300c2e2f3",
+    "conversion_manifest_sha256": "9876341b8a2103a8f1c8b1e2df9107cc959adbd4e7c0843aa1e26f409eeb277d",
+    "gap_policy_sha256": "f17000836275e3d40f5582fa34398a096b7504d0d8a22938bc7ec19d564b31d6"
+  },
+  "split_proposal": {
+    "development_start": "2020-01-01T00:00:00+00:00",
+    "development_end_exclusive": "2025-01-01T00:00:00+00:00",
+    "holdout_start": "2025-01-15T00:00:00+00:00",
+    "last_mt5_bar_open": "2026-10-05T11:10:00+00:00",
+    "holdout_end_exclusive_proposed": "2026-10-05T11:11:00+00:00",
+    "end_confirmed_by_user": false,
+    "split_yaml_applied": false
+  },
+  "conservative_cost_hypothesis": {
+    "mode_proposed": "broker_floor_no_mt5_calibration",
+    "broker_real": null,
+    "broker_evidence": null,
+    "spread_floor_usd_per_oz": null,
+    "hourly_spread_floor_usd_per_oz": null,
+    "major_news_spread_floor_usd_per_oz": null,
+    "commission_usd_per_lot_side": null,
+    "market_stop_slippage_usd_per_oz": null,
+    "limit_exit_slippage_usd_per_oz": null,
+    "entry_limit_slippage_usd_per_oz": 0,
+    "effective_spread": "max(reconstructed MT5 spread, independently fixed conservative broker floor)",
+    "spread_charged_once_via_effective_bid_ask": true,
+    "stress_cost_multipliers": [
+      1,
+      1.5,
+      2
+    ],
+    "stress_1_5_blocking": true,
+    "stress_2_blocking": null,
+    "freeze_before_baseline": true,
+    "recalibration_after_results": false
+  },
+  "gap_policy": {
+    "large_open_gap_threshold_minutes_exclusive": 15,
+    "mark_non_tradable_for": [
+      "ATR",
+      "detectors",
+      "fills"
+    ],
+    "reset_atr_and_detector_state": true,
+    "cancel_pending_orders": true,
+    "no_imputation": true,
+    "small_gap_policy_pending": true,
+    "engine_integration_validation_pending": true
+  },
+  "confirmation_trial": {
+    "preregistration_file": "preregistration_mt5_confirmation_trial.md",
+    "trial_registered": false,
+    "alternative_source": null,
+    "source_choices": [
+      "Dukascopy observed bid/ask",
+      "real broker observed bid/ask"
+    ],
+    "trial_budget_amendment_approved": false
+  },
+  "conditional_conclusion": "Positive MT5 result is provisional and requires frozen conservative costs, gap controls, and successful preregistered Dukascopy/broker confirmation",
+  "baseline_run": false,
+  "configuration_sha_updated": false
+}

@@ -1,0 +1,26 @@
+{
+  "provider": "mt5_csv",
+  "broker": "MetaQuotes-Demo",
+  "symbol": "XAUUSD",
+  "server_timezone": "Europe/Athens",
+  "point": "0.01",
+  "bid_origin": "mt5_bid",
+  "ask_origin": "reconstructed_ask",
+  "ask_reconstruction": "bid OHLC + original bar Spread * 0.01; constant within bar",
+  "bid_only": false,
+  "volume_field": "TickVol",
+  "separated_from_dukascopy": true,
+  "allowed_for_reference_cost_model": false,
+  "dst_policy": "skip_ambiguous_and_nonexistent_local_minutes",
+  "broker_specification": {
+    "contract_oz": 100,
+    "volume_min_lot": 0.01,
+    "volume_step_lot": 0.01,
+    "source": "User-confirmed MetaQuotes-Demo Specification 2026-10-05",
+    "real_broker_specification_confirmed": false
+  },
+  "gap_policy_file": "gap_policy.json",
+  "gap_policy_sha256": "f17000836275e3d40f5582fa34398a096b7504d0d8a22938bc7ec19d564b31d6",
+  "gap_policy_consumer_requirement": "apply non_tradable flags and gap_segment_id; reset ATR/detectors and cancel pending orders before baseline",
+  "primary_source_status": "proposal_not_approved"
+}

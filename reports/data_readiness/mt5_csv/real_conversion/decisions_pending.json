@@ -1,0 +1,23 @@
+{
+  "decisions_pending": [
+    {
+      "id": "point",
+      "need": "Provide the confirmed XAUUSD MT5 Specification point; no ask is reconstructed without it"
+    },
+    {
+      "id": "ask_ohlc_approximation",
+      "need": "Confirm applying the bar spread to all OHLC; true ask extrema are not recoverable"
+    },
+    {
+      "id": "history_2015_2019",
+      "need": "Provide missing export if history since 2015 is still required"
+    }
+  ],
+  "server_timezone": "Europe/Athens",
+  "timezone_evidence": "timing_2020.json",
+  "2020_comparison_cutoff_utc": "2020-12-23T00:00:00+00:00",
+  "post_cutoff_2020": "work rule, not directly verified by Dukascopy yet",
+  "conversion_status": "bid_converted_ask_pending_point",
+  "reference_cost_calibration": "MT5 forbidden",
+  "holdout_end": "unchanged_unfrozen"
+}

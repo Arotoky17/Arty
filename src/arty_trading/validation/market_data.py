@@ -19,6 +19,10 @@ def source_frames(directory: Path, symbol: str) -> tuple[dict[str, pd.DataFrame]
     sources = []
     for side in ("bid", "ask"):
         paths = sorted((directory / symbol.lower() / side / "m1").glob("*.csv"))
+        if not paths and (directory / "provenance.json").exists():
+            provider = json.loads((directory / "provenance.json").read_text()).get("provider")
+            if provider == "mt5_csv":
+                paths = sorted((directory / symbol.lower() / side).glob("*.csv"))
         # Intraday source snapshots are immutable. Select only the latest snapshot
         # of each day in this derived read view, without deleting older raw files.
         snapshots: dict[str, Path] = {}
@@ -37,16 +41,20 @@ def source_frames(directory: Path, symbol: str) -> tuple[dict[str, pd.DataFrame]
                 {"path": str(path), "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
             )
         frames[side] = pd.concat(parts, ignore_index=True)
+        gap_path = directory / "gap_policy.json"
+        if gap_path.exists():
+            frames[side].attrs["gap_policy"] = json.loads(gap_path.read_text(encoding="utf-8"))
     manifest_path = directory / "source_manifest.json"
     checks = []
     journal_path = directory / "import_manifest.jsonl"
+    journal_entries: list[dict[str, Any]] = []
     if journal_path.exists():
         from arty_trading.validation.dukascopy_import import read_manifest
 
-        entries = read_manifest(journal_path)
+        journal_entries = read_manifest(journal_path)
         expected_paths = {
             str(Path(row["path"]).resolve()): row["sha256"]
-            for row in entries
+            for row in journal_entries
             if row["status"] == "verified"
         }
         checks = [
@@ -66,14 +74,42 @@ def source_frames(directory: Path, symbol: str) -> tuple[dict[str, pd.DataFrame]
             }
             for row in sources
         ]
+    ask_origin = "source_ask"
+    sidecar = directory / "provenance.json"
+    if sidecar.exists():
+        extra = json.loads(sidecar.read_text(encoding="utf-8"))
+        ask_origin = extra.get("ask_origin", ask_origin)
+        expected_gap = extra.get("gap_policy_sha256")
+        if expected_gap:
+            gap_file = directory / "gap_policy.json"
+            if (
+                not gap_file.exists()
+                or hashlib.sha256(gap_file.read_bytes()).hexdigest() != expected_gap
+            ):
+                raise ValueError("MT5 gap policy checksum mismatch")
+    for row in journal_entries:
+        if row.get("quote_origin") == "reconstructed_ask" or row.get("ask_origin") == (
+            "reconstructed_ask"
+        ):
+            ask_origin = "reconstructed_ask"
+            break
+    if ask_origin == "reconstructed_ask":
+        timestamp_provenance = (
+            "MT5 server-local converted to UTC; ASK reconstructed_ask from bid+spread*point; "
+            "not Dukascopy; forbidden for the reference cost model"
+        )
+    elif journal_path.exists():
+        timestamp_provenance = (
+            "Dukascopy UTC day + seconds, zero-based URL month; source BI5 preserved"
+        )
+    else:
+        timestamp_provenance = "Unix milliseconds interpreted as UTC; source offset unverified"
     return frames, {
         "files": sources,
         "manifest_checks": checks,
-        "timestamp_provenance": (
-            "Dukascopy UTC day + seconds, zero-based URL month; source BI5 preserved"
-            if journal_path.exists()
-            else "Unix milliseconds interpreted as UTC; source offset unverified"
-        ),
+        "ask_origin": ask_origin,
+        "allowed_for_reference_cost_model": ask_origin != "reconstructed_ask",
+        "timestamp_provenance": timestamp_provenance,
     }
 
 
@@ -124,9 +160,10 @@ def resample_closed_bars(
         )
         bars["source_close"] = source_close.groupby(starts).max()
         bars["observations"] = grouped_daily.close.count()
-        return bars.loc[
+        result = bars.loc[
             bars.available_at <= frame.index[-1] + pd.Timedelta(minutes=source_minutes)
         ].copy()
+        return _apply_gap_overlay(result, frame)
     grouped = frame.resample(f"{minutes}min", origin="epoch", closed="left", label="left")
     bars = grouped.agg(aggregation).dropna(subset=OHLC)
     bars["available_at"] = bars.index + pd.Timedelta(minutes=minutes)
@@ -134,7 +171,7 @@ def resample_closed_bars(
     bars["source_close"] = source_close.resample(f"{minutes}min", origin="epoch").max()
     bars["observations"] = grouped.close.count()
     coverage_end = frame.index[-1] + pd.Timedelta(minutes=source_minutes)
-    return bars.loc[bars.available_at <= coverage_end].copy()
+    return _apply_gap_overlay(bars.loc[bars.available_at <= coverage_end].copy(), frame)
 
 
 def available_bars(bars: pd.DataFrame, at: pd.Timestamp) -> pd.DataFrame:
@@ -161,3 +198,12 @@ def write_report(path: Path, report: dict[str, Any]) -> None:
         json.dumps(report, indent=2, ensure_ascii=False, allow_nan=False, default=numeric),
         encoding="utf-8",
     )
+
+
+def _apply_gap_overlay(bars: pd.DataFrame, source: pd.DataFrame) -> pd.DataFrame:
+    policy = source.attrs.get("gap_policy")
+    if policy:
+        from arty_trading.validation.mt5_gaps import annotate_gap_bars
+
+        return annotate_gap_bars(bars, policy)
+    return bars

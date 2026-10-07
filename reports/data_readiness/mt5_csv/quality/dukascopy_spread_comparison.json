@@ -1,0 +1,3377 @@
+{
+  "matched_bid_minutes": 343458,
+  "first_common_utc": "2020-01-02T04:00:00+00:00",
+  "last_common_utc": "2020-12-22T23:59:00+00:00",
+  "overall": {
+    "bid_abs_price_diff_usd": {
+      "count": 343458,
+      "median": 0.07500000000004547,
+      "p95": 0.27500000000009095,
+      "p99": 0.6550000000000705,
+      "max": 14.13799999999992
+    },
+    "bid_signed_price_diff_usd": {
+      "count": 343458,
+      "median": 0.07199999999988904,
+      "p95": 0.23500000000012733,
+      "p99": 0.585860000000002,
+      "max": 13.375
+    },
+    "mt5_spread_usd": {
+      "count": 343458,
+      "median": 0.17,
+      "p95": 0.62,
+      "p99": 1.61,
+      "max": 17.44
+    },
+    "duka_spread_usd": {
+      "count": 343458,
+      "median": 0.3969999999999345,
+      "p95": 1.1639999999999873,
+      "p99": 2.2170000000000982,
+      "max": 14.423999999999978
+    },
+    "spread_signed_diff_mt5_minus_duka": {
+      "count": 343458,
+      "median": -0.24399999999995997,
+      "p95": -0.04700000000009821,
+      "p99": 0.1230000000000564,
+      "max": 12.931999999999963
+    },
+    "duka_negative_spread_pairs": 0,
+    "spread_caveat": "MT5 bar spread vs Dukascopy M1 close ask-bid, not synchronous ticks"
+  },
+  "monthly": {
+    "2020-01": {
+      "bid_abs_price_diff_usd": {
+        "count": 29609,
+        "median": 0.035000000000081855,
+        "p95": 0.08200000000010732,
+        "p99": 0.12199999999984357,
+        "max": 0.4880000000000564
+      },
+      "bid_signed_price_diff_usd": {
+        "count": 29609,
+        "median": 0.032000000000152795,
+        "p95": 0.08199999999987995,
+        "p99": 0.09200000000009823,
+        "max": 0.42200000000002547
+      },
+      "mt5_spread_usd": {
+        "count": 29609,
+        "median": 0.17,
+        "p95": 0.24,
+        "p99": 0.27,
+        "max": 0.61
+      },
+      "duka_spread_usd": {
+        "count": 29609,
+        "median": 0.27700000000004366,
+        "p95": 0.33999999999991815,
+        "p99": 0.39400000000000546,
+        "max": 0.8540000000000418
+      },
+      "spread_signed_diff_mt5_minus_duka": {
+        "count": 29609,
+        "median": -0.0999999999999818,
+        "p95": -0.026999999999879953,
+        "p99": 0.01299999999989268,
+        "max": 0.18500000000014552
+      },
+      "duka_negative_spread_pairs": 0,
+      "spread_caveat": "MT5 bar spread vs Dukascopy M1 close ask-bid, not synchronous ticks"
+    },
+    "2020-02": {
+      "bid_abs_price_diff_usd": {
+        "count": 27165,
+        "median": 0.041999999999916326,
+        "p95": 0.08200000000010732,
+        "p99": 0.12199999999992542,
+        "max": 0.4049999999999727
+      },
+      "bid_signed_price_diff_usd": {
+        "count": 27165,
+        "median": 0.041999999999916326,
+        "p95": 0.08200000000010732,
+        "p99": 0.10307999999998349,
+        "max": 0.4049999999999727
+      },
+      "mt5_spread_usd": {
+        "count": 27165,
+        "median": 0.17,
+        "p95": 0.2,
+        "p99": 0.24,
+        "max": 0.59
+      },
+      "duka_spread_usd": {
+        "count": 27165,
+        "median": 0.2799999999999727,
+        "p95": 0.3569999999999709,
+        "p99": 0.4099999999998545,
+        "max": 0.6800000000000637
+      },
+      "spread_signed_diff_mt5_minus_duka": {
+        "count": 27165,
+        "median": -0.11700000000002547,
+        "p95": -0.06699999999982537,
+        "p99": -0.03699999999987086,
+        "max": 0.1739999999999236
+      },
+      "duka_negative_spread_pairs": 0,
+      "spread_caveat": "MT5 bar spread vs Dukascopy M1 close ask-bid, not synchronous ticks"
+    },
+    "2020-03": {
+      "bid_abs_price_diff_usd": {
+        "count": 29324,
+        "median": 0.06199999999989814,
+        "p95": 0.537850000000013,
+        "p99": 1.857309999999965,
+        "max": 14.13799999999992
+      },
+      "bid_signed_price_diff_usd": {
+        "count": 29324,
+        "median": 0.03499999999985448,
+        "p95": 0.2819999999999254,
+        "p99": 1.0620000000001255,
+        "max": 13.375
+      },
+      "mt5_spread_usd": {
+        "count": 29324,
+        "median": 0.2,
+        "p95": 2.5,
+        "p99": 5.91,
+        "max": 17.44
+      },
+      "duka_spread_usd": {
+        "count": 29324,
+        "median": 0.4169999999999163,
+        "p95": 3.03954999999997,
+        "p99": 5.946310000000082,
+        "max": 14.423999999999978
+      },
+      "spread_signed_diff_mt5_minus_duka": {
+        "count": 29324,
+        "median": -0.18699999999999817,
+        "p95": 0.0759999999998814,
+        "p99": 0.8675400000000156,
+        "max": 12.931999999999963
+      },
+      "duka_negative_spread_pairs": 0,
+      "spread_caveat": "MT5 bar spread vs Dukascopy M1 close ask-bid, not synchronous ticks"
+    },
+    "2020-04": {
+      "bid_abs_price_diff_usd": {
+        "count": 28526,
+        "median": 0.1750000000000682,
+        "p95": 0.7319999999999709,
+        "p99": 1.0750000000000455,
+        "max": 8.634999999999991
+      },
+      "bid_signed_price_diff_usd": {
+        "count": 28526,
+        "median": 0.13200000000006185,
+        "p95": 0.7149999999999181,
+        "p99": 1.0519999999999072,
+        "max": 8.634999999999991
+      },
+      "mt5_spread_usd": {
+        "count": 28526,
+        "median": 0.32,
+        "p95": 1.3800000000000001,
+        "p99": 1.61,
+        "max": 3.19
+      },
+      "duka_spread_usd": {
+        "count": 28526,
+        "median": 0.9940000000001419,
+        "p95": 1.9739999999999327,
+        "p99": 2.9815000000000964,
+        "max": 9.576999999999998
+      },
+      "spread_signed_diff_mt5_minus_duka": {
+        "count": 28526,
+        "median": -0.5639999999999146,
+        "p95": -0.04400000000003268,
+        "p99": 0.19600000000000828,
+        "max": 1.1779999999999564
+      },
+      "duka_negative_spread_pairs": 0,
+      "spread_caveat": "MT5 bar spread vs Dukascopy M1 close ask-bid, not synchronous ticks"
+    },
+    "2020-05": {
+      "bid_abs_price_diff_usd": {
+        "count": 28452,
+        "median": 0.09500000000002728,
+        "p95": 0.3524499999999733,
+        "p99": 0.52800000000002,
+        "max": 1.5149999999998727
+      },
+      "bid_signed_price_diff_usd": {
+        "count": 28452,
+        "median": 0.02200000000016189,
+        "p95": 0.29500000000007276,
+        "p99": 0.47199999999998,
+        "max": 1.5149999999998727
+      },
+      "mt5_spread_usd": {
+        "count": 28452,
+        "median": 0.34,
+        "p95": 0.74,
+        "p99": 1.07,
+        "max": 1.61
+      },
+      "duka_spread_usd": {
+        "count": 28452,
+        "median": 0.5570000000000164,
+        "p95": 1.0039999999999054,
+        "p99": 1.3040000000000873,
+        "max": 2.6269999999999527
+      },
+      "spread_signed_diff_mt5_minus_duka": {
+        "count": 28452,
+        "median": -0.20699999999997998,
+        "p95": 0.13599999999996726,
+        "p99": 0.31600000000008976,
+        "max": 1.05599999999994
+      },
+      "duka_negative_spread_pairs": 0,
+      "spread_caveat": "MT5 bar spread vs Dukascopy M1 close ask-bid, not synchronous ticks"
+    },
+    "2020-06": {
+      "bid_abs_price_diff_usd": {
+        "count": 30140,
+        "median": 0.07500000000004547,
+        "p95": 0.19200000000000728,
+        "p99": 0.28500000000008185,
+        "max": 0.91800000000012
+      },
+      "bid_signed_price_diff_usd": {
+        "count": 30140,
+        "median": 0.07199999999988904,
+        "p95": 0.18200000000001637,
+        "p99": 0.2719999999999345,
+        "max": 0.8000000000001819
+      },
+      "mt5_spread_usd": {
+        "count": 30140,
+        "median": 0.16,
+        "p95": 0.49,
+        "p99": 0.77,
+        "max": 0.81
+      },
+      "duka_spread_usd": {
+        "count": 30140,
+        "median": 0.4470000000001164,
+        "p95": 0.7239999999999327,
+        "p99": 0.9939999999999145,
+        "max": 1.6169999999999618
+      },
+      "spread_signed_diff_mt5_minus_duka": {
+        "count": 30140,
+        "median": -0.26399999999993273,
+        "p95": -0.0669999999999345,
+        "p99": 0.03300000000016399,
+        "max": 0.6479999999998836
+      },
+      "duka_negative_spread_pairs": 0,
+      "spread_caveat": "MT5 bar spread vs Dukascopy M1 close ask-bid, not synchronous ticks"
+    },
+    "2020-07": {
+      "bid_abs_price_diff_usd": {
+        "count": 31160,
+        "median": 0.07200000000011642,
+        "p95": 0.15200000000004366,
+        "p99": 0.2319999999999709,
+        "max": 1.1520000000000437
+      },
+      "bid_signed_price_diff_usd": {
+        "count": 31160,
+        "median": 0.07199999999988904,
+        "p95": 0.15200000000004366,
+        "p99": 0.21199999999998909,
+        "max": 1.1520000000000437
+      },
+      "mt5_spread_usd": {
+        "count": 31160,
+        "median": 0.16,
+        "p95": 0.45,
+        "p99": 0.72,
+        "max": 0.81
+      },
+      "duka_spread_usd": {
+        "count": 31160,
+        "median": 0.4370000000001255,
+        "p95": 0.6770000000001346,
+        "p99": 0.8869999999999436,
+        "max": 2.5239999999998872
+      },
+      "spread_signed_diff_mt5_minus_duka": {
+        "count": 31160,
+        "median": -0.24700000000000727,
+        "p95": -0.07699999999997997,
+        "p99": 0.0029999999999547095,
+        "max": 0.5260000000001219
+      },
+      "duka_negative_spread_pairs": 0,
+      "spread_caveat": "MT5 bar spread vs Dukascopy M1 close ask-bid, not synchronous ticks"
+    },
+    "2020-08": {
+      "bid_abs_price_diff_usd": {
+        "count": 28888,
+        "median": 0.08500000000003638,
+        "p95": 0.21199999999998909,
+        "p99": 0.2619999999999436,
+        "max": 1.0919999999998709
+      },
+      "bid_signed_price_diff_usd": {
+        "count": 28888,
+        "median": 0.08500000000003638,
+        "p95": 0.20499999999992724,
+        "p99": 0.25499999999988177,
+        "max": 0.9149999999999636
+      },
+      "mt5_spread_usd": {
+        "count": 28888,
+        "median": 0.16,
+        "p95": 0.42,
+        "p99": 0.5700000000000001,
+        "max": 0.81
+      },
+      "duka_spread_usd": {
+        "count": 28888,
+        "median": 0.48700000000008004,
+        "p95": 0.7139999999999418,
+        "p99": 0.8569999999999709,
+        "max": 1.7339999999999236
+      },
+      "spread_signed_diff_mt5_minus_duka": {
+        "count": 28888,
+        "median": -0.30999999999990907,
+        "p95": -0.12700000000017098,
+        "p99": -0.047000000000025466,
+        "max": 0.22299999999988362
+      },
+      "duka_negative_spread_pairs": 0,
+      "spread_caveat": "MT5 bar spread vs Dukascopy M1 close ask-bid, not synchronous ticks"
+    },
+    "2020-09": {
+      "bid_abs_price_diff_usd": {
+        "count": 29906,
+        "median": 0.11200000000008004,
+        "p95": 0.22199999999998,
+        "p99": 0.2719999999999345,
+        "max": 0.7579999999998108
+      },
+      "bid_signed_price_diff_usd": {
+        "count": 29906,
+        "median": 0.11199999999985266,
+        "p95": 0.22199999999998,
+        "p99": 0.2719999999999345,
+        "max": 0.6620000000000346
+      },
+      "mt5_spread_usd": {
+        "count": 29906,
+        "median": 0.06,
+        "p95": 0.3,
+        "p99": 0.46,
+        "max": 0.76
+      },
+      "duka_spread_usd": {
+        "count": 29906,
+        "median": 0.4169999999999163,
+        "p95": 0.5639999999998508,
+        "p99": 0.6798500000000693,
+        "max": 1.086999999999989
+      },
+      "spread_signed_diff_mt5_minus_duka": {
+        "count": 29906,
+        "median": -0.3170000000001892,
+        "p95": -0.1639999999999327,
+        "p99": -0.08699999999998044,
+        "max": 0.1729999999999836
+      },
+      "duka_negative_spread_pairs": 0,
+      "spread_caveat": "MT5 bar spread vs Dukascopy M1 close ask-bid, not synchronous ticks"
+    },
+    "2020-10": {
+      "bid_abs_price_diff_usd": {
+        "count": 29974,
+        "median": 0.08500000000003638,
+        "p95": 0.17200000000002547,
+        "p99": 0.2319999999999709,
+        "max": 1.0219999999999345
+      },
+      "bid_signed_price_diff_usd": {
+        "count": 29974,
+        "median": 0.08500000000003638,
+        "p95": 0.17200000000002547,
+        "p99": 0.2319999999999709,
+        "max": 1.0219999999999345
+      },
+      "mt5_spread_usd": {
+        "count": 29974,
+        "median": 0.1,
+        "p95": 0.23,
+        "p99": 0.3,
+        "max": 0.5
+      },
+      "duka_spread_usd": {
+        "count": 29974,
+        "median": 0.3770000000001801,
+        "p95": 0.4839999999999236,
+        "p99": 0.5570000000000164,
+        "max": 1.0769999999999982
+      },
+      "spread_signed_diff_mt5_minus_duka": {
+        "count": 29974,
+        "median": -0.26400000000006457,
+        "p95": -0.1539999999999509,
+        "p99": -0.10700000000008003,
+        "max": 0.022999999999956333
+      },
+      "duka_negative_spread_pairs": 0,
+      "spread_caveat": "MT5 bar spread vs Dukascopy M1 close ask-bid, not synchronous ticks"
+    },
+    "2020-11": {
+      "bid_abs_price_diff_usd": {
+        "count": 28394,
+        "median": 0.09500000000002728,
+        "p95": 0.14200000000005275,
+        "p99": 0.20199999999999818,
+        "max": 1.0820000000001073
+      },
+      "bid_signed_price_diff_usd": {
+        "count": 28394,
+        "median": 0.09500000000002728,
+        "p95": 0.14200000000005275,
+        "p99": 0.20199999999999818,
+        "max": 1.0820000000001073
+      },
+      "mt5_spread_usd": {
+        "count": 28394,
+        "median": 0.1,
+        "p95": 0.2,
+        "p99": 0.27,
+        "max": 0.7000000000000001
+      },
+      "duka_spread_usd": {
+        "count": 28394,
+        "median": 0.3669999999999618,
+        "p95": 0.4699999999997999,
+        "p99": 0.5570000000000164,
+        "max": 1.203000000000202
+      },
+      "spread_signed_diff_mt5_minus_duka": {
+        "count": 28394,
+        "median": -0.2569999999999527,
+        "p95": -0.16700000000002546,
+        "p99": -0.12492999999996601,
+        "max": 0.044999999999981805
+      },
+      "duka_negative_spread_pairs": 0,
+      "spread_caveat": "MT5 bar spread vs Dukascopy M1 close ask-bid, not synchronous ticks"
+    },
+    "2020-12": {
+      "bid_abs_price_diff_usd": {
+        "count": 21920,
+        "median": 0.09200000000009823,
+        "p95": 0.15200000000004366,
+        "p99": 0.21199999999998909,
+        "max": 1.7449999999998909
+      },
+      "bid_signed_price_diff_usd": {
+        "count": 21920,
+        "median": 0.09200000000009823,
+        "p95": 0.15200000000004366,
+        "p99": 0.2106700000000297,
+        "max": 0.5349999999998545
+      },
+      "mt5_spread_usd": {
+        "count": 21920,
+        "median": 0.13,
+        "p95": 0.21,
+        "p99": 0.28,
+        "max": 0.46
+      },
+      "duka_spread_usd": {
+        "count": 21920,
+        "median": 0.3769999999999527,
+        "p95": 0.4600000000000364,
+        "p99": 0.5339999999998781,
+        "max": 1.043999999999869
+      },
+      "spread_signed_diff_mt5_minus_duka": {
+        "count": 21920,
+        "median": -0.24000000000010005,
+        "p95": -0.16700000000009824,
+        "p99": -0.1231900000000966,
+        "max": 0.03299999999999276
+      },
+      "duka_negative_spread_pairs": 0,
+      "spread_caveat": "MT5 bar spread vs Dukascopy M1 close ask-bid, not synchronous ticks"
+    }
+  },
+  "missing_duka_ask_files": [],
+  "source_hashes": [
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-01.csv",
+      "sha256": "c236ec318763b2679a65ee1cac63a5b5bd9b351e62716baf557ab497e34e9c0b"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-01.csv",
+      "sha256": "7dbf3c9db2aa2a3e3082cc47e4bbbdafdad9b167d480adc5f85fc359f9ceff6d"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-02.csv",
+      "sha256": "2cb4f8af62c9db934e83b43ac5b6c911d3a269005bbcbcaf77055ae5f964d3e3"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-02.csv",
+      "sha256": "8e35ee44287677d9be9a043401c6aa90c0e1defe27e5f8336387450b2bd71d34"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-03.csv",
+      "sha256": "f9ee99817da6d5a2e53fc7c92db4435665019c7a5258c117db5a0863f2287918"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-03.csv",
+      "sha256": "abf8b52855bb2eeb7c1c11a4d5761eee6fcfc7e1857762c7daa4279ac0c3c3d4"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-04.csv",
+      "sha256": "83e94e2cb1f6164d34bbd5682e1be67120bd9cb4ea703cc1ef629be460f725f3"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-04.csv",
+      "sha256": "100242755a0b00c4c5b0a4d30111e9120e0657147a3fa6eceb7fa4cfcf8afc2a"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-05.csv",
+      "sha256": "29daf8c3238a558e6768647323ebdfbaf655bff6c4d833459dfe4cb61b2639ed"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-05.csv",
+      "sha256": "229da9d8df3fb0cda1ed14d6f417a1ff96300b3fa2b8293851ad8c6805837710"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-06.csv",
+      "sha256": "09dde8be95f1cc2e2ec315592d8848e7dd9ad4b58dd19635e734b1448f542ff4"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-06.csv",
+      "sha256": "cabd6c79b536d8dfdce70fbdc1c450ed54603e5606239aebe56f70c81c64fa2e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-07.csv",
+      "sha256": "7991b0b66c529642b05e93bcbaaac8d33a525a596c057bc846e4fa28dadc237e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-07.csv",
+      "sha256": "e65b5716477e25f54532995dfdd7e3f582b918adf22fb8b8ddc87d5e4070d835"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-08.csv",
+      "sha256": "9f93be96563fbcc2e8fbfe17a7c4373c84ac212169e8bbfef251aaaf35a730c1"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-08.csv",
+      "sha256": "e1597597699ca90e7e233b576b0249ccae94679dd79ed2afbd02a05f30e4ebf0"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-09.csv",
+      "sha256": "d2cc428473dd1f345ac3088cb1413d3623c6cb0783c15c3ae524bbe08d3cf571"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-09.csv",
+      "sha256": "2acb58f7e2b9d3fb3cb5e8106cb7ba84e96aaa672807b1f90ac517153ece4892"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-10.csv",
+      "sha256": "4a3b1eb135b680ccd9f52fdf5a5ae359bf7daa6c9a9effd0becf5cbceb062bba"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-10.csv",
+      "sha256": "404829b90dad104e5f14f48be8a6a7494c9091c454bb3a0c00d0b453178a0cb5"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-11.csv",
+      "sha256": "6bdca60520a22ffd929bb79a72b253ab479d2523775f57a26caadcc064ba5377"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-11.csv",
+      "sha256": "b5114d7c0c62e51e07341f34bf6228ecf1a0522efba38bb17afcda59cd9bad86"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-12.csv",
+      "sha256": "c9288ce842d8010751684067ef0db258e5c8709b5de6423a05bfc028e30eb607"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-12.csv",
+      "sha256": "73b0de16f397f16487e26f753c3b6da495df187afb831aa39a885d9716b1ccb8"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-13.csv",
+      "sha256": "a3632205827634c6cac0a069aa171dee9342559b234477a1ba9f22a1415d8fa6"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-13.csv",
+      "sha256": "7482b67f5ab89648337f4208d6ad680e0f6c894fbb32aa5bcb1d4248d4ec52da"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-14.csv",
+      "sha256": "9c00ca24d7195c5b3077cd6363a564749d98d0eae823a8a3cf5c49e56f1ce33b"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-14.csv",
+      "sha256": "3ecd81073d620c1f0fb552a0006335cc1ccee6fb577b26dc8abf7b109ccaf50c"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-15.csv",
+      "sha256": "c9d97c6c57ea3f02baabd9909ea958ba03437846bc463aa788853c04982b0781"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-15.csv",
+      "sha256": "5c8dc6c4acaa57bfe4d641cd280cac590c20e4375d8e6a7072dc292d8b6b7f19"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-16.csv",
+      "sha256": "93698768a3c317603e4f06b98807fec1506695730fc445647e5f7030b54ce1c3"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-16.csv",
+      "sha256": "2fbd2796799180b88bd915a318d5e33d0514b365ff34decbb6b6e3d5fa3e5bde"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-17.csv",
+      "sha256": "69e22d7030103c6e4279229bd2f928fdca29049e41153d9c218f9a41a50abc04"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-17.csv",
+      "sha256": "4d3408de6a83b42ee0d7fa8c18329a123d6720def33c4c95ec1e3c45fadcad7d"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-18.csv",
+      "sha256": "370c07cd5ad4052c10934ea1953c1d8343dabaa63e099528140d446787afcb00"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-18.csv",
+      "sha256": "71d25a17c6a4d71229b1c6122bb52d9fd868c2e3c7c90159da30a69ffb1cf153"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-19.csv",
+      "sha256": "49686a9d7a237e84bfa1f6807c63ecf911ada449a526cb354e14f0b419ba4fbc"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-19.csv",
+      "sha256": "47672f48c53c715473b1b91914ad301e53654de4478f1e2c6cd02bbfd0b56018"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-20.csv",
+      "sha256": "447211725459205052bdd98de51d97198f4e9f2764fe8baef1bea1c0a2569cbb"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-20.csv",
+      "sha256": "8186bda67b2ed73133f3915bf5d36f68df622a0bf706607093c698e3a0e9ff2c"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-21.csv",
+      "sha256": "fbcbf8081beae480ac664bc73898d7e849802a27b6717918e95497d8a727b14b"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-21.csv",
+      "sha256": "a4cac22414b832f672198e413654ccf20f0e71810d4a54f0bbe2fff55a9f0fc3"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-22.csv",
+      "sha256": "53a976ce3f52c2e6a9be0293dbe5b8b5ec4e084485199eddf5e7c2ce009ceb2c"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-22.csv",
+      "sha256": "2c6cb03fd62fec6f3cad9af1cffefa04a353f6cd04aa5ee17ea72a501ece3988"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-23.csv",
+      "sha256": "c6e3dba41c46c3ddffccfff44680cb8f38a5e197c8cb5338e52a3593d434cea9"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-23.csv",
+      "sha256": "9910054df89d6a38d599c78d86eebf0ac77a4cdb6e85a7fdd1fbe94fb5418092"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-24.csv",
+      "sha256": "76e6a10af4b3e8287d4d6fb0d0f7927c4968e8629a6aaa03e52710805f9bf609"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-24.csv",
+      "sha256": "40ea7391c4f86064b89a2fc5c8e8d318af71542275907fff7754b2985ba65eb8"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-25.csv",
+      "sha256": "74e2b39abf942f7ac968a7a2c1a6d4ebea59fb147d9c302586ed3bf19d6dc970"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-25.csv",
+      "sha256": "27c0e8fb03666f2783f735feb9f5fce9cbf9fd672a26989bef82549d51bc2db7"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-26.csv",
+      "sha256": "24ed187ea8e22b8bea11cc4813005db611433e5a4e17325e119a7df27bcf6f96"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-26.csv",
+      "sha256": "5a7598d1382518b8b6e5641800bee061ecccf49b51ae3efe7ae3bd6392166e4b"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-27.csv",
+      "sha256": "a3dec8f3703c0e2902fd5f09d96bbf64fbb60d6321bda039303d9e5e534f5163"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-27.csv",
+      "sha256": "ba10aed03a45c101596ae4f77470b8ac5fbf6c87f2a89681d93538c56f5adf73"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-28.csv",
+      "sha256": "fb5c7df376791660bf632feff177ef417223097a05f06245aa60d496a9f1bdfe"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-28.csv",
+      "sha256": "fc52bb3e7685c34ff23957875f0fd585f7741f8587d90e8205c6f642103d6ee7"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-29.csv",
+      "sha256": "e48591f3585cb6e8dad339b0a3204d8d5f78e7be0047f98b9202e22b2cac6940"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-29.csv",
+      "sha256": "070b4638c60bca7a6490bac38517122ad69e4b3905ac692702a9fc4ae3d5209c"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-30.csv",
+      "sha256": "79eae71ae880559fea711abbb4594c1963448f820cee557b771010917c05d183"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-30.csv",
+      "sha256": "4a71aba53145c38b6fb51b54d2399f557e228d2b12504ad36e58f21213b659a3"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-31.csv",
+      "sha256": "9eb7fb750b2dcf0513b95dd18b5c339ccc58c0f5123ff376d426fa05300991db"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-31.csv",
+      "sha256": "6ffb0909f3dcc7372d4d562b4d8d3e463e85f4c7d1f425d86f96a0b0a9a22bea"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-02-01.csv",
+      "sha256": "6a3d6fecf3152a33ff6486f5ed4df39b3ea5388233055d75602b04576f54501b"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-02-01.csv",
+      "sha256": "e95ea010ab03b03a9de0f8f88476d2eb5a0d94802481e2f204decfa8a759100a"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-02-02.csv",
+      "sha256": "191acf27a289ced20dafa91a726e8792d1789d838d9a6f6a7a238604f9d45e84"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-02-02.csv",
+      "sha256": "0e99a22bb81ee6ec90eafdeb60fb2d36f0ae6f100eeda019e674039dc58e4e1f"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-02-03.csv",
+      "sha256": "d88ad1fdf366990ee0ffbd98e653f78241af70e1e011c2e79c3ce7af8d5a9034"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-02-03.csv",
+      "sha256": "13adac7de0c0571b0d430224f2cda1b401b7e4f15421a19f68640d0eb9b9e4bc"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-02-04.csv",
+      "sha256": "8a97eb2bfdca15aea26decaf7ac9abd303c9b1f1fb5149181833348864d512f3"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-02-04.csv",
+      "sha256": "62fa062e88b5e3af6eb7bbeda59de855678cc518e709dfb53d2a5c44e9fbd619"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-02-05.csv",
+      "sha256": "89d87242eb858fc5c4cb78dd2dfe9ef783bc98e3d5bba4aa9731f68f69b64e2e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-02-05.csv",
+      "sha256": "466c8651a895b996a4d50880b93113ca50812240f20b139ba92a439456048fd9"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-02-06.csv",
+      "sha256": "59b3f2d4a24a35f0aa196f839a87426d42f39d21ae519d6274beba2066619e7f"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-02-06.csv",
+      "sha256": "2cdde2288425e15b223d4eb805ce6de88448697d62f392fab5ca5a9c4a94a2b2"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-02-07.csv",
+      "sha256": "719bba0b4ebbe1b1e3265d03de7050960c0a69659b0b35a142329cc09f60812d"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-02-07.csv",
+      "sha256": "817c591624dcc1621b44608994063d9eaf2cb46c6eb0fb28ae744073dd184cb7"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-02-08.csv",
+      "sha256": "9eebb65388dd3c0dc92003de85dbd2b9b3089ffa21132ad8b749a1632bba44b4"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-02-08.csv",
+      "sha256": "fc066934e7211c51071f429cf59e32b6a99c17b7b5cad32506b4b6035a1e898d"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-02-09.csv",
+      "sha256": "3a211cefd3bdabb202afab56454909aa18355b8be18d82226321279358a10c6e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-02-09.csv",
+      "sha256": "d8199bdb8f46e505cb0808bb2e93e47e155507f2ab475e148b4e81ebc3dc0ce1"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-02-10.csv",
+      "sha256": "40aac11b9a4e4717c13c286785a25bd6cad65263ce6ffcf30a8408c956867778"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-02-10.csv",
+      "sha256": "8e4380c808432ffb74140670fb300c67bf4c019eb4fa12f68be0c000b632d092"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-02-11.csv",
+      "sha256": "f4d58751def8d3bdb33893da6bcaa4f97bdf62a085b191aada70d2b8ec3b84bd"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-02-11.csv",
+      "sha256": "3fdc9330bf341bccc458604dbef071ab6cabf71e69da61cee61235415a87d52a"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-02-12.csv",
+      "sha256": "8ad8a820affd087ebd12e6a15e29bbaf59a1fa5bfaf7b035328ce4255df77cf9"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-02-12.csv",
+      "sha256": "b05d49c7da9811c1eb242e31b6d2ed10cd092fed8d1b03b155b21c786585e1d5"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-02-13.csv",
+      "sha256": "8e5ae11d8cbe35988283381a687f40ae5f35c71f0a95d49f9a8029b9da9ba311"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-02-13.csv",
+      "sha256": "45c3dcfee46298de511989f63907025b172c36c840587afc4726e0df8e235602"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-02-14.csv",
+      "sha256": "c02f5e1b04d96e20f9e466b707f8de4c2b4b41e4c6111ca14e773fe23cd6b3b1"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-02-14.csv",
+      "sha256": "cdd36febc7b19ec4f0dcf9a85ceedc2e68c116ef63cec27f783d53cc6cfab7b6"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-02-15.csv",
+      "sha256": "382b19049ef1c547684fe7c431e0c53daed6c089057a6fcc1f4fb92a62095ff9"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-02-15.csv",
+      "sha256": "06bbfb69a6c72130b2a955b8fa13a1d9671ce2667d3e54214d7c38e28e5a23f6"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-02-16.csv",
+      "sha256": "6970b8699dd9c79948f1decd8d1e148cdb7de8ba3f661bc13f03f99d06076c3a"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-02-16.csv",
+      "sha256": "335395bae232eeaef4ff80ad0dd64fe74f5685acd112533d7aae419e48aa2279"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-02-17.csv",
+      "sha256": "8f4f32b13ae7e5f11c2a2bbced41841248ae65c567a7eeaf5c56cfdebca60471"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-02-17.csv",
+      "sha256": "c206429527429614320b1e6b0b7866db697d93c063efe9bf681bce0d70e00012"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-02-18.csv",
+      "sha256": "012a1e04cb7891d168cef5e90830334f1e0cff71e3cdb7dfbf8471a547208fbb"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-02-18.csv",
+      "sha256": "4c34535da6de4fdefd0f9840e96459a03b0c9dcdf9367aedc4655f2a7dc28d47"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-02-19.csv",
+      "sha256": "804cae9c6cc6e5046162dbccac12b960047a3b732ef2435f9f06fc6eb36ef961"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-02-19.csv",
+      "sha256": "a307966dbee5089b0ad5c29abe9bbf2b8f6328e3283819c5b95eb87ba9ca2627"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-02-20.csv",
+      "sha256": "a7d09a6044548c08fe6baea4229dd9aee7c7a5da9cb892fae0b0ec48be780727"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-02-20.csv",
+      "sha256": "0074fb49dd0a9cef0dbfa62bd0c95083a660cca50b339579b77c4769be851afe"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-02-21.csv",
+      "sha256": "69159b1b046b77dca0913206e87d35d7540158abd8a2ffa743e4ba9e04551fe5"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-02-21.csv",
+      "sha256": "41f0c68641907d504e342b7815869396758ddf7b3b61a67b06a1a5ff7c3e398e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-02-22.csv",
+      "sha256": "7f034cd120bde531757139c9f9404a10d3e4c1369fcb83bc3e82d5b25bf53178"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-02-22.csv",
+      "sha256": "3e09032b1408e6e805df51e4f1df386a7152807fd0819c352cbc8254591e1216"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-02-23.csv",
+      "sha256": "6f6878aeb228af39bc845f3bbdf0bc06d8eaac3b4999dcee4ba6ff3b32ff5173"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-02-23.csv",
+      "sha256": "19932085e43aa2d2da77a2fb6bad3e625d1609906f1e942db6a50c7eb514e612"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-02-24.csv",
+      "sha256": "1e49d668916da1d752261a5a1e8fb58eb4aec64a04ffc5e0eff9e9433d402b97"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-02-24.csv",
+      "sha256": "e3dda972549d8d2325cb83e4baff6dedf70e8ba0059acc2c194240404ed5e8cd"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-02-25.csv",
+      "sha256": "c82f12a7791555878cfd726f532681ccc0b078bcfce5a28f1bb6109705f3bd98"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-02-25.csv",
+      "sha256": "84cac07a994b770b82b9294a3e4d9d5a90413e1213422924b71400a53d70e052"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-02-26.csv",
+      "sha256": "dd897121a3d916bd4d88018b44a20b476fa88121b794f3927437e6fd1d5fd81e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-02-26.csv",
+      "sha256": "9931ea7d3e71c0f595f1f5df363817d7f4eff1e496cb0ebd32f95b15d6ede3e4"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-02-27.csv",
+      "sha256": "5139cdfc213cdbe241467ab408f3f9c6149f806c8072b0f8b154c9bf1d8152b8"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-02-27.csv",
+      "sha256": "cb41ce20a3e155e75780a587c75c5603a4baa4612f8be7fc8d3e444a41d23c8d"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-02-28.csv",
+      "sha256": "23ce90a4bd003e25a6d6946fe36e32c0be034bfbaac2ed614a0ff3edc14779e4"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-02-28.csv",
+      "sha256": "291b2b2213f2379f2ecf7625f8bd540d3a3cab77bcbbfa66a75aeeda26563bff"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-02-29.csv",
+      "sha256": "fbb365ea61508f19802c1b9e573e2f63808f9ee5e12495c30307649de7c78b36"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-02-29.csv",
+      "sha256": "a575b074a0f25de9dff1eae0b3bcbf0d9c30ce22f16691621e38bb3920959238"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-03-01.csv",
+      "sha256": "46ad1334553ca0464ddc4eb3bbbdb525579fb2f3a41ad5be29b2d8816b6e3daa"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-03-01.csv",
+      "sha256": "e5020f20914b413cd92748fff935a2c02d94f9a7342339b9327db9816b177af2"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-03-02.csv",
+      "sha256": "59dca1531b45587c7a8171a31e2daa0574fbf224cb1c10e1b3942c2fdc574967"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-03-02.csv",
+      "sha256": "63b5d409ce03f1559eb66050c90e4d012f73200f4a49953cc851c023b0df24f6"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-03-03.csv",
+      "sha256": "f5fe442ce58e4532382ffc099bfabf364b3126cd9d3ad81b139d97d30bc4dc77"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-03-03.csv",
+      "sha256": "5e43beee601ea37690713fbb7ae02e16507bb528c78e291750ccb6e2ddfc9533"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-03-04.csv",
+      "sha256": "26cdc51911135962d7db401371a81126ad551f915eff2b3f9b0b2b98d63a3d67"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-03-04.csv",
+      "sha256": "b356d59f65db4044c10a1a0a41591660cfecf95f8c572e731f241b953980a64c"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-03-05.csv",
+      "sha256": "89185d4dd628b002b62f97b9c1e5b67a4fa10f5c72db8b12978ccf7330bfd04d"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-03-05.csv",
+      "sha256": "7c83bcc6ca9286d50f3e2761363ee1ce8fab02db1916ddb04131af627518831e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-03-06.csv",
+      "sha256": "6d08dfb71ce3642812b6cc35d42b679e7b32e53851b695e3c12a59c1ffdb95ec"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-03-06.csv",
+      "sha256": "8050f2570896ca9ddb6bb6a9a73f4e6ef3a2f87d65f5093116aec76b035c85d6"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-03-07.csv",
+      "sha256": "5ed01072d74a5f80c103bfe53ca737c558379013c66f6fa559d55a79cb26d8cf"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-03-07.csv",
+      "sha256": "4e1723ec1d21236b16e4a0c4af0f41993e0d5500e102eedd5801b98d1ef4cab6"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-03-08.csv",
+      "sha256": "82289ffabc858cce2a4c941048e64567efad5ab9162274561708ffca0b9ca0fe"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-03-08.csv",
+      "sha256": "b87f6635758f5c084bb1888f6ca90da2b90d9187cd0ad9cdbc71ea3dda6088d8"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-03-09.csv",
+      "sha256": "3d0f81fc68c6e9604571cddf65b896d6e27a4d36b635bdd4e6de5963cc6fa430"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-03-09.csv",
+      "sha256": "48bb4a8529148ddb006dafbd84c34aa3553a698ba5c2ffced3def89b4098c66f"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-03-10.csv",
+      "sha256": "5d68928d0046bcb4f1857299ab969f93320cfeaa55e2ff58d837e16d5971c29c"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-03-10.csv",
+      "sha256": "edf301f60638da7da1a13779a33fc8e7394621854dc5628da47432634d6013f8"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-03-11.csv",
+      "sha256": "66a666d2888287e3ab940e8f66fb60b7a2fd835d2280701666585d5f80359f4c"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-03-11.csv",
+      "sha256": "4e7342dcccdd9cbf6f067f6efd00ed3f7e7f2cc172da8fbf8a032bcdae9fbecd"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-03-12.csv",
+      "sha256": "604a1356b7672d3cb7c7683886e2cdfe469a6b676f8dfce063771355e4ecf678"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-03-12.csv",
+      "sha256": "ec11f0b152a2e6297f63fecceae11364458d41d1c4ba401b0324f13b4f028c3f"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-03-13.csv",
+      "sha256": "0df8a64684c8c07ca3d63188e660d38fbaebc2a9dc9aec149e6f0674ef880fef"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-03-13.csv",
+      "sha256": "be18a3ab95ac383b441d9c173c4ec14fffd23f477ad7d8f63e582e059cb1f73d"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-03-14.csv",
+      "sha256": "22a8645c3b6572ddb8f6262ae84b30197945c57a9a199481e62a0237ec5a99ac"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-03-14.csv",
+      "sha256": "bf333046c864a75c8647f5269d78c1709f3185f2d9c9a5e217aa973f91bc79fd"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-03-15.csv",
+      "sha256": "720f31ebaf025602a578368418dc4342af319d60080f05d5a63ce9e9fc5c962a"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-03-15.csv",
+      "sha256": "ed1b90b21b05a0db4b0cb9d268c9b9b98462582d39ab858c0ca5c7691ce502c7"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-03-16.csv",
+      "sha256": "3d5ee4708144abd58eeefdfce9f9006f34133acd80daabbeeeda0db0259017cf"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-03-16.csv",
+      "sha256": "f6e0ad2ea617fa750ea39d528890c60417e0b90f44cf3a2ac70a74861e23bd32"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-03-17.csv",
+      "sha256": "c2e6242d4f3f05b93cc8067c99eb9850963f0f4456d898827381124c8b844893"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-03-17.csv",
+      "sha256": "e3bd74def24463f979ad7c1db6c1074f1c9b2ce0506e0975c24edaa0240d721f"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-03-18.csv",
+      "sha256": "83a6e399dd25f98b0e0ae8a0b84a7d5a42c6e8ff791326c6efe1cc896c292675"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-03-18.csv",
+      "sha256": "3651566b6ea8e0db970c935bceb21bb72d4e62cb172346be705318bc1cf68b12"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-03-19.csv",
+      "sha256": "26bd9658b0607d9554fe82380372beb96a86a14d4c6e7e03eda7619b13b53c28"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-03-19.csv",
+      "sha256": "10e93113504205a3c2edbbc6b23aef6d5f5bf96161049a3cde059f131dfd60ee"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-03-20.csv",
+      "sha256": "6b442b6b0b1ae4b823b5ff12312f3bb127f11516be1e7ae1dc39cb8c1f73592d"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-03-20.csv",
+      "sha256": "c9577875a63acfc66b253058f36d50c11844f2a32f7f3439c0df31708cab85c0"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-03-21.csv",
+      "sha256": "e52d8d4e30f5d630a831f727a70485fd58752f4a9b5e4f367fd9db3c95cac943"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-03-21.csv",
+      "sha256": "21b9243528879946c04c66450745429b04dfe3377ce75b69dba81784cec5cd4f"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-03-22.csv",
+      "sha256": "63cdd4a878a968f0147d900a737b26aabb65b3755606c0b2fe4de86b2b1892cd"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-03-22.csv",
+      "sha256": "671c9efc34f78fba5e1ee05dcdedd1613b7b378a1e45f85ba1b62b84075964cd"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-03-23.csv",
+      "sha256": "6dae4e747ddc9c6feb6e6d8db16988e13cf710f0a0efb4fdc9711534a51bd019"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-03-23.csv",
+      "sha256": "3debe9b6b5842b0368e44d3841cf487dfdfd2c8ee1322a38513b294c203d1aea"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-03-24.csv",
+      "sha256": "3eccb643be8bc7a82af6706e6962d727d335f548cf5de805619e7e88bd82b194"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-03-24.csv",
+      "sha256": "20b636c38e15384e4bcae7813cf1239d10beeb5e4d63a73212e02dc105e9f21e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-03-25.csv",
+      "sha256": "f93488a2e3feb278e202a045669f4f44009007344d0f8ecf25e48a87f3a6e957"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-03-25.csv",
+      "sha256": "1db9fa66b302adfa72273cefa446d7b3169d6563faf8396ea950f504116a6760"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-03-26.csv",
+      "sha256": "8e022eb95f650e7df4779b9bb81a2405d8c3d0b03585d335efb8bd7796c160b7"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-03-26.csv",
+      "sha256": "1bc80387e1c9c6008b81a268750ec12ab24e68c54dedfc58c013e8d4c865b86e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-03-27.csv",
+      "sha256": "09c72260eaacc70d261345721d32200d7f6b07a39d8e224c84d918f195df2e7f"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-03-27.csv",
+      "sha256": "377a0a169d390747f992e3024a57f990c133daf69674a54226ebe9fe61bc9cb0"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-03-28.csv",
+      "sha256": "f799c2ea0eb25b6e1c8088d86e727755cdd5c4a2b85f576ad3576ab15ea82645"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-03-28.csv",
+      "sha256": "634de46190e4e8d88997f7dc58174a65b47cdc1a0301b8820c28c43794c0e143"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-03-29.csv",
+      "sha256": "f392aaa208f1a47f8b7d845b6e0174e4de3825a0268a7eca40d0a109d60b73bc"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-03-29.csv",
+      "sha256": "3405df7de22fd6c7a5f09cb6301e2a3b170a489c2913723b9a9a585a9d70c342"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-03-30.csv",
+      "sha256": "7ee333bb2ffb4b657a03a52a5a2baf8a689ba365dc67fc99fc26462eac930090"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-03-30.csv",
+      "sha256": "abfed1546ca6bb4f0c79d4d365997158acaee4b0f985e94ec7b512ead9b8dc0b"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-03-31.csv",
+      "sha256": "bcc314f2ffbe0bddadbb4f36191ac71fd03e0e7bccca99bd41510f5110dbfed7"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-03-31.csv",
+      "sha256": "e11f82ac9a7f7f7bd88e5549a25fdef2b6fc4aba151af837be985558c80fb782"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-04-01.csv",
+      "sha256": "620e891e2c32d4d5efa1e2f3f72b7276d371c617be74569554246dc518d76ea3"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-04-01.csv",
+      "sha256": "93e0e7dd4a3d17ff193aebb06018fcf7419fa810216b1a9bd74d7f0895a895a6"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-04-02.csv",
+      "sha256": "0e8c5ffc744379fe510703e3bd745a4d102321db1b073a5d239ee34782859d6a"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-04-02.csv",
+      "sha256": "e4039eafa19f644cf847f8bd5a66c9ef214390988ed283aee80c3cbb87f45405"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-04-03.csv",
+      "sha256": "a45fa03a3809d058ca4c2ceb4d8cb6d8e56c1402f43b8741e3012d26c4f52eb7"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-04-03.csv",
+      "sha256": "420add91a44f9d34c5667f6c5bc4d0d13836258b37ecad66342585e01e48bed4"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-04-04.csv",
+      "sha256": "d088051b98d664e26c19159b4b3e967bd0944617794beb54257057e7a161203d"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-04-04.csv",
+      "sha256": "08c0d0ccb77100348f900891b63cbd74aaecee50a479e0311dbb0c8fb456fbf6"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-04-05.csv",
+      "sha256": "cafa038deefe11549dda21c97f07bd711e09bc746be5b3e9d4f64399a9ef4089"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-04-05.csv",
+      "sha256": "aa691309f7adeb7aa370e5daf6e19601897c6a2fd4f66098ea37621651df17dc"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-04-06.csv",
+      "sha256": "8a88786f2cec1aaf88b58299c523d9a587ce159a04c43cdf6a1ff120be4cc59d"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-04-06.csv",
+      "sha256": "06d963900b02a4378f96a41a9879c277dcff3525e3939520d0d07adf42073913"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-04-07.csv",
+      "sha256": "ceec5b545801d945bd41262f7f310e5151cfc479267ce17875a4f4443963f490"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-04-07.csv",
+      "sha256": "8c7ab78fd0ae9e00258dd31352b80917dee17f90ba43c9b57a951df09d8f4c61"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-04-08.csv",
+      "sha256": "a4fa23274a9fd164640e3d6bb3ffacc4634d16d50d36cb75322608c681424182"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-04-08.csv",
+      "sha256": "59cb2a475788aa42cfacee8a1cfe4695b8ecdc135bd3a1d497df257e82677aa4"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-04-09.csv",
+      "sha256": "2e87af8677302c6cfaebbfeff22082819aa9e5e1d5f2f3accf1a42f21e06fbc9"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-04-09.csv",
+      "sha256": "5af5e5969b2d441f6842327da20bbdbb3ffa11b955978c5b590acecdc8755e26"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-04-10.csv",
+      "sha256": "4fd22990b7ece7598dee4bdc3e687a65e374fa427cca1b1dc44b6bd986566505"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-04-10.csv",
+      "sha256": "88a912985461df45fd2f3550d3d57927f53d80f83e06fce9d93c0ae849b300bd"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-04-11.csv",
+      "sha256": "242bd6b8e1bc928e239b6b5167f6a34662c16a426f0c25e874d2d03ed6a2c14e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-04-11.csv",
+      "sha256": "af83843ad726e89540453bea5516b8667077da45b366354dd41e73964c038554"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-04-12.csv",
+      "sha256": "be8b6b76a48b7ae078ba8c549a6ef2d8081e0e11d57b41f9a09c32e2a48294fc"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-04-12.csv",
+      "sha256": "76dde40b7cc00f4f8452b060f319255b0ab6465188d33d47cc3ce5846d16001c"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-04-13.csv",
+      "sha256": "3e2b804123f15254019f0960b2904902c5108d1c4172552560ec6d980c7a8972"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-04-13.csv",
+      "sha256": "0347bcadd39eee859fa107863d1152da757a4ca42bdf7d2194ccf4eb3bfc2991"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-04-14.csv",
+      "sha256": "37948435366353ccd04547dbb16c00d053aa11049222476c43256eafb7bbabb2"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-04-14.csv",
+      "sha256": "3ff0817ef56659c353ac0fb32b02212e3840ca3cb8f0972fd6e0106fd4f311c6"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-04-15.csv",
+      "sha256": "5f2850c4e903ac2a790884f96b1b37020ff189215c6b362e88812787f41cc491"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-04-15.csv",
+      "sha256": "94d392c2cf4ecba94b1b2e5028087cc1f4ad725fcdff76518972057c085dd6e3"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-04-16.csv",
+      "sha256": "c42ddc03669258308b04a0ca6f26c1ff4fcf96a7c6c0cb25982507ff6f4d1918"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-04-16.csv",
+      "sha256": "9c3579f3089de5386a4825501eacac7ad8097ff3c587034449211b48fc334f22"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-04-17.csv",
+      "sha256": "70b85929957e7241123d1fcbeb761a39ab4da0c38d0b17328b4efce21d60bcb4"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-04-17.csv",
+      "sha256": "2a0f0779ba122620ad90ef488737ba7e2f8b129c6e36a20711a198afb507f4a4"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-04-18.csv",
+      "sha256": "f2e07cbed0c860bb3b446ccc96f66aaa55fe378b6ab543fdde6f6a4f2a552f49"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-04-18.csv",
+      "sha256": "d8c89bfbdff3b1982ccdeba20710d2431d378d2eb4b001a1255340e41bc99c0e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-04-19.csv",
+      "sha256": "4a26f453195c510d08b7deecc696d2f4f3b2fe9322b044ed37b78856acd5fbb5"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-04-19.csv",
+      "sha256": "51bf8834f3f2ba0ebbc033cfa3f25d594134572118ef96a8123a9e42e692232b"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-04-20.csv",
+      "sha256": "ec2cb713e8d7ba12c85976e3570d66573aeb9fbeffa2b23fe84052f99983f8c9"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-04-20.csv",
+      "sha256": "0662e903d0d6ccc3369c67c6f36d4ae163cc95b3407082f54cec0c0db665c44d"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-04-21.csv",
+      "sha256": "5de94719fc374de4cc376af4485c1aa9c08d0d4270728c82366b27919c096a6b"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-04-21.csv",
+      "sha256": "ed70e3efaf078db4cb35ce556bc651bbaa990f7fc73c454cb1f7c572ac3d7de5"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-04-22.csv",
+      "sha256": "02ef7ca8f1d217825bf3bf8f79811e897312d424a67210fc21fb43ed5e4c65fe"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-04-22.csv",
+      "sha256": "717ec1ce258315558290749a30c046d3d24530731ceae23b0e5e31b624a455b5"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-04-23.csv",
+      "sha256": "0ec150d0d3f35a72afbcf9696f561526c1646ea64c77fa5877624452c643815d"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-04-23.csv",
+      "sha256": "e7bcf494b17b847e1aa1f87680db1594b4b9cebac0717f6c05ef111eab615fe1"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-04-24.csv",
+      "sha256": "d1b806995938df6cef274b6251509b68b381e80c04a0edc5a365c24db7763f28"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-04-24.csv",
+      "sha256": "917e64eff736827d9f4cf420684a26a7ccfdea71472834a3fd3a9d2393760e05"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-04-25.csv",
+      "sha256": "73a331c99e9ddeb1713df0d78e556d6e2270f8c4e811ff48f78a8985a37bd0e6"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-04-25.csv",
+      "sha256": "cf30c090f442e94eed1de8de4dd5d8519787f10b48f71405ef0f81f8152739ec"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-04-26.csv",
+      "sha256": "ecffd4b8c92014740980c551a53146742e539831047e680265feade148dfc0c2"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-04-26.csv",
+      "sha256": "ad23c8b3b8fba188a642dc5918cdb233a9cbb32dc90eca83cf1194eeeaf47720"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-04-27.csv",
+      "sha256": "b8b3b1ad9871203ce3bb4fc95c49b2f9d0ef8359468327e7a1db2b5b27e53802"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-04-27.csv",
+      "sha256": "69edcc0418032f29714e52d1bdd21ef5b3d768c7b4d25f064d284c1f44cf9093"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-04-28.csv",
+      "sha256": "ffe3d98d12de6bade05dc745bd5c84705d33c8b609edd2f324577fab15a1eeb3"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-04-28.csv",
+      "sha256": "5ef295ea5a9e8892518c207f892b8f4ce85bf0c6fb0f96e164c2c1c65953917d"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-04-29.csv",
+      "sha256": "7167ab5ef74722e77cfb1cd6451ddd450d32b3569a8ea0cf475550b7a3fe0e21"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-04-29.csv",
+      "sha256": "108d9984edcb9901b7a1aaad497aa6478995a24c50488917933bf42fe9f6adc9"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-04-30.csv",
+      "sha256": "9badac218f8e63ba9f2b16f4d19ac7bfa0e609d2666ec7b25d2bc90ccee3b985"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-04-30.csv",
+      "sha256": "914b994c3f5cb75f8a5e0ae289c275f66f85b85e9b94775aae4d4d48acd5c873"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-05-01.csv",
+      "sha256": "5fec013a286759a40a0ebef65df38bdb5ff4910d8d71e0b0d36acd818c783905"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-05-01.csv",
+      "sha256": "8f9649dce9597f8e432f3cb1a602c096b92bc3f29c8440ee47c0b0a221d30dd5"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-05-02.csv",
+      "sha256": "956d78a9b3979904bc1452fe70f41d677eb4b92d2b38235d62b01ac0c0d9405b"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-05-02.csv",
+      "sha256": "75fcb1e3a36d14a774b485dd66a3f9de571bd1cdf95025aa494284a87da044fb"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-05-03.csv",
+      "sha256": "4a3d0fa1b4849693d3b6a40724fe6e169aab6e41ca411256c1845f9ac4aaeee1"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-05-03.csv",
+      "sha256": "a9dd6c55ae49d15f4670a544faed1c12bc19e41c38a82774c8126f63c97dc58e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-05-04.csv",
+      "sha256": "8664d88b4a32880243a18d2db0b4ac363917febe2b30924de1769127e007e7c2"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-05-04.csv",
+      "sha256": "ab562740cdaf5c134ded883d67671b6c903a6ed4fd1159a8d4a6e7e24bcefcd7"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-05-05.csv",
+      "sha256": "bb164f86b3cceebe6a21e0f73fb43014f67f0dbccde713cfba274773314a5c2b"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-05-05.csv",
+      "sha256": "60d664c455405b337b1a6a5825af9c5fccf4801f96d051542c82468df2289506"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-05-06.csv",
+      "sha256": "d1c471d98d653da27d4dafb2c9760e484d4f0f47e7f9487fa4f0c87dca240112"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-05-06.csv",
+      "sha256": "70036dd8283b3e59445ee096e7ea6a0a88ce33b2b3154b239b0d045eb43023b9"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-05-07.csv",
+      "sha256": "965e3919183c146d3458dd26ec8d4f8601fffc37bad73e009449088771d4eb1b"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-05-07.csv",
+      "sha256": "42bf46318fabb6a7c0e1cea2879a81b92c468390eba3a5b8aa3b0ce0c5c786d0"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-05-08.csv",
+      "sha256": "c9a4f6870ec4cb31d680899d6adac154a6a51ba1ef92911ffc7e550c7f94f0a4"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-05-08.csv",
+      "sha256": "9a45e42c4d0e9f62d33ac1fdff6137af059144f9cc69b4a5b7999ed7364b965e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-05-09.csv",
+      "sha256": "475e565f0b4b62b5d323583a7dbd4ef90c8705037c75865614d45e4f2977cd41"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-05-09.csv",
+      "sha256": "51a0c08ed05c8af06cb683a43a20a84d22a069edbf2e6f47834f77773491bd22"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-05-10.csv",
+      "sha256": "eb8fe1e64960b0031b527c3968f5666969affb9b40ca15867d5806b7197ded6b"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-05-10.csv",
+      "sha256": "55c7bc84392e68bf6980e7b2deea12a42f17b5b19f1bc24aca86f051594580e5"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-05-11.csv",
+      "sha256": "0d1fce613899c2734f22ff5daf2228cf79d9b1255aaf21e63f1108b1763355b1"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-05-11.csv",
+      "sha256": "25492dace9e35199d96bc307043b195c6554e1d9afa950a7f326251a3232accf"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-05-12.csv",
+      "sha256": "104c5634b78a24e268f113ec060c284e1ea0e7c4461abac7e1210359386eda56"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-05-12.csv",
+      "sha256": "c519072fdd44da4e7b235803794c9e139f1a2b7f28b584daa8ef03794d4b8289"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-05-13.csv",
+      "sha256": "9d7ecccdbbbad4264db4a7db5bf5b9301fb3dfc74faab5f04dd30b7d29e5cca1"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-05-13.csv",
+      "sha256": "1da89fc6e908e9b45493571a422e40e3cfb7242a2715302f9c6596a990fa7cd4"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-05-14.csv",
+      "sha256": "8e3307061063416b950698eb839acfe59e222cb04abe1c62440250a5f631d113"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-05-14.csv",
+      "sha256": "a248742e613248c8adb987893b3d084e545e9a43e5c2592b0314c2a000d6af74"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-05-15.csv",
+      "sha256": "9d55ab860c4ea6940346b98694291cf7bce11c133af07c1438d6be75a0ec9ac8"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-05-15.csv",
+      "sha256": "995d4a0c030f9f0a686ff39b4e1813105e41e935a53d7ffbf5fb48837ef03cbc"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-05-16.csv",
+      "sha256": "5eb3039f2c411cca365fd2523b7610886da94775d05cbc816a225dcf8c7ff7ad"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-05-16.csv",
+      "sha256": "f58f82d6b73634135fb3586927defe4c0bb2c37a6df77162d1c4b16bcab79e36"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-05-17.csv",
+      "sha256": "dc9d0b751f1a3008c454464ef3312733ec7eb1e4c38cb7ad4c83c1975c42b246"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-05-17.csv",
+      "sha256": "039d063c021630f84f3328124adc9a9e6b9051334db7996e2decb8e4597352b3"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-05-18.csv",
+      "sha256": "a7ea9cd823cb5e100b2c6c510da4f03477ef6230b1b2b6effaeb8035ada4c72b"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-05-18.csv",
+      "sha256": "e4feed76078da8cfb6733a7a4ef5aa8bd3ab6120da7c5cce77c2ee670f3b3b89"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-05-19.csv",
+      "sha256": "8f04477897f28f2b5a569a45452464c9794605695b95e2bd9e8984558679af05"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-05-19.csv",
+      "sha256": "907bb207e7968c98a633a2daa33c8b82b4d7897a38f04a8c2e6071e05cfbec9a"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-05-20.csv",
+      "sha256": "6f979db56302b997ec16630169b65e7a5952cb36c9c19db86fd4e244f66d07b1"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-05-20.csv",
+      "sha256": "d3760e41272dc3d386a9fc79698dc6a42ee91095b53b4c026c2c726b94a75ff9"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-05-21.csv",
+      "sha256": "28749868f6e32d9e814954df4625ef792df567850e0577bc0af8f7963ef10e96"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-05-21.csv",
+      "sha256": "ec9c7cb3a53e5c90d19812f9c57bb6a574d0022b750c6071dbcb3b556fe953af"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-05-22.csv",
+      "sha256": "b69e61147f87b82b0857981b34dd69ebea557e3db59b07622e940b89c86de16f"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-05-22.csv",
+      "sha256": "14b770025476e58bbcab8bbab3a26c2d3f78bf35f17aa89020f2f5494ba9337f"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-05-23.csv",
+      "sha256": "6377c09c41971b0875203187985cd78ab8f8375dd85f7d1a0392cad203c70c5b"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-05-23.csv",
+      "sha256": "d40e3efc5ee598159f4530a60af58bbf4b5e09fc46f2fb8d0a80a5e96bfb6500"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-05-24.csv",
+      "sha256": "b126ec82bb03ee7da38cc9fe639aceeb7945e4a511b0270881be6bdf6cd5d013"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-05-24.csv",
+      "sha256": "abfeed8e3b5ce9b017583e526cd4bd4a88816a6a16ce8b539f8582f30740d555"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-05-25.csv",
+      "sha256": "29661264065944bb6ea4b03202d9d5393ba20beff909ae945e1703625517cdb5"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-05-25.csv",
+      "sha256": "027f15f57571bca50536257f14d56073a719fcf75691dfc4ca22a35c36d80906"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-05-26.csv",
+      "sha256": "c3df1f0a3b96cf055c7a096e1ee261c77c64acfb163a23c0ddfe5958cab94c01"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-05-26.csv",
+      "sha256": "febfdf1fc9387440f9b8000a8821a808c12745b23faa53eae6bf299aca4d2023"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-05-27.csv",
+      "sha256": "002db9d9c350b7936ba93fdd892f88c3a845bfd166b72c0af31146184da80fcc"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-05-27.csv",
+      "sha256": "8ff0c18e2fbe6297c948573b686bd8c1833a6805ee8fcab952e0678433af3e8b"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-05-28.csv",
+      "sha256": "03346f097e73664783fa84d31747c86287c51b86eb952e5e01b091fa936f706e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-05-28.csv",
+      "sha256": "fc4d6ab53cec0b9ec3611c8bac01e03573c4368064c4f243e4928784518b5a88"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-05-29.csv",
+      "sha256": "fe4dc9b0cd2d04d0527e2b60a010f05e93ab6713e49d4f9dc6bd9f90aa629d3d"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-05-29.csv",
+      "sha256": "4184170428a8004d5467e058afeb3f3fc78efef1886f8c710cb22c7a67f39c58"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-05-30.csv",
+      "sha256": "7fc12c2da34b1b48d4937149a13a6b2735877bcacb3704b8e7e1b61f2f927181"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-05-30.csv",
+      "sha256": "7129c220b120c226d1398b644e3002ea3d5577de41fbf4ba1c22c8b74cd1324d"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-05-31.csv",
+      "sha256": "0fc93971a720717fbf2129fae36b09c7bc1fb71cc92dea604047204e8744c9d0"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-05-31.csv",
+      "sha256": "8acdfd12f9afefb94fcc4938d3d8859f4d6214fe4fa11668c0d8475b4eaf1c9f"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-06-01.csv",
+      "sha256": "9a52924f0adeadee4b3c13618395b28535fbe3f231b9f1f918c32884785f3c43"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-06-01.csv",
+      "sha256": "7979de585daef25c5cf4ca38280b534fef452da0446fae8e468d5c348f2358d9"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-06-02.csv",
+      "sha256": "e84eec84f55a1f22531bc09bf52989a2dc3974379c90bbf54891b3ae3908bf50"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-06-02.csv",
+      "sha256": "a22b4a29550ac2323f24e2693a0514944eccb0d9d0f30f397c15438ad595217c"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-06-03.csv",
+      "sha256": "6aae68b01b8de2d46df0650025ffae3f17243fd3b963988a91e3516ede3f2f88"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-06-03.csv",
+      "sha256": "7d3fa3be11dc56ded68006959e906692cd5c709253a947a602378c5bb47c4641"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-06-04.csv",
+      "sha256": "8eaf382262e4f040b373967765a3a87b3b5a03df9b1d9415d32f4b24cab1b8b5"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-06-04.csv",
+      "sha256": "783bd6a88ffef79a8cfbf0d1daa25a0874c57f277042ebc686d826c885b7f37c"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-06-05.csv",
+      "sha256": "c58f4092efa59e7507265eb258378ed872d67d90ff59715e0a1e8a4d6550a312"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-06-05.csv",
+      "sha256": "ebcf561987f1a39fb379c618cf3ba2e8b216b8d7be68c83cfa3a051a56f5025e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-06-06.csv",
+      "sha256": "49f2ac01941bb0801fee1e053444cbad0c151e3e1764912fd9a87c724d7f2195"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-06-06.csv",
+      "sha256": "a62a2d9351856e1f8ee4dd36d238f1722ac51352a46382113bce4729cc1d89a0"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-06-07.csv",
+      "sha256": "7ca0ff6d4c66f78822bf95aa9920c89a43960d25ee176c6bd8c267a8aec0e63c"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-06-07.csv",
+      "sha256": "8acd37bceb84ec9dc0fad6bc24cb331534df8791fb41d2ee38126814f90caa96"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-06-08.csv",
+      "sha256": "cb2c43713928ea2c4f3e7ec69ed38f07d33d807362f9125a5e245051037c849f"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-06-08.csv",
+      "sha256": "386e4215f54380f19de876d39cf80648b92bb29c55dc4d9d6493d9895c2ff576"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-06-09.csv",
+      "sha256": "65df34d152b2e651ec167d098ef1179059dae9420b26bc2c79850240878b5630"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-06-09.csv",
+      "sha256": "e9a392ede48ef8fdca1492e242926b38065c0fb54a16ad3ed1ce001829399319"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-06-10.csv",
+      "sha256": "e49eacc9ea0170c7a07a86aa818e69d314217ad88b305340e63a73436cb07e17"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-06-10.csv",
+      "sha256": "6c7c45b3da9e1b01bf20a06834aa326b2c1190c4dc88e5e37bbc442b3f6049f1"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-06-11.csv",
+      "sha256": "932d990920dfbc664edd3f981a567947521181081b4ec656631a47674503cba4"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-06-11.csv",
+      "sha256": "a7835a8bd8a8c824dcde72acde76462d4ca02d78267cd299dddbdecf11b56dfd"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-06-12.csv",
+      "sha256": "a4bf4eb9c4e89dea52bde140fed44373aec54d913a29ecc6f4ac6c2d620ff4c3"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-06-12.csv",
+      "sha256": "e5cdc68f79e39319d60ee47641770c7cddf2b6698ff9d42eb147a13349be09a5"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-06-13.csv",
+      "sha256": "5edf3e009e7c14cfd6f2e42b4f3845bc5c92d7e899dd7e68218c2e35b42f21be"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-06-13.csv",
+      "sha256": "7337cdbf5faf3dd589add395f648a1f10b54de37b868c7c88d5ab9768eda3f48"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-06-14.csv",
+      "sha256": "ad54dafb59e4c50b5557d819a48ffc975d5eea46e8aad3bbcffbf5c202a020fa"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-06-14.csv",
+      "sha256": "3f85048ab32e139a5019cbf91ce3172e3b8be1bae37be7ba4dbe94caed8298ea"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-06-15.csv",
+      "sha256": "b32878f61776d3d7ec0dd8dd9185b692a80536b818f1a0d21f4cf2047706ad09"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-06-15.csv",
+      "sha256": "d2abc6d2db01e35f273ec0b4869ed45961a23e3f4b293db4c3a8a12e9fe26209"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-06-16.csv",
+      "sha256": "a4812d3f1c8a916191cbb710c177c74cfbd638a36977377804cd4a247251bf32"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-06-16.csv",
+      "sha256": "f72b36378aad03cc0a73674d67419e1a989e27e25d293923c71a6e2847e90704"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-06-17.csv",
+      "sha256": "8d67a2273568280fe60cc54b8f1ef21fb89c5737230fc5db244089c453f20a0f"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-06-17.csv",
+      "sha256": "183a3627f0d99113e3607003b286c5b1a689c75d8a2cdec591d04c38f8b38ef9"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-06-18.csv",
+      "sha256": "6805377d8afb01ac1e6a227087c2dd98f83e415aa11c30506cc81bf5ee7e6f5f"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-06-18.csv",
+      "sha256": "04b378e6356e342d738e35d8250c1c0fdf590c4271d4f366e62faf8d6710986c"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-06-19.csv",
+      "sha256": "7bace53982d72b73297d14e8e0865b8c29ce3e61d257d4c25cab3b98b52634fd"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-06-19.csv",
+      "sha256": "5c2ff8dac830f01d56c80477a4598ab96297e136d9020490a202a9584ea7b3e4"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-06-20.csv",
+      "sha256": "59011223a9e3c751c60c78ad3ec7f464f00d3ee02011d6f8d341db5c8e93c5c8"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-06-20.csv",
+      "sha256": "64e79db5a8cdd27a26d7f78cea5c714aeead8defe6f3460ddd88d1e98fd22ff4"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-06-21.csv",
+      "sha256": "601401e8dd7ea75b3c79b6912eefdbd13c29dfc8e631261428f3827310b2cb03"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-06-21.csv",
+      "sha256": "3daa607343e0d1942d01e893e3f3bd49c8886f61fa97ea36f843fe2050ce2cb6"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-06-22.csv",
+      "sha256": "f4304b3125969c45197b7a764e30403469106083fb0dd234c2cac308860a169f"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-06-22.csv",
+      "sha256": "9cba2b919206467aabc3f103398fedd755eaeae65a002d9bdf90f6d8b4131ae4"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-06-23.csv",
+      "sha256": "9edb6e94aebe866ffd0d33ac8e7a46d097d2a0c4001c8fb14a33640886d5a673"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-06-23.csv",
+      "sha256": "d771a7c8b09693d89aa8a41a18f3effa3a60949e7266fde204133b96a89528fe"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-06-24.csv",
+      "sha256": "b98cb23d2d99b4e737464a8af17aa3b9ff1976b95e28f54fb1b04eefbc7f7454"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-06-24.csv",
+      "sha256": "9c0bd3be5fd0f3fce6ab081085f55acd456ac7bca61436545bce66d6046af632"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-06-25.csv",
+      "sha256": "c5f48922a9992084cc6f483a753f62f158e96415bec6178e68897405c798da0b"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-06-25.csv",
+      "sha256": "06986e857587088148de859cdfdce2c61807e539d1204b9cd84aef0d796a2141"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-06-26.csv",
+      "sha256": "30dc65deabae41b6e845962b6352f29e829a603469aa4c158d80aa847336d906"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-06-26.csv",
+      "sha256": "20b92d33de3e1d7115b8fac0c35e032cc86e7a0280f267f818341e7841061565"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-06-27.csv",
+      "sha256": "b2174babc195bd343ebc1ca5845ccffe58aba15027781c1b740d7b532b3bb3f3"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-06-27.csv",
+      "sha256": "de09f575f5dabc472654b80ea783b89420eec236958bb96ac6ddce209d139eac"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-06-28.csv",
+      "sha256": "2ac8b942909c860658fd7c5433f35970bed905eb2dd16fb42d9fabdcf83673f0"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-06-28.csv",
+      "sha256": "c7bfa65dafbca0eba198ea770937679831fa299df6a7f02f9affa8afca170826"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-06-29.csv",
+      "sha256": "d49b1ec237a09ab3bb080e959523d8af6d4c414c397c71d6aac51b479747ae36"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-06-29.csv",
+      "sha256": "8df2aeb785c889fd4aa3da17256ffe94fb8b6862259d814b472bb3778137704e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-06-30.csv",
+      "sha256": "4044f491821508f628e34ea8e0608755315f7f1ea0369725bc011c443b2d4ae3"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-06-30.csv",
+      "sha256": "d92786953d8ee433bf04387a4ae38c394c2a7252c50072bb90dcc91959f86bfc"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-07-01.csv",
+      "sha256": "1acef1373858f277c78f1762d0f6769a8eb683c2a88ad1ad711256e518d0181d"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-07-01.csv",
+      "sha256": "a2f273cf1a8852cbaf38ada804b2bfcc02ac2762199ec9ce6a73f485e389ca11"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-07-02.csv",
+      "sha256": "aec8c69da81ed76002b220b5dd012235606c0e315bb0fd777c76e43c3484f717"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-07-02.csv",
+      "sha256": "dff58fcabeb6232c2a2911cbd898a249f8a52e901bf0278cdcf258b29aa92e9e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-07-03.csv",
+      "sha256": "53e7fc074500b2ce5e3385c52107d06292cbe7b392e7f3c921b14cad197ac1f3"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-07-03.csv",
+      "sha256": "17194baa706dff4a6ea51f40e0f0fa24e43857883f0e24bda3185602340363b8"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-07-04.csv",
+      "sha256": "cc8ca9ae1bf2a0d319c9089dd6c5be2ae94820d02605f243f01141136565bd2f"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-07-04.csv",
+      "sha256": "53550bbcf65f77861ddf53f47c99586fb192976267defda55360db9e9180b294"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-07-05.csv",
+      "sha256": "2ab9e6b1096d1154e75357f606742dc02348c9d6c0e68b1e9da8bcf279abe1f6"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-07-05.csv",
+      "sha256": "b3faf148b5e97290863c41122a5121c063aeaed76aff0b3846faac508d7a7d95"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-07-06.csv",
+      "sha256": "78613bd211f18420ff6770c08cac74c1b8b48ff0b318287051e5639e26a0c421"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-07-06.csv",
+      "sha256": "1542b5d4a942df190fa67598f1fa4f4584f12eb387caedd37080cba72ef443fa"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-07-07.csv",
+      "sha256": "8e3f1e2a9436bb94c94da9d6522b29c9888f8a0898a5287685263e1aa6c0ad30"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-07-07.csv",
+      "sha256": "1bd7ac0eb4aa3100b01b293d2272a171021cb133c6897d5b14903bb5f12e9cf4"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-07-08.csv",
+      "sha256": "cd8bdf79b803183377c3386642cbf4fe2f14f0cb86ae13326d559e166ce8db4a"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-07-08.csv",
+      "sha256": "e2bf6e69df93a16b1c9ec19b52e632b73e5bf8f28cafc5e893b58088b7c19eb3"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-07-09.csv",
+      "sha256": "564a78540ccb61aaf3273e73a9ebb4f9ea953dc93dfbdfb7daa4b4c61ff0276e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-07-09.csv",
+      "sha256": "5022c4bc9831f32d19a3137a6ce8a698d3d052e9afd8f77cec48b804afbe634f"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-07-10.csv",
+      "sha256": "381e066b1d23d2629833154d01a1d3eb3cd05b112f11e29d5877ce6b99333a3d"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-07-10.csv",
+      "sha256": "95048308cd50db0f0edbb13b43e9f5ac17e4b9678eac51b68c2857d5a69a67a0"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-07-11.csv",
+      "sha256": "fb87b6a18987c4056d4007d060e998f5038b0e8d753c495425d03c61ba4f5e87"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-07-11.csv",
+      "sha256": "5cd6f10d5b66704b40ebcf6e6cc14efeb0c30be3f6123a44f26e0367a0c6335a"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-07-12.csv",
+      "sha256": "c23207767a36c36a66ee44534347a7fbfff73ce397e419af1f53b60569839331"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-07-12.csv",
+      "sha256": "8128886b14b6dadad7c68f52fb2e03beb2e44c5c5c13864cc4d114007d2020a1"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-07-13.csv",
+      "sha256": "4bc863642b665bb4456b6d614dade66a4a1f1196b8f667ef79142b152494f40f"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-07-13.csv",
+      "sha256": "8ebdb4f0de1b77a5ab55fb6759c03fa19c3ea3582f5f65a344a698341081df9b"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-07-14.csv",
+      "sha256": "006c0d73c3b636c4510964926d30f62a750a2a25ff81b9e41bdbae8082e745ab"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-07-14.csv",
+      "sha256": "57eb899aaa4b34b3bccf2b0d312f96fe49bb76dcb11a26996c61339612a0208f"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-07-15.csv",
+      "sha256": "55f721ee34891d80aee511b580c3c8a9b665c8d208a877b00e50d6a0d043a309"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-07-15.csv",
+      "sha256": "071bb4de97bfb57497d84209705ceabf4a706b9690083841b0073be2ce0f795c"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-07-16.csv",
+      "sha256": "d86cf15fdbf637aac95da6857732f340f0f006e8296c00032df99d54397e1ca9"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-07-16.csv",
+      "sha256": "7ab58705f771766a966aee33b4859891cb94a64fe65b1d3ee52f606167c34afa"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-07-17.csv",
+      "sha256": "c873e91c85f1a9c1b91111fef4462b932564acb77f842bf639611ab4bf4051b8"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-07-17.csv",
+      "sha256": "ed2aef101b21dddd3eb9fe5ba78b3a544173cac1d33e24c172e6288722dff0a6"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-07-18.csv",
+      "sha256": "bc23bb9ecb20ead6527c862927dd91030492e3b51dce722dfaf81a039d9f45c9"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-07-18.csv",
+      "sha256": "10c7970eb472e7f3fc8284735d14cebdbaad6f5fa6b839c6c050f4f9a94dda76"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-07-19.csv",
+      "sha256": "21719e8148d64e32900f1f12aca3d770fe11311590d482e11240ce3236c9514c"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-07-19.csv",
+      "sha256": "42256e4aae147f89867c1eaa5f21d040813ffc7aa3ddc46372eb17e5d0383be2"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-07-20.csv",
+      "sha256": "b81ced9b06b501efcab28b41169c982e6f7787d3a4e64daf5b20c6048c5e88bb"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-07-20.csv",
+      "sha256": "042e9bbc1936c3151bd05587888882779e5d555fef9629317664520ab21df928"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-07-21.csv",
+      "sha256": "11b9ae3eed4199786356151c2cd25a73e21039c4042b33db63f3db82e13455c3"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-07-21.csv",
+      "sha256": "7c2bcc286065033c7f9875a68409528e11badce5c97e6dc80c3f47a38279d84c"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-07-22.csv",
+      "sha256": "9975e2ca6d26151b4593e54052ba7ef5969f241e2d6a5319b928ce7ae3510a22"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-07-22.csv",
+      "sha256": "4f0ee98a1c5973c22e5fe2dd0bbd3f76cfa3f7b6da2b1b76680e095acae2334e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-07-23.csv",
+      "sha256": "616d70d8849e4c14d9e8b622cc01f4dcf0c7074b7136fed5b900a2d5bb46acb3"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-07-23.csv",
+      "sha256": "29d4b201ee018bbac3c952fb1ba2758c74336e4ef0704f303a579e862f1ad709"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-07-24.csv",
+      "sha256": "09e62e37556472c06833100409d6b677a8248f0db8e08aa028fcba67923ae678"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-07-24.csv",
+      "sha256": "940ffd2d443d056da3acf4cd0b24abcae746099a9f2eb6829c7bcaceca2b94cf"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-07-25.csv",
+      "sha256": "c67b0036622370b2dbc65b896d9bc0288877484dc2e76dee8ab5f0e6fb891676"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-07-25.csv",
+      "sha256": "68e1867d18db0b6416a8a1f67510cc5c7a07e001715f1da7eccb1aad7d72ed0f"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-07-26.csv",
+      "sha256": "1a13599bbf5ca5f6cf522c831d412f3602dfb6aa795f14776dda8c39088e9ac4"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-07-26.csv",
+      "sha256": "75a80099485ddaf665013f5c634d0455a79d1cce0d3125dded0f323076e267a0"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-07-27.csv",
+      "sha256": "3133b6bf98929b5ed3e0b24e0fbc2d54a16e26438138637a66d293ecbba4e03d"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-07-27.csv",
+      "sha256": "8a8e76b97bb89b3f3751882fc0024394825e5b19683f04a9a8321a4ffd43895d"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-07-28.csv",
+      "sha256": "e5f73cb1165554ab80da4a3d08af9b03c2f481105b43f1ea2602f0402281b41b"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-07-28.csv",
+      "sha256": "884708c642c6742912ca50fc315d58160f3284e9dc91d2e3eef7c8dc44cb225e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-07-29.csv",
+      "sha256": "fe09992e014c80edf93ab163ce8502f5eb69f21fa19cfd67b4a10b2fc2affd6b"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-07-29.csv",
+      "sha256": "d25abe86fceab68074b95a3f0f919c0f25710723b165301e964c5be833fbf341"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-07-30.csv",
+      "sha256": "d60a12259106e5449c6a4323ef2a61e512f69cb3cb6763557e8f41a6f273306b"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-07-30.csv",
+      "sha256": "ceaaac0e4af0cc6a2f98e50b78c3e98d9bb815bb05d676de10ff6ab7c60c1b19"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-07-31.csv",
+      "sha256": "d66a808fca893a2253ab8c91773b3d4e4ffe836658f723b6607aa97b4a8542b6"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-07-31.csv",
+      "sha256": "fc4147fb0e55e9ed605d95e572ff8ab499895e139ea7984eed0c1bfbd1c332b9"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-08-01.csv",
+      "sha256": "19f5281f32024b113772304d008b43b7b9d736e5260d7f2c525c781f69c5a60e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-08-01.csv",
+      "sha256": "ce8beb8794c19503bd83b6894e9e855668e091cf976fe71f320e8e55cf23bd72"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-08-02.csv",
+      "sha256": "48ca890eb96dca0dd6ab579d7c7ef1c21a17cd3571ab5a02a9e56d06f0be8c3f"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-08-02.csv",
+      "sha256": "df54fe7fc89fc0b9160e560459df9f639d78bd564c8e71cf9f0e500a4c8f8d7f"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-08-03.csv",
+      "sha256": "c389660687dfe6a709f8a3659d1382c2588f49dc3c621c891ebca08c62756212"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-08-03.csv",
+      "sha256": "a2008484025b6716a9bf032e0315c9d69f3418696a7c78fb01245d04e3f29f0d"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-08-04.csv",
+      "sha256": "24334eb0f2050e4205c1a28c6c10cc731fe410199ccad6d84317d4b4240272cb"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-08-04.csv",
+      "sha256": "0fb84c688d906207bb55de757592d7c3f0b07debd37630df949402e7fc9175bf"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-08-05.csv",
+      "sha256": "e2311b7e372aa4f08272f753696f0d75354e77b1876644ad60edbca9e899f2fb"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-08-05.csv",
+      "sha256": "d7ad0eb40471bc0c9202fac6f5bfcdb1a69d41a969ddafb8bb21f778f9dc582e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-08-06.csv",
+      "sha256": "1838e1d2d3b966ce954268aab3935e4e484e8ee919b67649ca6762f1d8eee715"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-08-06.csv",
+      "sha256": "44194fee597ac0e27b8c0c76f26be36249162840eefaa04e074fb237128346ae"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-08-07.csv",
+      "sha256": "de1ea759732aad95f579d90ec15eda1f20639d8eca933a1c5545eb789185c2f9"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-08-07.csv",
+      "sha256": "3a7487106ee3002c8ecd967c3c1d9610ddde8ec1b405956b4a583037e444ced8"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-08-08.csv",
+      "sha256": "af9ff1f11d0414614d3673d9d1908ddbf40dae51b02aceb32ff1469948f6d524"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-08-08.csv",
+      "sha256": "af0ffa26e70f87a83952c7325662e5445bb9ee3a98157162209318e3577f32ce"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-08-09.csv",
+      "sha256": "c7454a0b3916fb548c24fe90a02eca3dfd9f88e81bb3f62409dc4b018a4e86b1"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-08-09.csv",
+      "sha256": "503db568b6a4784b4c086258b3a13cd71ec6fb2c825b7e7f84d7ce6e49abca2f"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-08-10.csv",
+      "sha256": "2449707ab6bf072da7830a31b742178e5d3ceff7c77f643279eec61ca577ce18"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-08-10.csv",
+      "sha256": "535e3e55eb2aff17f062431e9df583d5e7dfa615bcb9df66e4f2f3b0b99e4c93"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-08-11.csv",
+      "sha256": "5b0c6e37b0e986fcd904c6c65b42eff08faebd869860efd7966c9fb34e1ec9d3"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-08-11.csv",
+      "sha256": "e6e30102583d4c4811c242b218b33742d0e9068123ee7a75176f0077447b5c9c"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-08-12.csv",
+      "sha256": "8dbb049ad3ede7d064286ec8a40d69296f8a70ce93233118d3ace01c00dc49a9"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-08-12.csv",
+      "sha256": "3963169158c26a6afe9917079cabd3c78c55d08879515fe9bd036e45989f909f"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-08-13.csv",
+      "sha256": "8ab7a77d2510b8366a3e0502a86031d34dc0d8c1691d632c6d470993e8afbf43"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-08-13.csv",
+      "sha256": "f053eb466be6f96a6197b23a7d0600e6c08f3b8ec8778e9dc840bed888c02237"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-08-14.csv",
+      "sha256": "479b6c766f3fd83274c734295aa7359921e7bdf89f13f7820a0ccb083c465d9e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-08-14.csv",
+      "sha256": "3801bea95ec6c10dc042e9ee80aea85eba10e53c6d52829d2500fa67aa2be61a"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-08-15.csv",
+      "sha256": "2707229445e6124a95d5f30e2b5289e999f90b735703a4d406ac90acdc3c7dcb"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-08-15.csv",
+      "sha256": "54ea26c59b2e51a55a7499818b9f216b18c2c60842885985260924bea100aa0a"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-08-16.csv",
+      "sha256": "3eaa9b1a43e97dfdc6c4fb9ce1acf9900b4ebbea77079e740b87f1aab64c8b8c"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-08-16.csv",
+      "sha256": "e9d8dbb87e5d62b75ecd7e5dc8b1ea5c4d35e692d8329495331c56502d5102e7"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-08-17.csv",
+      "sha256": "ae30acb6a595b66737186abe7e932ac02752c3050d845b34c5448b05ed79e6b6"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-08-17.csv",
+      "sha256": "809743d7cd2002a2efc358918a2c306854c3ba6b0fe1d1d36c32d931e1d9a682"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-08-18.csv",
+      "sha256": "31d23fab22c5296a340c71177d0db1b5c98f1f7acd2a7fdcec03f7f6f1133811"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-08-18.csv",
+      "sha256": "bd3c9bb11b56d25e8a8ac97bff1f7fc957d7943b035fbc896e086bb358f4af2c"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-08-19.csv",
+      "sha256": "289b76f326263b55b3cf640e71e475d7f41a651dfe50ab426b5a3802426ba133"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-08-19.csv",
+      "sha256": "7e3a2dbd59aab1b735bd44a973b2f1b1bbdff7d4f99b965ebba7de56545d4ad1"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-08-20.csv",
+      "sha256": "64caca836c67d322941d325878971f012d1474c6ac549beff0ca528c4a0c2583"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-08-20.csv",
+      "sha256": "6ba08edabc426070ce8ef53973b328ad2254cbcf7dd1eb256292341f422f4066"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-08-21.csv",
+      "sha256": "f96048896e8db76cad834537098c0e35a13ece78b03e96f77c6b177562695acb"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-08-21.csv",
+      "sha256": "050a56245604c708597dc9d0a06b47c1d39a813392d570d78907c28379181f34"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-08-22.csv",
+      "sha256": "f07d9f55bfda1b2a02fb9545247f3b2fb643728d927f9edcbdfdb8eea30f9812"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-08-22.csv",
+      "sha256": "a54a878519227d1a6d3ec0c039ec4aeb986ff6ea93c20d7a0e27269c399bf26a"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-08-23.csv",
+      "sha256": "b27ad217950bfe40b4dc1c8ac7996dccefe8681dddd1bcff0ee9a9867f87848b"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-08-23.csv",
+      "sha256": "9e1078e7ec5cbb0254d806d0ce7a883b99c49b38a52c93eaeb5a1adcf969c509"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-08-24.csv",
+      "sha256": "e527224fdf98a02c40b1847d1e6f3c5729df5d1e53db6228fe4217cc09d9cc54"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-08-24.csv",
+      "sha256": "ddf233d91ec1cc91d56f918e0d8bbe3a02d5b2aae014df2a6686957acd18c2df"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-08-25.csv",
+      "sha256": "296aa0d7ba23f2d7a6025687c007435384a001d3d56c7d50087271e898c61df6"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-08-25.csv",
+      "sha256": "d19cb8333efaec605abf32ee58a208621e5d72951d24379e37fbba8f1689ff6f"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-08-26.csv",
+      "sha256": "fd78d50cdee6c43f21d7762acb8185b9231bbeec2b246affb7c3c79c88745ae6"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-08-26.csv",
+      "sha256": "5d3f90d77b3b87559a1c15e1f3dad388ff093d06e16aed5d6e21652e97d2746f"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-08-27.csv",
+      "sha256": "3220e1473de96472bfccf867e4a25cd17d81645b13c3329f0da4ae583aee50e1"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-08-27.csv",
+      "sha256": "dea6798ebfaeb72a89c207f0555d84a700a410816b247f40f29d4d55bf4b6899"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-08-28.csv",
+      "sha256": "276b9097d7765002f981524ee7379fa17c8ee921b35f6727692cdf6d99d66929"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-08-28.csv",
+      "sha256": "e01b429e240a67c9300d072e77649e467d3225d47d1526cec1429a6b861c285b"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-08-29.csv",
+      "sha256": "777b749978899c91d3610ed34e14fda155c2fa61b67a7ff6f591a72f970f081b"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-08-29.csv",
+      "sha256": "d707e355f925f3940b1cab5edd2858389c49ad30c876ec3f58b6feb91ccf6f50"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-08-30.csv",
+      "sha256": "7916b94ad970e041e67c9cd6a23749c3ad42112e4f73a4a545b8b972346fed2e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-08-30.csv",
+      "sha256": "0abf58fcdb94d9867842ca4b7986df4cd529790671f688732b33a77a5cc74600"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-08-31.csv",
+      "sha256": "939339479ff6373176a03d70d8f93a139b4a1af3e82729d02b52443dd38355f5"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-08-31.csv",
+      "sha256": "00799119d31bd7c87cbce9408b8b64a526133eec3fd02a913d5d8d7bf5ab3777"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-09-01.csv",
+      "sha256": "49eca1094d7e312230f7bddc3a221e717971ba6a4ea4b9bd91e2f219f5dcb125"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-09-01.csv",
+      "sha256": "a986cc4f7e1021d47f3a9bd8b29094a4fb894754ebfddf7a20fc2c434cfd0ba4"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-09-02.csv",
+      "sha256": "3ffce4cc363072f7019a25222dced30f92f4c24e637a00ec139aa62eb47a8bb6"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-09-02.csv",
+      "sha256": "77aaecad0b914b1605c7127d5ef0169449ffe946bf3aca637d303776ab042dc9"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-09-03.csv",
+      "sha256": "ba24443696976cb5a3bacac4c7d59afa9bbbaf98e470ce4f79cec1139b957adb"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-09-03.csv",
+      "sha256": "2f6e9f8f5f76530453d79e97f0c74ea0bdf866e6315abe1c850e4a3c47ea516d"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-09-04.csv",
+      "sha256": "31d29b1bb5d4c31cf24c1f44760a02fc421449c5f0c7fdbf5e1ce10c7dc5c6ff"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-09-04.csv",
+      "sha256": "adca6574bcdce74dd0cd2c50c0c192b230fbe71de3e8477a621e5d436e1131c6"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-09-05.csv",
+      "sha256": "3f8acae209f708bca179c3532c7e91f99c2b3ef337d986449142eb1d44dc0d36"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-09-05.csv",
+      "sha256": "e9116364633530e26982c205c8a80f9a420de4649a5d0b43c5e392a8e06a6712"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-09-06.csv",
+      "sha256": "ffbefd98dcccd746ce096ebe95b769c77411b0f4e854a4192dbb39200e60a198"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-09-06.csv",
+      "sha256": "66ab737d935fcf0b2b93bb5b8ffe946fc17bca4e49d4767e9a91ac183a49156f"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-09-07.csv",
+      "sha256": "8df939d6f0dce2ce5387784b274b7bbf637a0efaaf07ff63ef13b059532baff8"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-09-07.csv",
+      "sha256": "3b417a77f1657e968cf02578d6200ba4c28d2c1db72e3b40cc82da061d17628a"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-09-08.csv",
+      "sha256": "d2157e17003b28fbde819c1cbd98e39a9e8b15f625efbbe838aad3e92b606b08"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-09-08.csv",
+      "sha256": "deaac1fef869149702393db02114db8557f2654726b33eb9abd0b92be4887486"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-09-09.csv",
+      "sha256": "9e890681c01cee490371977d83fc0d351ae6d67b7032f4991ec2148cb2c47eab"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-09-09.csv",
+      "sha256": "63eedd39459ef424c9afbe5790dc57c9d7f35ac7f374a68856012e415a42d815"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-09-10.csv",
+      "sha256": "5328995d538f51397efd4760b52bea62d7e66e32a6229288d627e526939d6472"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-09-10.csv",
+      "sha256": "e70a2c579bc3468c46dae8aee7a7d2905d6441c94d03219d6b28dd88289b380e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-09-11.csv",
+      "sha256": "108e54d24d124dbb28495a47c65d610a8cddacfd872ee65216e96f8b87dde0d7"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-09-11.csv",
+      "sha256": "2bea876a91b1470cfe8d5450e123baaf7ffdfb77521ced2a4b27ad2efa906d33"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-09-12.csv",
+      "sha256": "9efeab642ee3e49b8d14cd6d13e4444186ed6aea64e99568f6fa41066c4abc12"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-09-12.csv",
+      "sha256": "a80c9c98998661a1876ee0909b38eedd88d4bda9e8ae02faebec546dc464b863"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-09-13.csv",
+      "sha256": "df155fc88eebc45a32b241c5661680c14f4e3e655225143ef016af22c96bbeaf"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-09-13.csv",
+      "sha256": "69e1e8aff527471f44b9e984c1e2dcefda95dabdf23dfb449296f098e86e80af"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-09-14.csv",
+      "sha256": "a6d9d96bcb45d727dd0aba2ade825bac10f3a7c5fcfd765fc7d01d40c3bfae88"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-09-14.csv",
+      "sha256": "e417368711be19904f513117ef75383dd5ca1cf0c3b7414bce7964c97c3c0668"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-09-15.csv",
+      "sha256": "8a55fd9902d511f928aa0387573930dc3ed30569164006327850d46545b86235"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-09-15.csv",
+      "sha256": "ed2e0b3029b11b9d6fb795610dd3eb9c7cf3b8313939c59cf546fff87cee28f8"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-09-16.csv",
+      "sha256": "1c64d3222a3b29efbd63392560b64557b338c5a90d4099a5ad98ab4effd70813"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-09-16.csv",
+      "sha256": "c92fabc6e6f248fc1d57a092a1116fdc082fba2011059b5c734f0597dbc69807"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-09-17.csv",
+      "sha256": "98557a0664738eeff06c857c6cbbc57239c05af1c0b07a62bdbf9c9e621ebc4d"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-09-17.csv",
+      "sha256": "1482e888d6afda7367af030c905fac38a94339333d7e2166145d39101a76163e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-09-18.csv",
+      "sha256": "c36e77a7f3e04b87aa39529658a1ceb2e1609d178d5b5aedae9e3fa375904268"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-09-18.csv",
+      "sha256": "b92ea4c419e16823c65f44b11643eb7068da9cd4b84d3a46fec83aa9527fb8b2"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-09-19.csv",
+      "sha256": "3fe70f687c07704ff6dbd7f8bbf1e511e1eabdaf225ea9d84b210ea0b35321f2"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-09-19.csv",
+      "sha256": "7b7cd9bcaae234646b51c7542c248dbcecdf4402b3fbf6f64f7437182b340491"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-09-20.csv",
+      "sha256": "d5acbc5aad3a50fc898825b561c3baeb23dc59dc0e89411113fbe80bb5879f65"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-09-20.csv",
+      "sha256": "46122eb03e81397fcbd9cfcef0bd8411ccfa5a6ffa85003c6dea7b46c3ce7562"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-09-21.csv",
+      "sha256": "b0ac9d683d8a4136fdbd267de1810636e6c30a1cf6fbd348840df051c2686751"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-09-21.csv",
+      "sha256": "3d3f4a1ee7fbf653981c2ee21bd5d8b7550418d551aa826dd3bf1031a9bed13d"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-09-22.csv",
+      "sha256": "4d359b3f4783f9f1d24c5fcf18837ab707c83671e5d83f8e2d435ba13c58da98"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-09-22.csv",
+      "sha256": "9a705c49d49545ba560ac51a2b232b72774144823c63090b41c1c125f2440702"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-09-23.csv",
+      "sha256": "a8aaed3bd89c475dcd4d054a5c23234e6daa1c9bf4a5fad533895e2806f4111d"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-09-23.csv",
+      "sha256": "b8a112193def9d23756e9b28d5aa39794d7965bb02e881ca7baa2d800e995123"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-09-24.csv",
+      "sha256": "b1e676b1f6bb4e3046d3d206108a02f1ed21032cfbb7f5e771aba46d940499d4"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-09-24.csv",
+      "sha256": "a5660cfbd7fd16c228445bad09a86ccad5c3930014227f4d9a591083eaf9ffe5"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-09-25.csv",
+      "sha256": "9df208c76eba15c4a81177a1e3fe67c64a8a1b720c106b9de6e4e24982d8a80c"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-09-25.csv",
+      "sha256": "5e7f77225cc1458cda27145ea0cca93b4e8b271d420ea8e5dbd84d03bf9168eb"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-09-26.csv",
+      "sha256": "44fb38411853c8cb75c4477e19a49108b46f00f4fe7ed55f0be57f378d7cdf35"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-09-26.csv",
+      "sha256": "54ab691ef5222e7833901c190ccbd7d93d0e2949b6436831529bf1a7f8cba8ef"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-09-27.csv",
+      "sha256": "c0d136eaa26879af66d2366f60900f960c3472c956ff3b7eac63da62ff607cb6"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-09-27.csv",
+      "sha256": "26c0ee45d3e434f35fb3df66eb3e47db2d653acd83f682d7d442c7f3114d12ba"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-09-28.csv",
+      "sha256": "d1e9628710ff1bf62293867b51ab8d8ad404599549f2ea7a0c9dfd1300111fac"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-09-28.csv",
+      "sha256": "acaebe7191404c02e50b6c3d605d54b9396b1d89dc95782672652a1d8b00fa63"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-09-29.csv",
+      "sha256": "3db6c1ccc6876a8eab337599dbce3002cdaa9f7a844230f72c46f0e8a384612e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-09-29.csv",
+      "sha256": "ed57a85508fed72ee0872c9b3747d26e5babf80962d494f3e792eef66b3237c2"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-09-30.csv",
+      "sha256": "22d2159f2c7cc724788a6e3ca5cb6c8390f8a9b1caa9b2629e76c86b49598499"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-09-30.csv",
+      "sha256": "3ae72a955fd7992c87a71160f0e8091e88315524ae40e29071a4a923949e8e2f"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-10-01.csv",
+      "sha256": "c981412cf154e9dbf224279c13b3ba66a0193d50ab2c6467e1d4d98eac66e246"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-10-01.csv",
+      "sha256": "69710bb7412dbb1912b216c1cb111b02f790f0a5134e59c5ce0551e0939999b3"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-10-02.csv",
+      "sha256": "16ed2115c12b57756b2d76959b8b245569b3f689ba9f5e915366c105be9c6623"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-10-02.csv",
+      "sha256": "ffe5306528db0186dfd8afe38d5a4dc5c14cabd71dedf05e16e996274e14def5"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-10-03.csv",
+      "sha256": "81a42214243332ea76d8b0fca8e7a87f9a8c6f5cf3cd597a08fd6695dd5e5e1a"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-10-03.csv",
+      "sha256": "3158005d0d7ebbc72d6b3a702d69d2e7567d0079da1bce271a8644e95f13d0e3"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-10-04.csv",
+      "sha256": "8d58bd76ba030f7a7f69257274dc89d9b2c04bff3767e28be9693e449a56c290"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-10-04.csv",
+      "sha256": "50833742217c18c9885a6028794d56b7f04d0a1825fc627db2de1c242653e1e4"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-10-05.csv",
+      "sha256": "fb3b95f0b3bad4e13e07e0e8c2e8f0b3efbf9166ffebdd654ed457de5ee80661"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-10-05.csv",
+      "sha256": "e3c56e37766d4b6a3f2bf7e42169b120b168b1b381efef2bc3c06c63bed03621"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-10-06.csv",
+      "sha256": "d54d829dd4ac7fcf32c993729260c417d5d9929e22bc0c77b05c10ef127c4b63"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-10-06.csv",
+      "sha256": "0d0071d33cf8a930319e94888169ad4265f026f31a762c81f5ca0d66e24cf4d3"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-10-07.csv",
+      "sha256": "605b1d6158fa51b0115a337b54112e0459351c2bffc8fe660380ef32463900a2"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-10-07.csv",
+      "sha256": "91f627ce48864624e65c524ecd8b4c979f4b53ebb37d8c010547256eab64803f"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-10-08.csv",
+      "sha256": "0f42404615c5c70df65a63bdefb58868417a090b4b729d57433069dd96500f31"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-10-08.csv",
+      "sha256": "9b9d2775d51463cbdbc2089d71bb3cfe475ec756072ca325310ceb2a06552690"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-10-09.csv",
+      "sha256": "e21c9976909c14fba3d0c03b58c2e8970b1415fdc480634bb29651ddaa83b6c6"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-10-09.csv",
+      "sha256": "36161cc458019e71c5970b1393b4c732aa72382b8c216ebe2ee998c8e0f7ef63"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-10-10.csv",
+      "sha256": "c9f29091afaf86d2fc981aed5348720f1a4a25b35e54ccb5bd4c8082ae425331"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-10-10.csv",
+      "sha256": "b33ad2ef4cec4a5ff8c76c4c1e37aef811b786c179645dad47512a7723478437"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-10-11.csv",
+      "sha256": "3437e771391297754d2ee14806d792bda9f7cd8295ac2b8f3186c60945ca10ea"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-10-11.csv",
+      "sha256": "7e334676aba1e7c184326c53f7b044b6a441af07f1a1d00dd22c6951e3977da2"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-10-12.csv",
+      "sha256": "d719da1ce5c4e47f975be05e9bc045bac5a1b67c7398406594e5a2a464e394bd"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-10-12.csv",
+      "sha256": "0adcf0cd2baac18cd857f3c0f86855e23df58593c8ba3133e7c24283b1086c51"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-10-13.csv",
+      "sha256": "48694f1d67d45c1c46c464e85c77ff009e4abd344288b71d3a3bd494aeb1686c"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-10-13.csv",
+      "sha256": "7732aec8b24b16f2255316b5ff2254322dbc339d21ebe76b83f6b1a068154bbc"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-10-14.csv",
+      "sha256": "147004ec3218b7bf9e98bd24c4b4e4931533aa4c147b3c406cefa11c22d80f80"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-10-14.csv",
+      "sha256": "85f0fffe0429b8f934e22305c092b589c026d9e156c1a65d02471fb884027c08"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-10-15.csv",
+      "sha256": "b6ac867583621d30a4a8785eb5af74f5e92838b4e1e5a04c8158ebb8a18d0a0d"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-10-15.csv",
+      "sha256": "d5585787d2a3a48d8446495996b747b0d26cb3161c19a3653202660a093f3c7c"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-10-16.csv",
+      "sha256": "62e3fb6544c85a0aad5ad520022967fa9804ee81e275a86beafc73b9938f2712"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-10-16.csv",
+      "sha256": "9f26048221451ccd6dc8b4a3c220fd6d717b36822bbfd5875bbe7d26308c58a1"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-10-17.csv",
+      "sha256": "baf691c1028a44bc8db04005071699a2f356d810386d83ee1030928094b0d345"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-10-17.csv",
+      "sha256": "c1fc7eeb1c2e748dbbfb7aa4639967b2f9d8bf779c0d793ac18eec7df795969a"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-10-18.csv",
+      "sha256": "e62953eea609fcb598105875356a46b0bd7216cfe1bee500d4c0053f75e9b0c9"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-10-18.csv",
+      "sha256": "d03df073e36ba3544f41f23e6c53253334319b3dd868948d09a3938459988316"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-10-19.csv",
+      "sha256": "5a44dbc9a1d22f12988cf6468e631551eed9e408ffa44bffba535acf1dff9d53"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-10-19.csv",
+      "sha256": "9353b654e9f81fde682130b7dcbbe5612ec7f87f829bdbb6de3817e0ef10a0a1"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-10-20.csv",
+      "sha256": "8949b0e45384d636d7138b7befe9e6e4cebf8ef2c2fd6cdffb7f3fbdd1a2235f"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-10-20.csv",
+      "sha256": "369427362a08a9a50d642b36390648b9e8aa12e42aafee5ea4e7c960e5c91ad4"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-10-21.csv",
+      "sha256": "7e12c55d7e173298fbe5cf9edd12f4fae527e0665bce0e357a1d08d4db2098ee"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-10-21.csv",
+      "sha256": "b4f382f92344fb0fd5897defa24cd51eac77446ee28efd0a5b4da12716896f22"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-10-22.csv",
+      "sha256": "45bf48fc9f86b36a527222b18ceb85a9cb9afe4ea6d5a2addd1214d296ca2f38"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-10-22.csv",
+      "sha256": "1ec3959071b1425453bffa67503dd7e5bcbfbdde1c28cbfd889a58096d863714"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-10-23.csv",
+      "sha256": "f35c320a2e558f409877f265d63bf7563e7d0d72217e271e48df504c0e9f89e8"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-10-23.csv",
+      "sha256": "37e7065735a3043e83c5489526a53f56fff028cf59458865f6717e704ef7d1ee"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-10-24.csv",
+      "sha256": "48318ff81a235af06c8c909260746e42d5d4ea190bbe52cbf09d5a7449f4ed64"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-10-24.csv",
+      "sha256": "7c9c81b40a0baccbc2b470c4be5802a4e8d6da2db276fc4cba64729c14914758"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-10-25.csv",
+      "sha256": "4621ad00431c7488a7163968daaeb01e4b07e9577506031f9f0cefaed8f0ac53"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-10-25.csv",
+      "sha256": "ebec8f061b246d7450e9b68aca3d1c50bc2f557a8cab81c5277a4397859318d8"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-10-26.csv",
+      "sha256": "82129651d53efbb170e39cff1fd1e32a50844fa2341f140d9a630ad3bec4ead7"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-10-26.csv",
+      "sha256": "0ba84a9740fda48ebc2f91864900fe3153b282bcf82e6e8d5d59b1c8e8250121"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-10-27.csv",
+      "sha256": "42a162fdfda963a4ddced36c3f441f203f3643cef7859e18045405b34206e840"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-10-27.csv",
+      "sha256": "64b1fd56c9ad32a715edb2bbceb76cb7efca2b8cf975e9b86dca5b228e7f9652"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-10-28.csv",
+      "sha256": "e8d9d4a2e2b99285548df950aa8c456b2f997432e5ffb3893a6ca43891bbd70e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-10-28.csv",
+      "sha256": "08864722e65957f6b2a92cda3b00ac9878e12d17d58814c585369565fc635238"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-10-29.csv",
+      "sha256": "27a548de28ae8a0dd015064eba0f99c11ec9244deec67c7b7d73f8b87f41baca"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-10-29.csv",
+      "sha256": "afbce2883ef59b9109e4533a8aebb43bf435b9cdfb568cf6b59f7ce5f3d10cf3"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-10-30.csv",
+      "sha256": "1f6a073e2bf19fb28a850736245be60434e551f60585f93bb8563eff6ef8f53b"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-10-30.csv",
+      "sha256": "bd6c7b294492a75776ca0f0e0f1d795b7b39f6def48074bf2b0228af6220eca3"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-10-31.csv",
+      "sha256": "5f7391b8b5672721043a53031fbebbb7ad4b52582dc2ea5b19051be72ca7ce72"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-10-31.csv",
+      "sha256": "777241d69aefcbdd40c86e2dda0c09b82bde1eb5f9e572e1e346b4cb0bd8ef88"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-11-01.csv",
+      "sha256": "dcbf0b58d4fcded716e4fa35cad0f36175b834f567d905492f7a76db9e8d2973"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-11-01.csv",
+      "sha256": "a480e71e2c8f2440871b4a0d9cac0346bbeb30ab7545e8fa00719e344a34a5fb"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-11-02.csv",
+      "sha256": "d358d1df582c31a80e62cd6cdd70dcd4562c8260c70d3e11feee9025008b0c8c"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-11-02.csv",
+      "sha256": "88dd19272bc0d1a386ba6c8f27b159d72f12cb132bc774db09806db40f2d7fca"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-11-03.csv",
+      "sha256": "68da19bccf77ea06907d20378798ce1ec1fbb5021e99cecaa1728229e4745be9"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-11-03.csv",
+      "sha256": "929fa9ef4ed1d98c86914ecca035342d365e822dee76d392a7434a18106ac347"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-11-04.csv",
+      "sha256": "4c9fc612da5bb5c785b345547f6cc9dbd808fe83346349ed887414f31e839943"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-11-04.csv",
+      "sha256": "3f20d18f512f0ec628bfb3bb6b11dd3266195fc42b1116c236750917a339988c"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-11-05.csv",
+      "sha256": "7de1d23c14c0685b78ec9af5666316b4aa9411225cacd6b13d3271581bf7a514"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-11-05.csv",
+      "sha256": "64d5fce365c7da1c143ed6f734721b828489e85515089f2c4dc6b8cab7017f01"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-11-06.csv",
+      "sha256": "a287107b90c82fb03ce066c3ec72f319feb7cd742708adbe22da2c1e5e320c25"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-11-06.csv",
+      "sha256": "7b4ed68303da37b7d86ce3ae0be1a6f012aacf28afc9497605b378bfc6390e7b"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-11-07.csv",
+      "sha256": "a2c41f947d1d3c5f255c6689a856561602860e9709c5c15042c7b58365396039"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-11-07.csv",
+      "sha256": "1eb592d3e32dfe4fdb8e9e75d937314aa87aee91eedc1c06dda76ed9b70be1d3"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-11-08.csv",
+      "sha256": "b08e4c6e2d2595e461c3d28057d74d55d0e388f886959f430f4e5b745cfcd8f6"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-11-08.csv",
+      "sha256": "c3f8cd4570614e2312f2cf16db09f814cf446957e8eacbf1da32983feec1bc9e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-11-09.csv",
+      "sha256": "2547d4431337260124e2bf7a74a393d1e1bf72f432e6e2d05437584a665ce208"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-11-09.csv",
+      "sha256": "f96fb67297adea16cb53f5944c61366da12407a7ec4f6b7d83801b44fbe1f2b6"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-11-10.csv",
+      "sha256": "d9725e89e9ce2eb6b0eabf693f05931ec4d6c1e628d5e4971dfc42405ee19ccb"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-11-10.csv",
+      "sha256": "a5991a7724449e3d94334c8e90fa56e1a786284c91c332a4ae881bf89ad1be3d"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-11-11.csv",
+      "sha256": "e4c8f4dc82a40e80a86c8c8434b5429ab7c279ae1151c0e02711f8631790b6b8"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-11-11.csv",
+      "sha256": "ea349007ebd3503310bbe511d3ea97a7c7171f3de90bf0426352b575f6e13f4c"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-11-12.csv",
+      "sha256": "aad55ae975107cbb0dfc8a08db40d03b3d32d17069dc474e00eb1cea7aba6eca"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-11-12.csv",
+      "sha256": "4e6fb6078acf1be1ca85dfaf87a7405b6701d24a663e808917d7e7a56062d874"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-11-13.csv",
+      "sha256": "9c77f5148812b91d9f5861a5a806aad6391965a68168c0c859bebf7c791e5e99"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-11-13.csv",
+      "sha256": "cee0f65b40427672e63296acee48f7d484e909605981c6b26306305e6e4dd1e8"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-11-14.csv",
+      "sha256": "2b5655826188289f8bf2c4df72032e15be4ab23803cbe33a342303b903f46e95"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-11-14.csv",
+      "sha256": "8225b3db66d823668387ee1c284aa7b3abbe3a51d1be46c62319c2714e51cace"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-11-15.csv",
+      "sha256": "5557476dc80f7fca2a096315b9f4765a804b2eb8953cd8d8531f4cb645f4e7ca"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-11-15.csv",
+      "sha256": "eef6d0775745a4b1b974a6648e56c90d5b267abd54c55c1810309e28b596298c"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-11-16.csv",
+      "sha256": "bce3d834ae59af70e73dcf671247fd875108d0d8242ea98a1dc7e3de40c241c4"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-11-16.csv",
+      "sha256": "be169424d8e62dbf9572a7bef8fce3fad5f51899ceaf6c6a6f4f688381f74d13"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-11-17.csv",
+      "sha256": "0275c057f202ba594556137e303fa4c029a9f8a2013276f2800725d33b1ca11b"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-11-17.csv",
+      "sha256": "5385b7e280064cf87c1f25c03b0aa0fe1008f03283af0552ab3d59f57052c118"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-11-18.csv",
+      "sha256": "6e354d9dca0e356d48f9983cb5ddd8181f7cc17c4e2ec2eec8bc8802e51054a7"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-11-18.csv",
+      "sha256": "10bd91edb9137fe8ff3eeddd60b7a7a1d3f6d4cb339eab4e39278671451b9877"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-11-19.csv",
+      "sha256": "aad0ce528d665a1764bc9a339810f0dd075aceac3607a182e4aa3efebe2925b1"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-11-19.csv",
+      "sha256": "ad8130899cec6fe93130bf204fce54c99acbcdf8225c8c88b89aa05179799001"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-11-20.csv",
+      "sha256": "207826cd55a4eef6ec1ebd5aea3bc1cbde0a1f98cb49624fef34515084c063c0"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-11-20.csv",
+      "sha256": "a22ececada33cf367e14a2069e4b4eaf478d76ed0a88a2110b3df348f3fc9fc5"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-11-21.csv",
+      "sha256": "46aedd74dc8a937ea34a475cea33dc513e21a9dde134f7fd313c0bbd8212f160"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-11-21.csv",
+      "sha256": "3b18e892551952c3dca0fd5b2afda6a61bded2877489fa9ce613c0b3438506a5"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-11-22.csv",
+      "sha256": "bda60b98961f428a8670f8b7a27b7209b37df39b18e3c44ac02abac976091f50"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-11-22.csv",
+      "sha256": "e46edff34e73a6a50d5825d70f0d8ec22574bf2f40a7e535c05cdfa19f95d422"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-11-23.csv",
+      "sha256": "487143a2454686bd1487ae351ee1280f1382b5f64c0de8ab703c33ded34dee61"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-11-23.csv",
+      "sha256": "c613769baf9265bc68cac1e75eab4a03c3c518c9dd9e0f2449d6861724afc998"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-11-24.csv",
+      "sha256": "4e0a4a47d0d2a4e32dcf8b7ad8ddacce82ba45af5b920ae09701ad9ddb1eaeec"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-11-24.csv",
+      "sha256": "97d859b9896ed67487f36f3624cef08888226ac39f07c5da0701e4f7a4c79fe8"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-11-25.csv",
+      "sha256": "b5cfa63f1fb95b8643511f27ec0a73a0b332f00ea0c56fba86b7adeb860b47b5"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-11-25.csv",
+      "sha256": "668a05ea2d00969972e21876f05c1fdc112413ed161651a5be8aa2f77fcf462e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-11-26.csv",
+      "sha256": "437ba9e7bffb3f49e6dc83243ddaa70058beea7a97b1e75cc71e0febc2fdca96"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-11-26.csv",
+      "sha256": "db3b51189da390d8ac5449971ceddbde7a8fc6dea473de5144e75b66c6449fc8"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-11-27.csv",
+      "sha256": "04eb9b28c785012125e5f2cf7d932bc1c31f3c0d98eeeb8c7b735389564b630e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-11-27.csv",
+      "sha256": "5529ced747b317ffa7bb9105367f1a58252acdf265ff55b8521c53c3ef57f025"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-11-28.csv",
+      "sha256": "500a2742426f2d26c552d67d23195f1d0acef65da6479192d323259d1ddab868"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-11-28.csv",
+      "sha256": "0603ec2605331e71908a4287cee9d716e043e5e7daf5f170e4e649c8a3c906cb"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-11-29.csv",
+      "sha256": "8d90bc3c53652c54c4cd4faecf315e8b5875dcb52db90ce336fdc5e14947a331"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-11-29.csv",
+      "sha256": "be89eab0a2c753207c5c81f4722cedf415450b0b2a85488cee5f6fc0af652087"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-11-30.csv",
+      "sha256": "469dfc8c1b39c345508ac9b38de5c89fae999d9d1e48515c2c6cfda595c53833"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-11-30.csv",
+      "sha256": "6576240529d69769e4fa3f44c954ae6eca8af3bf6204b117cc3247b50d413bb1"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-12-01.csv",
+      "sha256": "2c8233b8676a8f62847a2971880f63b4113912c9835a3b9e0efb47cfb4278bfb"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-12-01.csv",
+      "sha256": "a0de9f788877eae64cb562404bc1159afdd2f2ec89c0104ccd12e7380255bd11"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-12-02.csv",
+      "sha256": "16aa5371aeb589f7bfa44558d02f67113548ce253cb3b1cf7cc51a78300548a1"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-12-02.csv",
+      "sha256": "aea64e7579b4b4813177b74021a0028f6794524548365dec727ff254cbaffe7d"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-12-03.csv",
+      "sha256": "2e209a894128c4c132f5b3a98f5347072bc958f11717f5b1573a61cc43a80d75"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-12-03.csv",
+      "sha256": "00dee88227dd8fdfac6e2957ac2a1ee5c5afa96275b7dffd022385ba90e64891"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-12-04.csv",
+      "sha256": "64a42161fbec44afac71cd6625487ff028b734826a3114407d6a030b41a3bbc9"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-12-04.csv",
+      "sha256": "3045e6a1b3e65e63ba7d6b08194d9cef07b43e7966544db97a0e9ae5cadf956e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-12-05.csv",
+      "sha256": "aa63ec611c74def983021850829d0a955dce18fd51ec3a7c3e17ca94a8efa93d"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-12-05.csv",
+      "sha256": "74544bfcfea39fd3d8066ff5d40e5e73e830de7d83cf0dd0882954de5e97f3e0"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-12-06.csv",
+      "sha256": "3406e1764b11602df0ed4f1cc11bfee0e2f06c66ae3956cb5dd93a1c6ccadbee"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-12-06.csv",
+      "sha256": "d6779fc952695998b4ad304ba9b3484fbacb5c4b3829b083a16a30729a168922"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-12-07.csv",
+      "sha256": "fa7bd17d777b9e2fb17b4595867126b185e360d20cd7198abcaac64226e431a5"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-12-07.csv",
+      "sha256": "0f7fd6c0cd5c6cf2d291efb5760e10ba87d953fa2bb70de31bd06ebcfb24ce42"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-12-08.csv",
+      "sha256": "34f99d852fdcb4520fd4fb0d32a9d94f64cbea861f2221a9114b86d94236d5e6"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-12-08.csv",
+      "sha256": "9cb4e1a240250448d8f85eef043a521b77a9dd4b7196057e9122046f494ba90d"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-12-09.csv",
+      "sha256": "8e8ad60b1fe939810ae18662646a3053d1cffda94f254fdb341598972e26f63e"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-12-09.csv",
+      "sha256": "3ff9900f13fb50c6efd90ad96d4d3caf5f7b77bce5e756cb2afa1e48523dc526"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-12-10.csv",
+      "sha256": "1d8ff4bdfb8163abb0e1fdca2919b128757af9eec160d65fa2579172bbe758e7"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-12-10.csv",
+      "sha256": "764ad87e97c3bbc1f726963ba5753f604a1ba0c94bc38cc36a56f585947c7eb9"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-12-11.csv",
+      "sha256": "62fd4c186538390f8f1ac0d00c0dd1b5be09cd9f9eec5d51d942777a1ead539c"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-12-11.csv",
+      "sha256": "a2270879797cfaf8486f7873d7aad7e0b8f016e6aa323ab33b2779afe7ab45b5"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-12-12.csv",
+      "sha256": "c8398a93ab62c0b60020901b9e069d20b1c12319f18db752ccaa8c0d80984181"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-12-12.csv",
+      "sha256": "61cc7f95f95ec67d97a204f8977ff8fc60ca935048f9bb0bc28bf145b2403963"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-12-13.csv",
+      "sha256": "f91e8cbb9a1568d96d8724be1e70bc682a9656d42cbe097dce033af5726e8c34"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-12-13.csv",
+      "sha256": "c9f519a742f9fbfa0fa65608691acc51ab85983275aa35a77a045dcce3d7b129"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-12-14.csv",
+      "sha256": "9782787fe789ac406a0e9fff2347e65f1a08ca3ead7e10c5c3fbad40ed99bd3d"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-12-14.csv",
+      "sha256": "1a92651f07033c293a5940d1b17813ddaa3fdb5447e5fa8891605a15df9e0667"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-12-15.csv",
+      "sha256": "014ff3ef2911a54220374924bf2f6dabde789b39356955ca9d1aeb6135968e32"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-12-15.csv",
+      "sha256": "1f78b7909d74383ec007bc4bb110b83dc870ef2c06854e3678290b42740ef597"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-12-16.csv",
+      "sha256": "428fb172d806e53d2731ff6e94066b31c962d34427b76828d87d2f7edc84ae64"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-12-16.csv",
+      "sha256": "80f17da76d5cb1acf7674f12cbdbc52bbef98a149c1ae4667adb4ca09c76a2ff"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-12-17.csv",
+      "sha256": "8efd9de743394ecc406624e5399b32564b8507d1d6934bd41d8a1f5510050108"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-12-17.csv",
+      "sha256": "a70fb15600d1cba99dba83d088484f2df67e872fc79a0828fd3ec15f130992da"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-12-18.csv",
+      "sha256": "44bedc51029fa1d3bd5a9b177eaf4d91f3435ee57e91f276e8290a125e07ad6f"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-12-18.csv",
+      "sha256": "e5136a890127bfac526cfbe83795651c74112f73ba1d9d7f216be85e847db99b"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-12-19.csv",
+      "sha256": "7db07a9d1745bb3a6a41bd85feb6f29231ac714e629fec96e62e557ab97b3384"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-12-19.csv",
+      "sha256": "08098aaad391261094100bda742799fa33a449be6845eb3cab35f49fdc29a581"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-12-20.csv",
+      "sha256": "eed008c8c7548c17025b7158e4bf717e20859fa38df060db206c0e0ee37f8de2"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-12-20.csv",
+      "sha256": "b99637edde9def46dc518f2ca34bd2207867d487520fa441a3ca3527c3d03046"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-12-21.csv",
+      "sha256": "e2376f54885740420eca9fe2c1356afccd3d45db0bdfa96c7ee834176535ab53"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-12-21.csv",
+      "sha256": "452a3210c7f7f92c3a49c87b49c51dc0ad494dfde6fbcb03cb483d481f9066d8"
+    },
+    {
+      "path": "data\\raw\\xauusd\\ask\\m1\\2020-12-22.csv",
+      "sha256": "9685d322cf5028eb75ffb9bec917a03ed5f5abca0446254f565a63b66bcb4606"
+    },
+    {
+      "path": "data\\raw\\xauusd\\bid\\m1\\2020-12-22.csv",
+      "sha256": "fdd037353e59a0d413a0a4c20ec36f8ca777abca2a9185f62809052ace7f4380"
+    }
+  ],
+  "ask_origin": "reconstructed_ask",
+  "reference_calibration": false,
+  "network": false,
+  "backtest_run": false
+}

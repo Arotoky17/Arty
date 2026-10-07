@@ -46,6 +46,8 @@ def validate_history(
                         close=Decimal(str(row["close"])),
                         volume=int(row.get("tick_volume", row.get("volume", 0))),
                         spread=int(row["spread"]),
+                        non_tradable=bool(row.get("non_tradable", False)),
+                        entry_blocked=bool(row.get("entry_blocked", False)),
                     )
                 )
         if not candles:

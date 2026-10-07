@@ -1,0 +1,42 @@
+{
+  "source": "external\\mt5_xauusd_m1.csv",
+  "rows": 2375973,
+  "first_server_local": [
+    "2020.01.02",
+    "06:00:00"
+  ],
+  "last_server_local": [
+    "2026.10.05",
+    "14:10:00"
+  ],
+  "rows_by_server_year": {
+    "2020": 351258,
+    "2021": 351026,
+    "2022": 352900,
+    "2023": 352756,
+    "2024": 355673,
+    "2025": 351821,
+    "2026": 260539
+  },
+  "adjacent_duplicate_server_minutes": 0,
+  "history_since_2015_available": false,
+  "missing_years": [
+    2015,
+    2016,
+    2017,
+    2018,
+    2019
+  ],
+  "utc_conversion_status": "bid_and_reconstructed_ask_converted",
+  "depth_and_2020_bid_comparison_status": "pending_validated_UTC_conversion",
+  "network": false,
+  "backtest_run": false,
+  "split_yaml_modified": false,
+  "source_copy": "data/external/mt5_source/mt5_xauusd_m1.csv",
+  "sha256": "14d47c38faa9083194996f0be84c8fab43b8a744dcb2ca1028c6a7f300c2e2f3",
+  "server_timezone": "Europe/Athens",
+  "point": 0.01,
+  "ask_origin": "reconstructed_ask",
+  "converted_root": "data/external/mt5_converted",
+  "primary_source_status": "proposal_pending_user_validation"
+}

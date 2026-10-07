@@ -22,7 +22,12 @@ def calibrate(
     allow_holdout_quotes: bool = False,
 ) -> dict:
     safe_output(directory, output)
+    from arty_trading.validation.csv_import import load_csv_provenance
+    from arty_trading.validation.mt5_csv import reconstructed_ask_forbidden
+
+    reconstructed_ask_forbidden(load_csv_provenance(directory))
     raw, provenance = source_frames(directory, "XAUUSD")
+    reconstructed_ask_forbidden(provenance)
     bid, ask = (index_utc(raw[side], "ms") for side in ("bid", "ask"))
     split = load_config("split.yaml")["development"]
     partition = "development"

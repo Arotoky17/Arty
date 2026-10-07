@@ -234,6 +234,11 @@ def test_failing_side_is_deferred_and_never_blocks_the_next_file(tmp_path, monke
     summary = importer.run_fetch(output, now=datetime(2026, 10, 3, tzinfo=UTC), until=until)
     # Only the deferred side is re-requested; the verified one is served from cache.
     assert len(urls) == 1 and "BID" in urls[0]
+    assert not summary["bid_ask_pairing_validated"]
+    assert summary["pairing_audit_required"] == ["2024-01-04"]
+    # Ordinary resume never opens the previously committed ask CSV.
+    summary = importer.run_fetch(output, now=datetime(2026, 10, 3, tzinfo=UTC),
+                                 until=until, verify_existing=True)
     assert summary["bid_ask_pairing_validated"]
     assert summary["scope"] == "development_only"
     assert not summary["coverage_validated"]
@@ -472,3 +477,19 @@ def test_external_csv_import_rejects_bad_rows_as_deferred(tmp_path):
     assert any(row["status"] == "rejected" for row in summary["deferred_files"])
     assert summary["resume_required"] is True
     assert summary["status"] == "failed"
+def test_interrupted_session_still_writes_a_truthful_report(tmp_path, monkeypatch):
+    """Ctrl-C during a fetch must not leave the previous run's report behind."""
+    isolated_run(tmp_path, monkeypatch)
+    monkeypatch.setattr(importer, "fetch_bytes", MagicMock(side_effect=KeyboardInterrupt))
+    summary = importer.run_fetch(
+        tmp_path / "raw", now=datetime(2026, 10, 3, tzinfo=UTC), until=DAY + timedelta(days=1)
+    )
+    assert summary["status"] == "interrupted"
+    assert summary["interrupted"] is True
+    assert summary["resume_required"] is True
+    assert summary["verified_daily_sides"] == 0
+    assert summary["bid_ask_pairing_validated"] is False
+    written = json.loads((tmp_path / "report" / "import_status.json").read_text())
+    assert written["status"] == "interrupted"
+    assert written["interrupted"] is True
+    assert written["verified_daily_sides"] == 0

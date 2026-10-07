@@ -1,0 +1,44 @@
+{
+  "approval_status": "draft_not_applied",
+  "blockers": [
+    {
+      "id": "approve_amendment_and_sha",
+      "need": "Approve MT5 primary-source amendment; new signature only after validation"
+    },
+    {
+      "id": "real_broker_costs",
+      "need": "Specify real broker, independently justified conservative spread/hour/news floors, commission, slippages, leverage/margin and stress x2 decision"
+    },
+    {
+      "id": "holdout_freeze",
+      "need": "Confirm proposed exclusive end 2026-10-05T11:11:00Z and immutable dataset snapshot before results; split unchanged now"
+    },
+    {
+      "id": "data_exceptions",
+      "need": "Approve treatment of zero/constant/extreme spreads, small gaps and imperfect coverage; no automatic corrections"
+    },
+    {
+      "id": "runtime_gap_controls",
+      "need": "Integrate and verify MT5 reader, non_tradable masks, causal segment reset/warmup and pending-order cancellation across large gaps"
+    },
+    {
+      "id": "cost_gate_and_reviews",
+      "need": "After approval implement conservative reference-cost option, avoid double spread charging, pass precision and human visual reviews, approve MT5 audit"
+    },
+    {
+      "id": "confirmation_trial",
+      "need": "Pre-register source, dates, costs, thresholds and trial budget separately; no extra trial currently registered"
+    }
+  ],
+  "confirmed_specification": {
+    "point": 0.01,
+    "contract_oz": 100,
+    "volume_min_lot": 0.01,
+    "volume_step_lot": 0.01,
+    "source": "MetaQuotes-Demo Specification, user confirmation 2026-10-05"
+  },
+  "ask_origin": "reconstructed_ask",
+  "reference_cost_calibration_from_mt5": false,
+  "split_yaml_modified": false,
+  "baseline_run": false
+}

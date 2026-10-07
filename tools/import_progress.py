@@ -63,6 +63,7 @@ def _last_common_close(
             return datetime.fromtimestamp(max(common) / 1000, UTC) + timedelta(seconds=seconds)
     return None
 
+
 def _expected_closed_days(start: datetime, end: datetime) -> set[str]:
     """UTC days fully outside market hours, from the shared market calendar.
 
@@ -153,13 +154,11 @@ def progress(directory: Path = Path("data/raw")) -> dict[str, Any]:
     dev_end = datetime.fromisoformat(split["development"]["end"])
     hold_start = datetime.fromisoformat(split["holdout"]["start"])
     last_close = _last_common_close(latest, common) if common else None
+    # Compute the shared calendar range once, then select each report's interval.
+    closed = _expected_closed_days(min(dev_start, hold_start), max(dev_end, last_close or dev_end))
     if last_close:
-        holdout_block = _coverage(
-            hold_start, last_close, common, _expected_closed_days(hold_start, last_close)
-        )
-        full_block = _coverage(
-            dev_start, last_close, common, _expected_closed_days(dev_start, last_close)
-        )
+        holdout_block = _coverage(hold_start, last_close, common, closed)
+        full_block = _coverage(dev_start, last_close, common, closed)
     else:
         holdout_block = {"verdict": "indisponible", "reason": "aucune clôture commune"}
         full_block = {"verdict": "indisponible", "reason": "aucune clôture commune"}
@@ -175,9 +174,7 @@ def progress(directory: Path = Path("data/raw")) -> dict[str, Any]:
         "closed_day_source": (
             "market_calendar: weekends, daily pause, configured non-tradable holidays"
         ),
-        "development_to_2025_01_01": _coverage(
-            dev_start, dev_end, common, _expected_closed_days(dev_start, dev_end)
-        ),
+        "development_to_2025_01_01": _coverage(dev_start, dev_end, common, closed),
         "holdout_to_last_common_close": holdout_block,
         "full_to_last_common_close": full_block,
         "pnl_inspected": False,
@@ -226,4 +223,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

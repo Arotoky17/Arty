@@ -1,0 +1,57 @@
+version: 1
+symbol: XAUUSD
+mode: forward_demo
+# The demo run is traced in the trial registry but must never consume the three
+# backtest trials: it is registered under its own derived setup id.
+setup_id_suffix: ':forward_demo'
+require_signed_preregistration: true
+
+account:
+  # Technical verification only: mt5.account_info().trade_mode must be exactly 0.
+  # Kept as documentation of the expectation. It is never consulted by the code:
+  # only the broker payload decides, so a config flag can never widen acceptance.
+  expected_broker_trade_mode: 0
+  refused_broker_trade_modes: [1, 2]
+
+feed:
+  max_staleness_seconds: 180
+  poll_interval_seconds: 5
+  max_consecutive_execution_errors: 3
+
+risk:
+  risk_fraction: 0.01
+  # Fail fast on the demo account: as in the backtest, the run is halted at the
+  # first 3 % daily drawdown (see the loss-breaker gate). The demo envelope must
+  # never be looser than the preregistered risk it mirrors.
+  max_daily_loss_fraction: 0.03
+  max_run_loss_fraction: 0.03
+  # Small account: 1 % of equity can be below the broker minimum volume.
+  small_account_policy: cap_risk   # refuse | cap_risk
+  small_account_balance_threshold: 100.0
+  small_account_capped_risk_fraction: 0.005
+
+spread:
+  # USD per ounce on XAUUSD; beyond this the kill switch trips.
+  max_spread_price: 0.60
+
+execution:
+  pending_max: 1
+  expiry_bars: 10
+  max_holding_bars: 48
+  reward_risk: 2.0
+  stop_buffer_atr: 0.1
+  post_reopen_minutes: 20
+  ny_flat_hour: 17
+  min_stop_atr: 0.5
+
+reporting:
+  bootstrap_replicates: 10000
+  bootstrap_seed: 20261002
+  bootstrap_confidence: 0.95
+  minimum_trades_for_verdict: 100
+  periods: [weekly, monthly]
+
+paths:
+  journal: reports/forward_demo/forward_demo.sqlite
+  manifest: reports/forward_demo/run_manifest.json
+  reports: reports/forward_demo

@@ -1,5 +1,24 @@
 # Arty
 
+## Observation live Exness (plumbing_only)
+
+Depuis un terminal MT5 connecté au compte **démo Exness Standard, XAUUSDm,
+10 000 USD**, lancer le mode A sans ordres :
+
+```powershell
+python tools/observe_live.py --html reports/observation_live/live.html
+```
+
+Ouvrir le fichier HTML local pour suivre prix, spreads, structures, ordres
+simulés et positions. Le terminal affiche aussi l'état. **Ctrl+C** arrête la
+session. Le mode B envoie des ordres uniquement sur un compte techniquement
+vérifié démo, avec le flag explicite `--send-demo-orders`.
+
+Ce mode n'est aucune preuve de validation et ne consomme aucun trial.
+Il ne modifie ni le SHA actif ni `split.yaml`. Voir
+[le guide d'observation live](docs/observation_live.md) pour les commandes,
+le journal SQLite, les limites et les décisions restantes.
+
 Plateforme professionnelle de trading Forex (SMC/ICT + IA) — architecture modulaire, évolutive et maintenable.
 
 ## Validation de recherche SMC

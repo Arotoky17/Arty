@@ -73,10 +73,16 @@ class BacktestEngine:
         self.setup_id = setup_id
         self.parameters = parameters or {}
         self.news_exclusion = news_exclusion
+        self.setup1_source = None
+        if setup_id == load_config("setup1_preregistration.yaml")["setup_id"]:
+            from arty_trading.application.setup1_source import Setup1Source
+
+            self.setup1_source = Setup1Source()
         self._authorized_batches: list[tuple[list[Candle], tuple[str, ...]]] = []
         self._pending: list[tuple[Signal, int]] = []
         self._rng = random.Random(self.fill_model.seed)
         self._newly_filled: set[int | None] = set()
+        self._setup1_holding_counts: dict[int | None, int] = {}
         self._orders_submitted = 0
         self._orders_filled = 0
         self._entry_times: dict[int | None, datetime] = {}
@@ -140,7 +146,19 @@ class BacktestEngine:
             self._process_pending(candle)
             self._check_open_trades(candle)
 
-            if signal_generator and smc_detector and i >= 20:
+            if self.setup1_source is not None:
+                signal = await self.setup1_source.evaluate(candles[: i + 1])
+                if self.setup1_source.opposite_break:
+                    direction = self.setup1_source.opposite_break
+                    self._pending = [
+                        (s, ttl)
+                        for s, ttl in self._pending
+                        if (s.direction == Direction.BUY) == (direction == "bullish")
+                    ]
+                if signal and not self._pending and not self._open_trades:
+                    self._submit_limit(signal, candle)
+
+            elif signal_generator and smc_detector and i >= 20:
                 recent_candles = candles[max(0, i - 20) : i + 1]
                 try:
                     smc_data = await smc_detector.detect(recent_candles, self._symbol)
@@ -226,6 +244,9 @@ class BacktestEngine:
         self._open_trades = []
         self._equity_curve = [self._initial_balance]
         self._pending = []
+        self._setup1_holding_counts = {}
+        if self.setup1_source is not None:
+            self.setup1_source.seen.clear()
         self._orders_submitted = self._orders_filled = 0
         self._entry_times = {}
         self._initial_risks = {}
@@ -260,12 +281,8 @@ class BacktestEngine:
         stats.leverage_capped_trades = sum(
             1 for t in scored if t.metadata.get("capped_by_leverage")
         )
-        stats.margin_capped_trades = sum(
-            1 for t in scored if t.metadata.get("capped_by_margin")
-        )
-        stats.volume_capped_share = (
-            stats.volume_capped_trades / len(scored) if scored else 0.0
-        )
+        stats.margin_capped_trades = sum(1 for t in scored if t.metadata.get("capped_by_margin"))
+        stats.volume_capped_share = stats.volume_capped_trades / len(scored) if scored else 0.0
         results = [
             float(t.profit or 0) / self._initial_risks[t.ticket]
             for t in closed_orders
@@ -291,22 +308,34 @@ class BacktestEngine:
         )
         stats.cost_assumptions = self.cost_model.assumptions()
         stats.execution_audit = [
-            {"ticket": t.ticket, **t.metadata,
-             "costs_usd": self._costs_by_ticket.get(t.ticket, 0.0),
-             "costs_over_initial_r": (
-                 self._costs_by_ticket.get(t.ticket, 0.0) / self._initial_risks[t.ticket]
-             )}
-            for t in closed_orders if self._initial_risks.get(t.ticket, 0) > 0
+            {
+                "ticket": t.ticket,
+                **t.metadata,
+                "costs_usd": self._costs_by_ticket.get(t.ticket, 0.0),
+                "costs_over_initial_r": (
+                    self._costs_by_ticket.get(t.ticket, 0.0) / self._initial_risks[t.ticket]
+                ),
+            }
+            for t in closed_orders
+            if self._initial_risks.get(t.ticket, 0) > 0
         ]
         from arty_trading.validation.xauusd_diagnostics import diagnostics
 
         stats.xauusd_diagnostics = diagnostics(
-            [{"entry_time": self._entry_times[t.ticket].isoformat(),
-              "direction": t.direction.value,
-              "r": float(t.profit or 0) / self._initial_risks[t.ticket]}
-             for t in closed_orders if self._initial_risks.get(t.ticket, 0) > 0],
-            self._diagnostic_candles, self.cost_model, float(self._initial_balance),
-            self._risk_per_trade, self._symbol,
+            [
+                {
+                    "entry_time": self._entry_times[t.ticket].isoformat(),
+                    "direction": t.direction.value,
+                    "r": float(t.profit or 0) / self._initial_risks[t.ticket],
+                }
+                for t in closed_orders
+                if self._initial_risks.get(t.ticket, 0) > 0
+            ],
+            self._diagnostic_candles,
+            self.cost_model,
+            float(self._initial_balance),
+            self._risk_per_trade,
+            self._symbol,
         )
         self.registry.record_diagnostics(
             self._trial_id, {**stats.xauusd_diagnostics, "execution_audit": stats.execution_audit}
@@ -384,19 +413,22 @@ class BacktestEngine:
             from arty_trading.modules.execution.risk_limits import permitted_volume
 
             period = effective_definitions(self._symbol)["atr_period"]
-            atr = float(signal.metadata.get(
-                "atr_at_bos", calculate_atr(self._execution_candles, period)
-            ))
+            atr = float(
+                signal.metadata.get("atr_at_bos", calculate_atr(self._execution_candles, period))
+            )
             units = effective_definitions(self._symbol)["instrument_units"]["XAUUSD"][
                 "contract_ounces_per_lot"
             ]
             existing = sum(float(t.volume * t.entry_price) * units for t in self._open_trades)
-            margin_leverage = load_config("execution.yaml")["risk_limits"][
-                "broker_margin_leverage"
-            ]
+            margin_leverage = load_config("execution.yaml")["risk_limits"]["broker_margin_leverage"]
             volume, limits = permitted_volume(
-                volume, float(signal.entry_price), float(signal.stop_loss), atr,
-                float(self._equity), existing, existing / margin_leverage,
+                volume,
+                float(signal.entry_price),
+                float(signal.stop_loss),
+                atr,
+                float(self._equity),
+                existing,
+                existing / margin_leverage,
             )
             if not volume:
                 return
@@ -542,6 +574,33 @@ class BacktestEngine:
     def _check_open_trades(self, candle: Candle) -> None:
         self._exit_time = candle.time
         for trade in list(self._open_trades):
+            if self.setup1_source is not None:
+                from datetime import timedelta
+
+                from arty_trading.modules.execution.setup1_policy import closed_bar_exit
+                from arty_trading.validation.market_calendar import MarketCalendar
+
+                new_fill = trade.ticket in self._newly_filled
+                count = self._setup1_holding_counts.get(trade.ticket, 0) + (not new_fill)
+                self._setup1_holding_counts[trade.ticket] = count
+                close_time = candle.available_at or candle.time + timedelta(minutes=5)
+                local = close_time.astimezone(MarketCalendar().zone)
+                decision = closed_bar_exit(
+                    trade,
+                    candle,
+                    newly_filled=new_fill,
+                    stop_on_fill_bar=self.fill_model.stop_on_fill_bar,
+                    remaining_bars=load_config("setup1_preregistration.yaml")["strategy"][
+                        "maximum_holding_market_bars"
+                    ]
+                    - count,
+                    ny_flat=local.hour == 17,
+                )
+                if decision:
+                    _, price, kind = decision
+                    self._exit_time = close_time
+                    self._close_trade(trade, Decimal(str(price)), exit_kind=kind)
+                continue
             hit_sl = False
             hit_tp = False
             close_price = float(trade.entry_price)

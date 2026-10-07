@@ -110,6 +110,24 @@ def _closes(path: Path) -> list[float]:
         return [float(row["close"]) for row in csv.DictReader(stream)]
 
 
+def load_csv_provenance(root: Path) -> dict[str, Any]:
+    path = root / "provenance.json"
+    if not path.exists():
+        return {"provider": "external_csv", "ask_origin": "source_ask"}
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("CSV provenance.json must be an object")
+    return payload
+
+
+def dukascopy_store_entries(entries: list[dict[str, Any]]) -> bool:
+    return any(
+        row.get("binary_path") or "dukascopy" in str(row.get("url") or "").lower()
+        for row in entries
+        if row.get("status") == "verified"
+    )
+
+
 def _open_days(start: datetime, cutoff: datetime, calendar: MarketCalendar, sides: list[str]):
     day = start
     while day < cutoff:
@@ -117,6 +135,8 @@ def _open_days(start: datetime, cutoff: datetime, calendar: MarketCalendar, side
             for side in sides:
                 yield day, side
         day += timedelta(days=1)
+
+
 def run_csv_import(
     root: Path,
     output: Path | None = None,
@@ -148,8 +168,18 @@ def run_csv_import(
     output.mkdir(parents=True, exist_ok=True)
     staging = Path(cfg["staging"])
     staging.mkdir(parents=True, exist_ok=True)
+    provenance = load_csv_provenance(root)
     manifest = output / "import_manifest.jsonl"
     entries = read_manifest(manifest, recover=True)
+    reconstructed = provenance.get("ask_origin") == "reconstructed_ask"
+    if reconstructed and dukascopy_store_entries(entries):
+        raise ValueError(
+            "Refusing to mix reconstructed_ask MT5 files with a Dukascopy raw store"
+        )
+    if reconstructed:
+        (output / "provenance.json").write_text(
+            json.dumps(provenance, indent=2), encoding="utf-8"
+        )
     calendar = MarketCalendar()
     verified: list[dict[str, Any]] = []
     deferred: list[dict[str, Any]] = []
@@ -174,10 +204,16 @@ def run_csv_import(
                     target = output / cfg["symbol"].lower() / side / "m1" / f"{key}.csv"
                     sha = publish_immutable(target, payload, staging)
                     published[side] = target
+                    if reconstructed:
+                        quote_origin = "mt5_bid" if side == "bid" else "reconstructed_ask"
+                    else:
+                        quote_origin = "source_bid" if side == "bid" else "source_ask"
                     entry = {
                         "date": key,
                         "side": side,
-                        "provider": "external_csv",
+                        "provider": provenance.get("provider", "external_csv"),
+                        "quote_origin": quote_origin,
+                        "ask_origin": provenance.get("ask_origin", "source_ask"),
                         "source": str(source),
                         "source_sha256": digest(source.read_bytes()),
                         "url": None,
@@ -189,6 +225,7 @@ def run_csv_import(
                         "cached": False,
                         "path": str(target),
                         "sha256": sha,
+                        "allowed_for_reference_cost_model": not reconstructed,
                     }
                     journal.write(json.dumps(entry) + "\n")
                     journal.flush()
@@ -213,7 +250,9 @@ def run_csv_import(
         if (day.date().isoformat(), side) not in validated
     ]
     summary: dict[str, Any] = {
-        "provider": "external_csv",
+        "provider": provenance.get("provider", "external_csv"),
+        "ask_origin": provenance.get("ask_origin", "source_ask"),
+        "allowed_for_reference_cost_model": not reconstructed,
         "source_root": str(root),
         "generated_at": utc_now().isoformat(),
         "cutoff_utc": cutoff.isoformat(),
@@ -231,7 +270,10 @@ def run_csv_import(
     report = Path(cfg["report_output"])
     report.mkdir(parents=True, exist_ok=True)
     (report / "import_status_csv.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
-    if until is None and not summary["resume_required"]:
+    if until is None and not summary["resume_required"] and not reconstructed:
         last = freeze_available_end(CONFIG_ROOT / "split.yaml", entries, cutoff)
         summary["last_common_closed_bar"] = last.isoformat() if last else None
+    summary["split_yaml_modified"] = bool(
+        until is None and not summary["resume_required"] and not reconstructed
+    )
     return summary

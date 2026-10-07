@@ -58,6 +58,10 @@ class CostModel:
             if not self.spread_calibration_path:
                 raise ValueError("Calibrated spread requires a calibration file")
             calibrated = load_config(self.spread_calibration_path)
+            if calibrated.get("ask_origin") == "reconstructed_ask":
+                raise ValueError("Reconstructed MT5 ask cannot be the reference cost model")
+            if calibrated.get("allowed_for_reference_cost_model") is False:
+                raise ValueError("Spread calibration marked unfit for the reference cost model")
             if calibrated.get("calibration_end_exclusive"):
                 object.__setattr__(self, "development_end_year", datetime.fromisoformat(
                     calibrated["calibration_end_exclusive"]

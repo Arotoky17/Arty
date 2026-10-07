@@ -1,0 +1,26 @@
+{
+  "plumbing_only": true,
+  "real_mt5_started": false,
+  "network_calls": false,
+  "backtest_run": false,
+  "trial_consumed": false,
+  "active_configuration_sha256": "eb2f9ed7bfc6fd3b69e4da8215916e0aa0a2c55d5bdf3b11a53f7efe65561733",
+  "active_sha_unchanged": true,
+  "mode_A_default": "read_feed_simulate_execution",
+  "mode_B": "explicit_send_demo_orders_and_technical_demo_check",
+  "observation_tests_passed": 17,
+  "existing_precision_and_forward_tests_passed": 50,
+  "ruff": "passed",
+  "remaining_validation": [
+    "local terminal smoke test by user",
+    "operational kill thresholds and pause restart policy",
+    "snapshot cost assumptions are observational only",
+    "visual Standard account and clock check"
+  ],
+  "limitations": [
+    "no synchronous price comparison without a second feed",
+    "broker fills cannot enforce simulated OHLC crossing",
+    "cleanup may fail on disconnect; inspect terminal",
+    "no research validation evidence"
+  ]
+}

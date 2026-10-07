@@ -17,14 +17,125 @@ import struct
 import time
 import urllib.error
 import urllib.request
+from collections import deque
+from collections.abc import Iterator
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import closing, contextmanager
+from contextvars import ContextVar
 from datetime import UTC, datetime, timedelta
 from email.utils import parsedate_to_datetime
 from pathlib import Path
+from threading import Lock
 from typing import Any
 
 import yaml
 
 from arty_trading.config.operational import load_config
+
+_timings: ContextVar[dict[str, float] | None] = ContextVar("import_timings", default=None)
+
+
+class RuntimeExpiredError(Exception):
+    """The download budget expired; leave uncommitted files for the next session."""
+
+
+class RequestGate:
+    """Session-wide provider cooldown; requests already in flight may finish."""
+
+    def __init__(self, deadline: float | None = None):
+        self.deadline = deadline
+        self.cooldown_until = 0.0
+        self.lock = Lock()
+        self.stopped = False
+        self.provider_pause = False
+
+    def check(self) -> None:
+        if self.stopped or (self.deadline is not None and time.monotonic() >= self.deadline):
+            raise RuntimeExpiredError
+
+    def slow_all(self, seconds: float) -> None:
+        with self.lock:
+            self.cooldown_until = max(self.cooldown_until, time.monotonic() + seconds)
+
+    def wait(self) -> None:
+        while True:
+            self.check()
+            with self.lock:
+                remaining = self.cooldown_until - time.monotonic()
+            if remaining <= 0:
+                return
+            if self.deadline is not None:
+                remaining = min(remaining, max(0.0, self.deadline - time.monotonic()))
+            with timed_phase("backoff_seconds"):
+                time.sleep(remaining)
+
+
+def sleep_for(cfg: dict[str, Any], seconds: float, phase: str) -> None:
+    gate = cfg.get("_request_gate")
+    if gate is not None:
+        gate.check()
+        if gate.deadline is not None:
+            seconds = min(seconds, max(0.0, gate.deadline - time.monotonic()))
+    with timed_phase(phase):
+        time.sleep(seconds)
+    if gate is not None:
+        gate.check()
+
+
+@contextmanager
+def download_pool(pool: ThreadPoolExecutor, gate: RequestGate) -> Iterator[None]:
+    try:
+        yield
+    finally:
+        gate.stopped = True
+        pool.shutdown(wait=True, cancel_futures=True)
+
+
+def index_manifest(entries: list[dict[str, Any]]) -> tuple[dict, dict]:
+    """One in-memory pass; immutable committed objects are trusted on ordinary resume."""
+    latest, pairs, hashes = {}, {}, {}
+    for row in entries:
+        if row["status"] == "pair_verified":
+            pairs[row["date"]] = row
+        if row["status"] != "verified":
+            continue
+        for path_key, hash_key in (("path", "sha256"), ("binary_path", "binary_sha256")):
+            if path_key in row:
+                previous = hashes.setdefault(row[path_key], row[hash_key])
+                if previous != row[hash_key]:
+                    raise ValueError(f"Conflicting manifest checksum changed: {row[path_key]}")
+        key = (row["date"], row["side"])
+        if key not in latest or row["snapshot_cutoff"] >= latest[key]["snapshot_cutoff"]:
+            latest[key] = row
+    return latest, pairs
+
+
+@contextmanager
+def timed_phase(name: str) -> Iterator[None]:
+    started = time.perf_counter()
+    try:
+        yield
+    finally:
+        timings = _timings.get()
+        if timings is not None:
+            timings[name] = timings.get(name, 0.0) + time.perf_counter() - started
+
+
+def validation_signature(cfg: dict[str, Any]) -> dict[str, Any]:
+    """Only reuse validation performed with these exact decoder rules."""
+    return {
+        "decoder_version": 1,
+        **{
+            key: cfg[key]
+            for key in (
+                "record_format",
+                "record_fields",
+                "price_divisor",
+                "day_seconds",
+                "source_bar_seconds",
+            )
+        },
+    }
 
 
 def utc_now() -> datetime:
@@ -42,7 +153,8 @@ def validate_import_period(split: dict[str, Any], now: datetime) -> None:
 
 
 def digest(payload: bytes) -> str:
-    return hashlib.sha256(payload).hexdigest()
+    with timed_phase("checksum_seconds"):
+        return hashlib.sha256(payload).hexdigest()
 
 
 def read_manifest(path: Path, *, recover: bool = False) -> list[dict[str, Any]]:
@@ -123,7 +235,8 @@ def decode_m1(
         raise ValueError("Empty Dukascopy BI5 response")
     try:
         decoder = lzma.LZMADecompressor()
-        decoded = decoder.decompress(payload)
+        with timed_phase("bi5_decode_seconds"):
+            decoded = decoder.decompress(payload)
         if not decoder.eof or decoder.unused_data:
             raise ValueError("Truncated or trailing data in Dukascopy LZMA stream")
     except lzma.LZMAError as error:
@@ -232,13 +345,23 @@ def fetch_bytes(url: str, cfg: dict[str, Any]) -> bytes | None:
         raise ValueError("Invalid timeout, retry multiplier or request delay range")
     for attempt in range(cfg["max_attempts"]):
         try:
-            time.sleep(
-                random.uniform(cfg["request_delay_min_seconds"], cfg["request_delay_max_seconds"])
+            gate = cfg.get("_request_gate")
+            if gate is not None:
+                gate.check()
+            sleep_for(
+                cfg,
+                random.uniform(cfg["request_delay_min_seconds"], cfg["request_delay_max_seconds"]),
+                "delay_seconds",
             )
+            if gate is not None:
+                gate.wait()
             request = urllib.request.Request(
                 url, headers={"User-Agent": str(cfg.get("user_agent", "Arty-data-audit/1.0"))}
             )
-            with urllib.request.urlopen(request, timeout=cfg["timeout_seconds"]) as response:
+            timeout = cfg["timeout_seconds"]
+            if gate is not None and gate.deadline is not None:
+                timeout = min(timeout, max(0.001, gate.deadline - time.monotonic()))
+            with urllib.request.urlopen(request, timeout=timeout) as response:
                 payload = bytes(response.read())
                 if not payload:
                     # Emptiness is judged per day, not here; return it unchanged.
@@ -255,9 +378,17 @@ def fetch_bytes(url: str, cfg: dict[str, Any]) -> bytes | None:
             if error.code not in (429, 500, 502, 503, 504):
                 raise
             error.retry_after = header  # Honoured again by the file-level backoff.
+            if gate is not None and error.code in (429, 503):
+                try:
+                    gate.slow_all(retry_delay(cfg, attempt, header))
+                except RuntimeError:
+                    # A provider deadline beyond the cap stops the whole session.
+                    gate.provider_pause = True
+                    gate.stopped = True
+                    raise RuntimeExpiredError from None
             if attempt + 1 == cfg["max_attempts"]:
                 raise
-            time.sleep(retry_delay(cfg, attempt, header))
+            sleep_for(cfg, retry_delay(cfg, attempt, header), "backoff_seconds")
         except (
             TimeoutError,
             ConnectionError,
@@ -268,7 +399,7 @@ def fetch_bytes(url: str, cfg: dict[str, Any]) -> bytes | None:
                 raise  # Never bypass TLS verification or retry a certificate defect.
             if attempt + 1 == cfg["max_attempts"]:
                 raise
-            time.sleep(retry_delay(cfg, attempt))
+            sleep_for(cfg, retry_delay(cfg, attempt), "backoff_seconds")
     raise RuntimeError("Unreachable download retry state")
 
 
@@ -282,9 +413,7 @@ def apply_request_delay(cfg: dict[str, Any], base: float) -> dict[str, Any]:
     return result
 
 
-def throughput(
-    verified: int, attempted: int, started: float, sides: int = 2
-) -> dict[str, Any]:
+def throughput(verified: int, attempted: int, started: float, sides: int = 2) -> dict[str, Any]:
     """Debit journal: days per hour and observed error rate."""
     elapsed = max(time.monotonic() - started, 1e-9)
     return {
@@ -304,6 +433,37 @@ def fetch_day_with_backoff(
     cfg: dict[str, Any],
     calendar: Any = None,
 ) -> dict[str, Any]:
+    timings = {
+        key: 0.0
+        for key in (
+            "network_seconds",
+            "delay_seconds",
+            "backoff_seconds",
+            "cache_read_seconds",
+            "bi5_decode_seconds",
+            "validation_seconds",
+            "checksum_seconds",
+            "write_seconds",
+        )
+    }
+    token = _timings.set(timings)
+    started = time.perf_counter()
+    try:
+        entry = _fetch_day_with_backoff(day, side, cutoff, output, cfg, calendar)
+        entry["phase_timings"] = {**timings, "total_seconds": time.perf_counter() - started}
+        return entry
+    finally:
+        _timings.reset(token)
+
+
+def _fetch_day_with_backoff(
+    day: datetime,
+    side: str,
+    cutoff: datetime,
+    output: Path,
+    cfg: dict[str, Any],
+    calendar: Any = None,
+) -> dict[str, Any]:
     """Retry one file with the long backoff, then defer it and continue.
 
     A failing file never aborts the session: after file_attempts it is
@@ -314,12 +474,14 @@ def fetch_day_with_backoff(
     for attempt in range(attempts):
         try:
             return fetch_day(day, side, cutoff, output, cfg, calendar)
+        except RuntimeExpiredError:
+            raise
         except Exception as error:  # noqa: BLE001 - one file must never stop the run
             last = error
             if attempt + 1 >= attempts:
                 break
             header = getattr(error, "retry_after", "") or ""
-            time.sleep(retry_delay(cfg, attempt, str(header)))
+            sleep_for(cfg, retry_delay(cfg, attempt, str(header)), "backoff_seconds")
     return {
         "date": day.date().isoformat(),
         "side": side,
@@ -368,7 +530,23 @@ def fetch_day(
     binary = output / symbol.lower() / side / "bi5" / f"{stem}.bi5"
     target = output / symbol.lower() / side / "m1" / f"{stem}.csv"
     cached = binary.exists()
-    payload = binary.read_bytes() if cached else fetch_bytes(url, cfg)
+    if cached:
+        with timed_phase("cache_read_seconds"):
+            payload = binary.read_bytes()
+    else:
+        timings = _timings.get()
+        waits_before = (
+            sum(timings.get(k, 0.0) for k in ("delay_seconds", "backoff_seconds"))
+            if timings
+            else 0.0
+        )
+        began = time.perf_counter()
+        try:
+            payload = fetch_bytes(url, cfg)
+        finally:
+            if timings is not None:
+                waits = sum(timings[k] for k in ("delay_seconds", "backoff_seconds")) - waits_before
+                timings["network_seconds"] += max(0.0, time.perf_counter() - began - waits)
     entry = {
         "date": day.date().isoformat(),
         "side": side,
@@ -389,10 +567,39 @@ def fetch_day(
         return {**entry, "status": "not_available", "rows": 0}
     if not payload:
         raise ValueError("Empty Dukascopy HTTP response")
-    csv_bytes, info = decode_m1(payload, day, cutoff, cfg)
+    timings = _timings.get()
+    decoded_before = timings.get("bi5_decode_seconds", 0.0) if timings else 0.0
+    began = time.perf_counter()
+    try:
+        csv_bytes, info = decode_m1(payload, day, cutoff, cfg)
+    finally:
+        if timings is not None:
+            timings["validation_seconds"] += max(
+                0.0, time.perf_counter() - began - timings["bi5_decode_seconds"] + decoded_before
+            )
     staging = Path(cfg["staging"])
-    binary_sha = publish_immutable(binary, payload, staging)
-    csv_sha = publish_immutable(target, csv_bytes, staging)
+    if cfg.get("_prepare_only"):
+        return {
+            **entry,
+            **info,
+            "status": "verified",
+            "cached": cached,
+            "binary_path": str(binary),
+            "path": str(target),
+            "validation_signature": validation_signature(cfg),
+            "_binary_payload": payload,
+            "_csv_payload": csv_bytes,
+        }
+    checksum_before = timings.get("checksum_seconds", 0.0) if timings else 0.0
+    began = time.perf_counter()
+    try:
+        binary_sha = publish_immutable(binary, payload, staging)
+        csv_sha = publish_immutable(target, csv_bytes, staging)
+    finally:
+        if timings is not None:
+            timings["write_seconds"] += max(
+                0.0, time.perf_counter() - began - timings["checksum_seconds"] + checksum_before
+            )
     return {
         **entry,
         **info,
@@ -402,11 +609,52 @@ def fetch_day(
         "binary_sha256": binary_sha,
         "path": str(target),
         "sha256": csv_sha,
+        "validation_signature": validation_signature(cfg),
     }
 
 
+def publish_prepared(entry: dict[str, Any], cfg: dict[str, Any]) -> dict[str, Any]:
+    """Called only by the session's writer, never by download workers."""
+    if "_binary_payload" not in entry:
+        return entry
+    timings = entry["phase_timings"]
+    token = _timings.set(timings)
+    started = time.perf_counter()
+    checksum_before = timings["checksum_seconds"]
+    try:
+        for path_key, payload_key, hash_key in (
+            ("binary_path", "_binary_payload", "binary_sha256"),
+            ("path", "_csv_payload", "sha256"),
+        ):
+            entry[hash_key] = publish_immutable(
+                Path(entry[path_key]), entry.pop(payload_key), Path(cfg["staging"])
+            )
+    except Exception as error:  # noqa: BLE001 - preserve the per-file failure journal
+        entry.pop("_binary_payload", None)
+        entry.pop("_csv_payload", None)
+        entry.update(
+            status="failed",
+            error=str(error),
+            error_type=type(error).__name__,
+            deferred_for_resume=True,
+        )
+    finally:
+        elapsed = time.perf_counter() - started
+        timings["write_seconds"] += max(
+            0.0, elapsed - timings["checksum_seconds"] + checksum_before
+        )
+        timings["total_seconds"] += elapsed
+        _timings.reset(token)
+    return entry
+
+
 def freeze_available_end(
-    split_path: Path, entries: list[dict[str, Any]], cutoff: datetime
+    split_path: Path,
+    entries: list[dict[str, Any]],
+    cutoff: datetime,
+    *,
+    certified_last: datetime | None = None,
+    use_certificates: bool = False,
 ) -> datetime | None:
     """Use actual common timestamps, not file names, scheduled dates or one-sided data."""
     latest: dict[tuple[str, str], dict[str, Any]] = {}
@@ -416,8 +664,8 @@ def freeze_available_end(
             if key not in latest or row["snapshot_cutoff"] > latest[key]["snapshot_cutoff"]:
                 latest[key] = row
     common_dates = sorted({d for d, s in latest if (d, "bid") in latest and (d, "ask") in latest})
-    last = None
-    for day in reversed(common_dates):
+    last = certified_last
+    for day in reversed(common_dates) if certified_last is None and not use_certificates else ():
         sides = []
         for side in ("bid", "ask"):
             entry = latest[(day, side)]
@@ -462,10 +710,12 @@ def run_fetch(
     until: datetime | None = None,
     max_runtime: timedelta | float | None = None,
     cfg: dict[str, Any] | None = None,
+    verify_existing: bool = False,
 ) -> dict[str, Any]:
-    cfg = cfg or load_config("data_import.yaml")
-    if cfg["workers"] != 1:
-        raise ValueError("Dukascopy import requires concurrency 1")
+    cfg = dict(cfg or load_config("data_import.yaml"))
+    workers = cfg.get("workers", 1)
+    if isinstance(workers, bool) or not isinstance(workers, int) or not 1 <= workers <= 32:
+        raise ValueError("workers must be an integer between 1 and 32")
     if cfg["sides"] != ["bid", "ask"]:
         raise ValueError("Dukascopy import requires both configured BID and ASK sides")
     cutoff = (now or utc_now()).replace(second=0, microsecond=0)
@@ -488,11 +738,13 @@ def run_fetch(
     staging.mkdir(parents=True, exist_ok=True)
     manifest = output / "import_manifest.jsonl"
     # An OS-backed SQLite lock releases on interruption; no stale lock to delete.
-    with sqlite3.connect(staging / "download_lock.sqlite", timeout=1) as lock:
+    with closing(sqlite3.connect(staging / "download_lock.sqlite", timeout=1)) as lock, lock:
         lock.execute("CREATE TABLE IF NOT EXISTS importer_lock (id INTEGER)")
         lock.commit()
         lock.execute("BEGIN EXCLUSIVE")
+        resume_started = time.perf_counter()
         entries = read_manifest(manifest, recover=True)
+        latest, pair_certificates = index_manifest(entries)
         days: list[tuple[datetime, str]] = []
         day = start
         while day < cutoff:
@@ -501,8 +753,14 @@ def run_fetch(
         from arty_trading.validation.market_calendar import MarketCalendar
 
         calendar = MarketCalendar()
-        closed_days = {day.date() for day, _ in days if calendar.day_is_closed(day.date())}
-        for entry in entries:
+        closed_days = {
+            day.date()
+            for day, _ in days[:: len(cfg["sides"])]
+            if calendar.day_is_closed(day.date())
+        }
+        checked_objects: set[tuple[str, str]] = set()
+        audit_started = time.perf_counter()
+        for entry in latest.values() if verify_existing else ():
             if entry["status"] == "verified":
                 if (
                     until is not None
@@ -513,15 +771,54 @@ def run_fetch(
                     if path_key not in entry:
                         continue  # External CSV ingest carries no binary object.
                     path = Path(entry[path_key])
+                    object_key = (str(path), entry[hash_key])
+                    if object_key in checked_objects:
+                        continue
                     if not path.exists() or digest(path.read_bytes()) != entry[hash_key]:
                         raise ValueError(f"Imported object missing or checksum changed: {path}")
-        # Existing objects are decoded/rechecked by fetch_day on every resume.
+                    checked_objects.add(object_key)
+        audit_seconds = time.perf_counter() - audit_started
+        reusable = {}
+        signature = validation_signature(cfg)
+        default_signature = validation_signature(load_config("data_import.yaml"))
+        for entry in latest.values():
+            saved_signature = entry.get("validation_signature")
+            if saved_signature != signature and not (
+                saved_signature is None and signature == default_signature
+            ):
+                continue
+            day = datetime.fromisoformat(entry["date"]).replace(tzinfo=UTC)
+            # Partial-day snapshots and external CSVs must not hide a new BI5 request.
+            complete_at = day + timedelta(days=1)
+            if (
+                complete_at > cutoff
+                or datetime.fromisoformat(entry["snapshot_cutoff"]) < complete_at
+            ):
+                continue
+            base = output / cfg["symbol"].lower() / entry["side"]
+            expected_binary = str(base / "bi5" / f"{entry['date']}.bi5")
+            expected_csv = str(base / "m1" / f"{entry['date']}.csv")
+            # Complete external CSV imports are committed validation too.
+            if (
+                entry["path"] == expected_csv
+                and entry.get("binary_path", expected_binary) == expected_binary
+            ):
+                reusable[(entry["date"], entry["side"])] = entry
         failures = []
         deferred: list[dict[str, Any]] = []
         attempted = 0
         verified_here = 0
-        started = time.monotonic()
+        pending = [
+            (number, day, side)
+            for number, (day, side) in enumerate(days, 1)
+            if (day.date().isoformat(), side) not in reusable
+        ]
+        reused = len(days) - len(pending)
+        resume_seconds = time.perf_counter() - resume_started
+        manifest_seconds = 0.0
+        phase_totals: dict[str, float] = {}
         runtime_exhausted = False
+        interrupted = False
         budget: float | None = None
         if max_runtime is not None:
             budget = (
@@ -529,23 +826,69 @@ def run_fetch(
                 if isinstance(max_runtime, timedelta)
                 else float(max_runtime)
             )
-            if budget <= 0:
+            if not math.isfinite(budget) or budget <= 0:
                 raise ValueError("max_runtime must be positive")
-        with manifest.open("a", encoding="utf-8") as journal:
-            for number, (day, side) in enumerate(days, 1):
-                if budget is not None and time.monotonic() - started >= budget:
-                    # Bounded session: stop cleanly and report what is left.
-                    runtime_exhausted = True
-                    break
+        # The runtime budget starts only after resume indexing/planning/audit.
+        started = time.monotonic()
+        gate = RequestGate(started + budget if budget is not None else None)
+        worker_cfg = {**cfg, "_prepare_only": True, "_request_gate": gate}
+        changed: set[tuple[str, str]] = set()
+        pool = ThreadPoolExecutor(max_workers=workers, thread_name_prefix="dukascopy")
+        queue = deque()
+        tasks = iter(pending)
+
+        def submit_next() -> bool:
+            nonlocal runtime_exhausted
+            task = next(tasks, None)
+            if task is None:
+                return False
+            try:
+                gate.check()
+            except RuntimeExpiredError:
+                runtime_exhausted = not gate.provider_pause
+                return False
+            number, day, side = task
+            queue.append(
+                (
+                    number,
+                    pool.submit(
+                        fetch_day_with_backoff, day, side, cutoff, output, worker_cfg, calendar
+                    ),
+                )
+            )
+            return True
+
+        for _ in range(workers):
+            if not submit_next():
+                break
+        with download_pool(pool, gate), manifest.open("a", encoding="utf-8") as journal:
+            while queue:
+                number, future = queue.popleft()
                 attempted += 1
                 # A failing file is deferred, never fatal to the remaining files.
-                entry = fetch_day_with_backoff(day, side, cutoff, output, cfg, calendar)
+                try:
+                    entry = publish_prepared(future.result(), cfg)
+                except RuntimeExpiredError:
+                    runtime_exhausted = not gate.provider_pause
+                    break
+                except (KeyboardInterrupt, SystemExit):
+                    # An interrupted session must still leave a truthful report
+                    # instead of leaving the previous run's one on disk.
+                    interrupted = True
+                    break
+                append_started = time.perf_counter()
                 journal.write(json.dumps(entry) + "\n")
                 journal.flush()
                 os.fsync(journal.fileno())
+                manifest_seconds += time.perf_counter() - append_started
+                for phase, seconds in entry.get("phase_timings", {}).items():
+                    phase_totals[phase] = phase_totals.get(phase, 0.0) + seconds
                 entries.append(entry)
                 if entry["status"] == "verified":
                     verified_here += 1
+                    key = (entry["date"], entry["side"])
+                    latest[key] = entry
+                    changed.add(key)
                 elif entry["status"] in {"failed", "error"}:
                     deferred.append(entry)
                 if attempted % cfg["progress_every"] == 0:
@@ -556,14 +899,31 @@ def run_fetch(
                         f"errors {rate['error_rate']:.1%} | deferred {len(deferred)}",
                         flush=True,
                     )
+                submit_next()
+            gate.stopped = True
+            for _, future in queue:
+                future.cancel()
+            pool.shutdown(wait=True, cancel_futures=True)
+            if attempted:
+                journal.write(
+                    json.dumps(
+                        {
+                            "status": "session_timing",
+                            "timestamp": utc_now().isoformat(),
+                            "phase_timings": phase_totals,
+                            "manifest_append_seconds": manifest_seconds,
+                            "existing_checksum_seconds": audit_seconds,
+                            "reused_daily_sides": reused,
+                            "resume_seconds": resume_seconds,
+                            "workers": workers,
+                        }
+                    )
+                    + "\n"
+                )
+                journal.flush()
+                os.fsync(journal.fileno())
         requested = {(day.date().isoformat(), side) for day, side in days}
-        verified = list(
-            {
-                entry["path"]: entry
-                for entry in entries
-                if entry["status"] == "verified" and (entry["date"], entry["side"]) in requested
-            }.values()
-        )
+        verified = [entry for key, entry in latest.items() if key in requested]
         unavailable = [entry for entry in entries if entry["status"] == "not_available"]
         empty_expected = [entry for entry in entries if entry["status"] == "empty_expected"]
         if not failures and not any(entry["rows"] for entry in verified):
@@ -576,6 +936,13 @@ def run_fetch(
             "failures": failures,
             "status": "failed" if failures else "downloaded",
             "manifest": str(manifest),
+            "phase_timings": phase_totals,
+            "manifest_append_seconds": manifest_seconds,
+            "existing_checksum_seconds": audit_seconds,
+            "resume_seconds": resume_seconds,
+            "workers": workers,
+            "provider_pause": gate.provider_pause,
+            "reused_daily_sides": reused,
             "verified_daily_sides": len(verified),
             "unavailable_daily_sides": len(unavailable),
             "empty_expected_daily_sides": len(empty_expected),
@@ -592,14 +959,17 @@ def run_fetch(
             ],
             "throughput": throughput(verified_here, attempted, started, len(cfg["sides"])),
             "runtime_exhausted": runtime_exhausted,
-            "resume_required": bool(deferred) or runtime_exhausted,
+            "interrupted": interrupted,
+            "resume_required": bool(deferred)
+            or runtime_exhausted
+            or interrupted
+            or gate.provider_pause,
         }
         validated = {(entry["date"], entry["side"]) for entry in verified}
         summary["missing_files"] = [
             {"date": day.date().isoformat(), "side": side}
             for day, side in days
-            if (day.date().isoformat(), side) not in validated
-            and day.date() not in closed_days
+            if (day.date().isoformat(), side) not in validated and day.date() not in closed_days
         ]
         if summary["missing_files"] and not failures:
             failures.append(
@@ -612,22 +982,45 @@ def run_fetch(
                 }
             )
             summary["status"] = "failed"
-        if runtime_exhausted:
-            # A bounded session ends by design: resumable, not a hard failure.
+        if runtime_exhausted or interrupted or gate.provider_pause:
+            # A bounded or interrupted session ends by design: resumable, never a
+            # hard failure, and the report must match what is actually on disk.
             failures = []
             summary["failures"] = []
-            summary["status"] = "runtime_budget_exhausted"
+            summary["status"] = (
+                "provider_pause"
+                if gate.provider_pause
+                else "runtime_budget_exhausted"
+                if runtime_exhausted
+                else "interrupted"
+            )
         summary["scope"] = "development_only" if until is not None else "full_requested_period"
         summary["bid_ask_pairing_validated"] = False
-        if not failures and not runtime_exhausted:
+        summary["pairing_audit_required"] = []
+        certified_last = None
+        if not failures and not runtime_exhausted and not interrupted and not gate.provider_pause:
             # Compare UTC timestamps and OHLC quotes for both sides before any freeze.
-            latest = {
-                (row["date"], row["side"]): row for row in entries if row["status"] == "verified"
-            }
             try:
                 for day, _ in days[:: len(cfg["sides"])]:
                     if day.date() in closed_days:
                         continue  # No provider file is required on a closed day.
+                    day_key = day.date().isoformat()
+                    pair_hashes = [latest[(day_key, side)]["sha256"] for side in cfg["sides"]]
+                    certificate = pair_certificates.get(day_key)
+                    if (
+                        certificate
+                        and certificate["hashes"] == pair_hashes
+                        and certificate.get("validation_signature") == signature
+                    ):
+                        close = datetime.fromisoformat(certificate["last_common_closed_bar"])
+                        certified_last = max(certified_last or close, close)
+                        continue
+                    if not verify_existing and any(
+                        (day_key, side) not in changed for side in cfg["sides"]
+                    ):
+                        # No raw reads on resume: legacy/mixed pairs require an explicit audit.
+                        summary["pairing_audit_required"].append(day_key)
+                        continue
                     paired = []
                     for side in cfg["sides"]:
                         with Path(latest[(day.date().isoformat(), side)]["path"]).open(
@@ -642,16 +1035,44 @@ def run_fetch(
                         for key in ("open", "high", "low", "close")
                     ):
                         raise ValueError(f"BID/ASK crossed OHLC quotes: {day.date()}")
-                summary["bid_ask_pairing_validated"] = True
+                    close = datetime.fromtimestamp(
+                        int(paired[0][-1]["timestamp"]) / 1000, UTC
+                    ) + timedelta(seconds=cfg["source_bar_seconds"])
+                    certified_last = max(certified_last or close, close)
+                    certificate = {
+                        "status": "pair_verified",
+                        "date": day_key,
+                        "hashes": pair_hashes,
+                        "validation_signature": signature,
+                        "last_common_closed_bar": close.isoformat(),
+                    }
+                    with manifest.open("a", encoding="utf-8") as journal:
+                        journal.write(json.dumps(certificate) + "\n")
+                        journal.flush()
+                        os.fsync(journal.fileno())
+                summary["bid_ask_pairing_validated"] = not summary["pairing_audit_required"]
             except ValueError as error:
                 failures.append({"status": "error", "error": str(error)})
                 summary["status"] = "failed"
-        if not failures and not runtime_exhausted and until is None:
+        if (
+            not failures
+            and not runtime_exhausted
+            and not interrupted
+            and until is None
+            and summary["bid_ask_pairing_validated"]
+        ):
             from arty_trading.config.operational import CONFIG_ROOT
             from arty_trading.validation.trial_registry import TrialRegistry
 
             split_before = yaml.safe_load((CONFIG_ROOT / "split.yaml").read_text(encoding="utf-8"))
-            last = freeze_available_end(CONFIG_ROOT / "split.yaml", entries, cutoff)
+            # Certificates already establish the actual common close; avoid raw reads.
+            last = freeze_available_end(
+                CONFIG_ROOT / "split.yaml",
+                entries,
+                cutoff,
+                certified_last=certified_last,
+                use_certificates=True,
+            )
             split_after = yaml.safe_load((CONFIG_ROOT / "split.yaml").read_text(encoding="utf-8"))
             if split_before != split_after:
                 TrialRegistry().record_rule_change(

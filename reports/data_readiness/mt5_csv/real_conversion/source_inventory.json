@@ -1,0 +1,27 @@
+{
+  "source": "data\\external\\mt5_source\\mt5_xauusd_m1.csv",
+  "source_bars": 2375973,
+  "first_server_local": "2020-01-02T06:00:00",
+  "last_server_local": "2026-10-05T14:10:00",
+  "rows_by_server_year": {
+    "2020": 351258,
+    "2021": 351026,
+    "2022": 352900,
+    "2023": 352756,
+    "2024": 355673,
+    "2025": 351821,
+    "2026": 260539
+  },
+  "missing_years_since_2015": [
+    2015,
+    2016,
+    2017,
+    2018,
+    2019
+  ],
+  "utc_conversion_status": "converted_with_explicit_parameters",
+  "network": false,
+  "backtest_run": false,
+  "server_timezone": "Europe/Athens",
+  "point": null
+}

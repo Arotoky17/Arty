@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-04T06:55:01.451165+00:00",
+  "generated_at": "2026-10-04T09:23:30.912955+00:00",
   "symbol": "XAUUSD",
   "pnl_inspected": false,
   "holdout_setup_access_consumed": false,
@@ -82,6 +82,70 @@
         "sha256": "e1597597699ca90e7e233b576b0249ccae94679dd79ed2afbd02a05f30e4ebf0"
       },
       {
+        "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-09.csv",
+        "sha256": "2acb58f7e2b9d3fb3cb5e8106cb7ba84e96aaa672807b1f90ac517153ece4892"
+      },
+      {
+        "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-10.csv",
+        "sha256": "404829b90dad104e5f14f48be8a6a7494c9091c454bb3a0c00d0b453178a0cb5"
+      },
+      {
+        "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-11.csv",
+        "sha256": "b5114d7c0c62e51e07341f34bf6228ecf1a0522efba38bb17afcda59cd9bad86"
+      },
+      {
+        "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-12.csv",
+        "sha256": "73b0de16f397f16487e26f753c3b6da495df187afb831aa39a885d9716b1ccb8"
+      },
+      {
+        "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-13.csv",
+        "sha256": "7482b67f5ab89648337f4208d6ad680e0f6c894fbb32aa5bcb1d4248d4ec52da"
+      },
+      {
+        "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-14.csv",
+        "sha256": "3ecd81073d620c1f0fb552a0006335cc1ccee6fb577b26dc8abf7b109ccaf50c"
+      },
+      {
+        "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-15.csv",
+        "sha256": "5c8dc6c4acaa57bfe4d641cd280cac590c20e4375d8e6a7072dc292d8b6b7f19"
+      },
+      {
+        "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-16.csv",
+        "sha256": "2fbd2796799180b88bd915a318d5e33d0514b365ff34decbb6b6e3d5fa3e5bde"
+      },
+      {
+        "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-17.csv",
+        "sha256": "4d3408de6a83b42ee0d7fa8c18329a123d6720def33c4c95ec1e3c45fadcad7d"
+      },
+      {
+        "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-18.csv",
+        "sha256": "71d25a17c6a4d71229b1c6122bb52d9fd868c2e3c7c90159da30a69ffb1cf153"
+      },
+      {
+        "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-19.csv",
+        "sha256": "47672f48c53c715473b1b91914ad301e53654de4478f1e2c6cd02bbfd0b56018"
+      },
+      {
+        "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-20.csv",
+        "sha256": "8186bda67b2ed73133f3915bf5d36f68df622a0bf706607093c698e3a0e9ff2c"
+      },
+      {
+        "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-21.csv",
+        "sha256": "a4cac22414b832f672198e413654ccf20f0e71810d4a54f0bbe2fff55a9f0fc3"
+      },
+      {
+        "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-22.csv",
+        "sha256": "2c6cb03fd62fec6f3cad9af1cffefa04a353f6cd04aa5ee17ea72a501ece3988"
+      },
+      {
+        "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-23.csv",
+        "sha256": "9910054df89d6a38d599c78d86eebf0ac77a4cdb6e85a7fdd1fbe94fb5418092"
+      },
+      {
+        "path": "data\\raw\\xauusd\\bid\\m1\\2020-01-24.csv",
+        "sha256": "40ea7391c4f86064b89a2fc5c8e8d318af71542275907fff7754b2985ba65eb8"
+      },
+      {
         "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-01.csv",
         "sha256": "c236ec318763b2679a65ee1cac63a5b5bd9b351e62716baf557ab497e34e9c0b"
       },
@@ -112,6 +176,70 @@
       {
         "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-08.csv",
         "sha256": "9f93be96563fbcc2e8fbfe17a7c4373c84ac212169e8bbfef251aaaf35a730c1"
+      },
+      {
+        "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-09.csv",
+        "sha256": "d2cc428473dd1f345ac3088cb1413d3623c6cb0783c15c3ae524bbe08d3cf571"
+      },
+      {
+        "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-10.csv",
+        "sha256": "4a3b1eb135b680ccd9f52fdf5a5ae359bf7daa6c9a9effd0becf5cbceb062bba"
+      },
+      {
+        "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-11.csv",
+        "sha256": "6bdca60520a22ffd929bb79a72b253ab479d2523775f57a26caadcc064ba5377"
+      },
+      {
+        "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-12.csv",
+        "sha256": "c9288ce842d8010751684067ef0db258e5c8709b5de6423a05bfc028e30eb607"
+      },
+      {
+        "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-13.csv",
+        "sha256": "a3632205827634c6cac0a069aa171dee9342559b234477a1ba9f22a1415d8fa6"
+      },
+      {
+        "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-14.csv",
+        "sha256": "9c00ca24d7195c5b3077cd6363a564749d98d0eae823a8a3cf5c49e56f1ce33b"
+      },
+      {
+        "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-15.csv",
+        "sha256": "c9d97c6c57ea3f02baabd9909ea958ba03437846bc463aa788853c04982b0781"
+      },
+      {
+        "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-16.csv",
+        "sha256": "93698768a3c317603e4f06b98807fec1506695730fc445647e5f7030b54ce1c3"
+      },
+      {
+        "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-17.csv",
+        "sha256": "69e22d7030103c6e4279229bd2f928fdca29049e41153d9c218f9a41a50abc04"
+      },
+      {
+        "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-18.csv",
+        "sha256": "370c07cd5ad4052c10934ea1953c1d8343dabaa63e099528140d446787afcb00"
+      },
+      {
+        "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-19.csv",
+        "sha256": "49686a9d7a237e84bfa1f6807c63ecf911ada449a526cb354e14f0b419ba4fbc"
+      },
+      {
+        "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-20.csv",
+        "sha256": "447211725459205052bdd98de51d97198f4e9f2764fe8baef1bea1c0a2569cbb"
+      },
+      {
+        "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-21.csv",
+        "sha256": "fbcbf8081beae480ac664bc73898d7e849802a27b6717918e95497d8a727b14b"
+      },
+      {
+        "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-22.csv",
+        "sha256": "53a976ce3f52c2e6a9be0293dbe5b8b5ec4e084485199eddf5e7c2ce009ceb2c"
+      },
+      {
+        "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-23.csv",
+        "sha256": "c6e3dba41c46c3ddffccfff44680cb8f38a5e197c8cb5338e52a3593d434cea9"
+      },
+      {
+        "path": "data\\raw\\xauusd\\ask\\m1\\2020-01-24.csv",
+        "sha256": "76e6a10af4b3e8287d4d6fb0d0f7927c4968e8629a6aaa03e52710805f9bf609"
       }
     ],
     "manifest_checks": [
@@ -148,6 +276,70 @@
         "matches": true
       },
       {
+        "file": "data\\raw\\xauusd\\bid\\m1\\2020-01-09.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\bid\\m1\\2020-01-10.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\bid\\m1\\2020-01-11.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\bid\\m1\\2020-01-12.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\bid\\m1\\2020-01-13.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\bid\\m1\\2020-01-14.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\bid\\m1\\2020-01-15.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\bid\\m1\\2020-01-16.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\bid\\m1\\2020-01-17.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\bid\\m1\\2020-01-18.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\bid\\m1\\2020-01-19.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\bid\\m1\\2020-01-20.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\bid\\m1\\2020-01-21.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\bid\\m1\\2020-01-22.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\bid\\m1\\2020-01-23.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\bid\\m1\\2020-01-24.csv",
+        "matches": true
+      },
+      {
         "file": "data\\raw\\xauusd\\ask\\m1\\2020-01-01.csv",
         "matches": true
       },
@@ -177,6 +369,70 @@
       },
       {
         "file": "data\\raw\\xauusd\\ask\\m1\\2020-01-08.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\ask\\m1\\2020-01-09.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\ask\\m1\\2020-01-10.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\ask\\m1\\2020-01-11.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\ask\\m1\\2020-01-12.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\ask\\m1\\2020-01-13.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\ask\\m1\\2020-01-14.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\ask\\m1\\2020-01-15.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\ask\\m1\\2020-01-16.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\ask\\m1\\2020-01-17.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\ask\\m1\\2020-01-18.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\ask\\m1\\2020-01-19.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\ask\\m1\\2020-01-20.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\ask\\m1\\2020-01-21.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\ask\\m1\\2020-01-22.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\ask\\m1\\2020-01-23.csv",
+        "matches": true
+      },
+      {
+        "file": "data\\raw\\xauusd\\ask\\m1\\2020-01-24.csv",
         "matches": true
       }
     ],
@@ -258,10 +514,42 @@
         }
       },
       "structure_htf": {
-        "contains_both_observed": false,
+        "contains_both_observed": true,
         "episodes": {
-          "trend": [],
-          "range": []
+          "trend": [
+            {
+              "start": "2020-01-14T12:00:00+00:00",
+              "end": "2020-01-15T20:00:00+00:00",
+              "bars": 9
+            },
+            {
+              "start": "2020-01-20T00:00:00+00:00",
+              "end": "2020-01-21T20:00:00+00:00",
+              "bars": 12
+            },
+            {
+              "start": "2020-01-23T08:00:00+00:00",
+              "end": "2020-01-24T20:00:00+00:00",
+              "bars": 10
+            }
+          ],
+          "range": [
+            {
+              "start": "2020-01-09T04:00:00+00:00",
+              "end": "2020-01-10T12:00:00+00:00",
+              "bars": 9
+            },
+            {
+              "start": "2020-01-13T04:00:00+00:00",
+              "end": "2020-01-14T08:00:00+00:00",
+              "bars": 8
+            },
+            {
+              "start": "2020-01-16T00:00:00+00:00",
+              "end": "2020-01-18T00:00:00+00:00",
+              "bars": 13
+            }
+          ]
         }
       }
     },
@@ -277,12 +565,15 @@
       "period": "development",
       "month": "2020-01",
       "data_present": true,
-      "d1_bars": 4,
+      "d1_bars": 16,
       "adx_mean": null,
       "adx_min": null,
       "adx_max": null,
-      "adx_warmup": 4,
-      "structure_warmup": 24
+      "adx_warmup": 16,
+      "structure_range": 36,
+      "structure_trend_up": 28,
+      "structure_warmup": 24,
+      "structure_trend_down": 9
     },
     {
       "period": "development",

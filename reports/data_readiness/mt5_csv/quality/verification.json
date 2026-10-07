@@ -1,0 +1,14 @@
+{
+  "quote_files_verified": 4204,
+  "ask_rows": 2375973,
+  "bid_rows": 2375973,
+  "bid_files_unchanged": 2102,
+  "dukascopy_files_unchanged": 714,
+  "configuration_sha256_before": "eb2f9ed7bfc6fd3b69e4da8215916e0aa0a2c55d5bdf3b11a53f7efe65561733",
+  "configuration_sha256_after": "eb2f9ed7bfc6fd3b69e4da8215916e0aa0a2c55d5bdf3b11a53f7efe65561733",
+  "sha_applied_to_amendment": null,
+  "point_confirmed": 0.01,
+  "gap_marks_in_separate_mask": true,
+  "backtest_run": false,
+  "network": false
+}

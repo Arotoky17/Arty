@@ -59,6 +59,11 @@ def load_csv_history(directory: Path, point: float) -> dict[str, Any]:
     if (ask.close < bid.close).any():
         raise ValueError("Negative historical bid/ask spread")
     columns = ["open", "high", "low", "close"]
+    gap_path = directory / "gap_policy.json"
+    if gap_path.exists():
+        policy = json.loads(gap_path.read_text(encoding="utf-8"))
+        bid.attrs["gap_policy"] = policy
+        ask.attrs["gap_policy"] = policy
     unchanged = MarketCalendar().annotate(bid).non_tradable
     bid, ask = bid.loc[~unchanged], ask.loc[~unchanged]
     candles: dict[str, list[dict[str, Any]]] = {}
@@ -80,6 +85,8 @@ def load_csv_history(directory: Path, point: float) -> dict[str, Any]:
                     "available_at": int(row.available_at.timestamp()),
                     "tick_volume": int(row[volume_column]) if volume_column is not None else 0,
                     "spread": math.ceil(max(0.0, (quote.close - row.close) / point)),
+                    "non_tradable": bool(row.get("non_tradable", False)),
+                    "entry_blocked": bool(row.get("entry_blocked", False)),
                 }
             )
             rows.append(item)
